@@ -6,6 +6,7 @@ import OutfitCard from '@/components/OutfitCard';
 import AccessoriesSection from '@/components/AccessoriesSection';
 import WeatherBanner from '@/components/WeatherBanner';
 import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
+import StyleInspiration from '@/components/StyleInspiration';
 
 const Index = () => {
   const [showRecommendations, setShowRecommendations] = useState(false);
@@ -68,6 +69,7 @@ const Index = () => {
               </div>
               <EventInput onEventSubmit={handleEventSubmit} />
               <DailyOutfitAssistant />
+              <StyleInspiration />
             </div>
           </div>
         ) : (
