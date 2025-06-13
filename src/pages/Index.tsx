@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import EventInput from '@/components/EventInput';
 import OutfitCard from '@/components/OutfitCard';
 import AccessoriesSection from '@/components/AccessoriesSection';
-import WeatherBanner from '@/components/WeatherBanner';
+import WeatherDisplay from '@/components/WeatherDisplay';
 import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
 import StyleInspiration from '@/components/StyleInspiration';
 import TrendingNow from '@/components/TrendingNow';
@@ -68,6 +68,7 @@ const Index = () => {
                   Buy or rent stunning pieces that arrive exactly when you need them.
                 </p>
               </div>
+              <WeatherDisplay />
               <EventInput onEventSubmit={handleEventSubmit} />
               <TrendingNow />
               <DailyOutfitAssistant />
@@ -91,7 +92,7 @@ const Index = () => {
               </p>
             </div>
 
-            <WeatherBanner />
+            <WeatherDisplay />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
               {sampleOutfits.map((outfit) => (
