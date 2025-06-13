@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import EventInput from '@/components/EventInput';
@@ -68,11 +67,11 @@ const Index = () => {
                   Buy or rent stunning pieces that arrive exactly when you need them.
                 </p>
               </div>
-              <WeatherDisplay />
               <EventInput onEventSubmit={handleEventSubmit} />
-              <TrendingNow />
               <DailyOutfitAssistant />
               <StyleInspiration />
+              <WeatherDisplay />
+              <TrendingNow />
             </div>
           </div>
         ) : (

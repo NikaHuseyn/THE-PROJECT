@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MapPin, Thermometer, Cloud, Sun, CloudRain, Wind, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -103,10 +102,10 @@ const WeatherDisplay = () => {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-xl p-6 mb-8 border border-sky-100">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
-          <span className="ml-3 text-sky-700">Getting your local weather...</span>
+      <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-lg p-4 mb-6 border border-sky-100">
+        <div className="flex items-center justify-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-600"></div>
+          <span className="ml-2 text-sm text-sky-700">Getting weather...</span>
         </div>
       </div>
     );
@@ -114,9 +113,9 @@ const WeatherDisplay = () => {
 
   if (!weather) {
     return (
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-8 border border-gray-200">
+      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 mb-6 border border-gray-200">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Unable to get weather information</p>
+          <p className="text-gray-600 text-sm mb-3">Unable to get weather information</p>
           <Button onClick={getLocation} variant="outline" size="sm">
             Try Again
           </Button>
@@ -126,69 +125,66 @@ const WeatherDisplay = () => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 rounded-xl p-6 mb-8 border border-sky-100 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-sky-100 rounded-lg">
+    <div className="bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-sky-100 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <div className="p-2 bg-sky-100 rounded-md">
             {getWeatherIcon(weather.condition)}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-800 flex items-center">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
               Today's Weather
-              <MapPin className="h-4 w-4 ml-2 text-sky-600" />
+              <MapPin className="h-3 w-3 ml-1 text-sky-600" />
             </h3>
-            <p className="text-sm text-gray-600">{weather.location}</p>
+            <p className="text-xs text-gray-600">{weather.location}</p>
             {error && <p className="text-xs text-amber-600">{error}</p>}
           </div>
         </div>
-        <Button onClick={getLocation} variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700">
+        <Button onClick={getLocation} variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 text-xs">
           Refresh
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Weather Details */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Thermometer className="h-5 w-5 text-sky-600" />
-              <span className={`text-2xl font-bold ${getTemperatureColor(weather.temperature)}`}>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1">
+              <Thermometer className="h-4 w-4 text-sky-600" />
+              <span className={`text-xl font-bold ${getTemperatureColor(weather.temperature)}`}>
                 {weather.temperature}°F
               </span>
             </div>
-            <span className="text-gray-600">{weather.condition}</span>
+            <span className="text-gray-600 text-sm">{weather.condition}</span>
           </div>
 
-          <div className="flex items-center space-x-6 text-sm text-gray-600">
+          <div className="flex items-center space-x-4 text-xs text-gray-600">
             <div className="flex items-center space-x-1">
-              <Droplets className="h-4 w-4" />
-              <span>{weather.humidity}% humidity</span>
+              <Droplets className="h-3 w-3" />
+              <span>{weather.humidity}%</span>
             </div>
             <div className="flex items-center space-x-1">
-              <Wind className="h-4 w-4" />
-              <span>{weather.windSpeed} mph wind</span>
+              <Wind className="h-3 w-3" />
+              <span>{weather.windSpeed} mph</span>
             </div>
           </div>
         </div>
 
         {/* Clothing Recommendations */}
         <div>
-          <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+          <h4 className="font-semibold text-gray-800 mb-2 text-sm">
             Perfect Weather For:
           </h4>
-          <div className="flex flex-wrap gap-2">
-            {weather.clothingRecommendations.map((item, index) => (
+          <div className="flex flex-wrap gap-1">
+            {weather.clothingRecommendations.slice(0, 4).map((item, index) => (
               <span 
                 key={index}
-                className="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full border border-sky-200"
+                className="text-xs bg-sky-100 text-sky-700 px-2 py-1 rounded-full border border-sky-200"
               >
                 {item}
               </span>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-3">
-            Browse our collection to find the perfect outfit for today's weather
-          </p>
         </div>
       </div>
     </div>
