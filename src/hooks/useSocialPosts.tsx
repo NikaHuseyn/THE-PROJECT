@@ -36,24 +36,38 @@ export const useSocialPosts = () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { data, error: fetchError } = await supabase
+      // First get posts with social profiles
+      const { data: postsData, error: fetchError } = await supabase
         .from('posts')
         .select(`
           *,
-          social_profiles:user_id (
+          social_profiles!inner (
             display_name,
             avatar_url
-          ),
-          likes!inner (user_id)
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      const postsWithLikeStatus = data?.map(post => ({
-        ...post,
-        user_liked: user ? post.likes.some((like: any) => like.user_id === user.id) : false
-      })) || [];
+      // Then get likes for each post if user is authenticated
+      let postsWithLikeStatus = postsData || [];
+      
+      if (user && postsData) {
+        const postIds = postsData.map(post => post.id);
+        const { data: likesData } = await supabase
+          .from('likes')
+          .select('post_id')
+          .in('post_id', postIds)
+          .eq('user_id', user.id);
+
+        const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
+        
+        postsWithLikeStatus = postsData.map(post => ({
+          ...post,
+          user_liked: likedPostIds.has(post.id)
+        }));
+      }
 
       setPosts(postsWithLikeStatus);
     } catch (err) {
