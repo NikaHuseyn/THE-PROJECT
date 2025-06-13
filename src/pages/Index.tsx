@@ -5,6 +5,7 @@ import EventInput from '@/components/EventInput';
 import OutfitCard from '@/components/OutfitCard';
 import AccessoriesSection from '@/components/AccessoriesSection';
 import WeatherBanner from '@/components/WeatherBanner';
+import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
 
 const Index = () => {
   const [showRecommendations, setShowRecommendations] = useState(false);
@@ -66,6 +67,7 @@ const Index = () => {
                 </p>
               </div>
               <EventInput onEventSubmit={handleEventSubmit} />
+              <DailyOutfitAssistant />
             </div>
           </div>
         ) : (
