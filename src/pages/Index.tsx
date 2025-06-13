@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import EventInput from '@/components/EventInput';
 import OutfitCard from '@/components/OutfitCard';
@@ -11,6 +13,24 @@ import TrendingNow from '@/components/TrendingNow';
 const Index = () => {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [currentEvent, setCurrentEvent] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const sampleOutfits = [
     {
@@ -66,10 +86,15 @@ const Index = () => {
                   Get perfectly curated outfits for any occasion, considering weather, dress code, and your unique style. 
                   Buy or rent stunning pieces that arrive exactly when you need them.
                 </p>
+                {!isAuthenticated && (
+                  <p className="text-sm text-gray-500 mt-4">
+                    Sign in to access your personal wardrobe and get personalized recommendations!
+                  </p>
+                )}
               </div>
               <EventInput onEventSubmit={handleEventSubmit} />
               <WeatherDisplay />
-              <DailyOutfitAssistant />
+              {isAuthenticated && <DailyOutfitAssistant />}
               <StyleInspiration />
               <TrendingNow />
             </div>

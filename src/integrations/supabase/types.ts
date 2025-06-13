@@ -9,7 +9,182 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      outfit_combinations: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          occasion: string | null
+          shopping_items: string[] | null
+          updated_at: string
+          user_id: string
+          wardrobe_items: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          occasion?: string | null
+          shopping_items?: string[] | null
+          updated_at?: string
+          user_id: string
+          wardrobe_items?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          occasion?: string | null
+          shopping_items?: string[] | null
+          updated_at?: string
+          user_id?: string
+          wardrobe_items?: string[] | null
+        }
+        Relationships: []
+      }
+      shopping_items: {
+        Row: {
+          affiliate_url: string | null
+          brand: string | null
+          category: string
+          colors: string[] | null
+          created_at: string
+          description: string | null
+          external_id: string | null
+          id: string
+          image_url: string | null
+          in_stock: boolean | null
+          name: string
+          price: number | null
+          rental_price: number | null
+          retailer_name: string | null
+          retailer_url: string | null
+          sizes: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          affiliate_url?: string | null
+          brand?: string | null
+          category: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean | null
+          name: string
+          price?: number | null
+          rental_price?: number | null
+          retailer_name?: string | null
+          retailer_url?: string | null
+          sizes?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          affiliate_url?: string | null
+          brand?: string | null
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean | null
+          name?: string
+          price?: number | null
+          rental_price?: number | null
+          retailer_name?: string | null
+          retailer_url?: string | null
+          sizes?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          shopping_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          shopping_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          shopping_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_shopping_item_id_fkey"
+            columns: ["shopping_item_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wardrobe_items: {
+        Row: {
+          brand: string | null
+          category: string
+          color: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          size: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          size?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          size?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
