@@ -90,64 +90,60 @@ const Header = () => {
             </button>
           </div>
 
-          {/* Desktop Navigation */}
-          {user && (
-            <nav className="hidden md:flex items-center space-x-6">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => navigate(item.path)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                      isActive(item.path)
-                        ? 'bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700'
-                        : 'text-gray-600 hover:text-rose-600 hover:bg-rose-50'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          )}
+          {/* Desktop Navigation - Always visible */}
+          <nav className="hidden md:flex items-center space-x-6">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700'
+                      : 'text-gray-600 hover:text-rose-600 hover:bg-rose-50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                {/* Mobile Menu Button */}
-                <button
-                  className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                >
-                  {mobileMenuOpen ? (
-                    <X className="h-5 w-5" />
-                  ) : (
-                    <Menu className="h-5 w-5" />
-                  )}
-                </button>
+            {/* Mobile Menu Button - Always visible */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
 
-                {/* User Menu */}
-                <div className="hidden md:flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg">
-                    <User className="h-4 w-4 text-rose-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      {user.email?.split('@')[0]}
-                    </span>
-                  </div>
-                  <Button
-                    onClick={handleSignOut}
-                    variant="outline"
-                    size="sm"
-                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
+            {user ? (
+              {/* Authenticated User Menu */}
+              <div className="hidden md:flex items-center space-x-3">
+                <div className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg">
+                  <User className="h-4 w-4 text-rose-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {user.email?.split('@')[0]}
+                  </span>
                 </div>
-              </>
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  size="sm"
+                  className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -175,8 +171,8 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        {user && mobileMenuOpen && (
+        {/* Mobile Navigation Menu - Always visible */}
+        {mobileMenuOpen && (
           <div className="md:hidden border-t border-rose-100 py-4">
             <nav className="space-y-2">
               {navigationItems.map((item) => {
@@ -202,22 +198,24 @@ const Header = () => {
             </nav>
             
             {/* Mobile User Actions */}
-            <div className="border-t border-rose-100 mt-4 pt-4 space-y-2">
-              <div className="flex items-center space-x-3 px-3 py-2 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg">
-                <User className="h-4 w-4 text-rose-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  {user.email?.split('@')[0]}
-                </span>
+            {user && (
+              <div className="border-t border-rose-100 mt-4 pt-4 space-y-2">
+                <div className="flex items-center space-x-3 px-3 py-2 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg">
+                  <User className="h-4 w-4 text-rose-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {user.email?.split('@')[0]}
+                  </span>
+                </div>
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  className="w-full border-rose-200 text-rose-600 hover:bg-rose-50"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
               </div>
-              <Button
-                onClick={handleSignOut}
-                variant="outline"
-                className="w-full border-rose-200 text-rose-600 hover:bg-rose-50"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+            )}
           </div>
         )}
       </div>
