@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Shirt, Edit, Trash2, Tag } from 'lucide-react';
 import { toast } from 'sonner';
+import { useBehaviorAnalytics } from '@/hooks/useBehaviorAnalytics';
 
 interface WardrobeItem {
   id: string;
@@ -32,6 +32,7 @@ const WardrobeManager = () => {
     size: '',
     notes: ''
   });
+  const { trackEvent } = useBehaviorAnalytics();
 
   const categories = [
     'Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Shoes', 
@@ -51,6 +52,12 @@ const WardrobeManager = () => {
 
       if (error) throw error;
       setWardrobeItems(data || []);
+      
+      // Track wardrobe view event
+      trackEvent({
+        event_type: 'wardrobe_view',
+        event_data: { items_count: data?.length || 0 }
+      });
     } catch (error) {
       console.error('Error fetching wardrobe items:', error);
       toast.error('Failed to load wardrobe items');
@@ -80,6 +87,17 @@ const WardrobeManager = () => {
       setNewItem({ name: '', category: '', color: '', brand: '', size: '', notes: '' });
       setShowAddForm(false);
       fetchWardrobeItems();
+      
+      // Track item addition
+      trackEvent({
+        event_type: 'wardrobe_item_add',
+        event_data: { 
+          category: newItem.category,
+          brand: newItem.brand,
+          has_color: !!newItem.color,
+          has_size: !!newItem.size
+        }
+      });
     } catch (error) {
       console.error('Error adding item:', error);
       toast.error('Failed to add item to wardrobe');
@@ -88,6 +106,8 @@ const WardrobeManager = () => {
 
   const handleDeleteItem = async (id: string) => {
     try {
+      const itemToDelete = wardrobeItems.find(item => item.id === id);
+      
       const { error } = await supabase
         .from('wardrobe_items')
         .delete()
@@ -97,6 +117,17 @@ const WardrobeManager = () => {
 
       toast.success('Item removed from wardrobe');
       fetchWardrobeItems();
+      
+      // Track item deletion
+      if (itemToDelete) {
+        trackEvent({
+          event_type: 'wardrobe_item_delete',
+          event_data: { 
+            category: itemToDelete.category,
+            brand: itemToDelete.brand
+          }
+        });
+      }
     } catch (error) {
       console.error('Error deleting item:', error);
       toast.error('Failed to remove item');

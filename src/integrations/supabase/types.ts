@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_recommendations: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_accepted: boolean | null
+          occasion: string | null
+          reasoning: string | null
+          recommendation_type: string | null
+          recommended_items: Json | null
+          user_id: string
+          weather_context: Json | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_accepted?: boolean | null
+          occasion?: string | null
+          reasoning?: string | null
+          recommendation_type?: string | null
+          recommended_items?: Json | null
+          user_id: string
+          weather_context?: Json | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_accepted?: boolean | null
+          occasion?: string | null
+          reasoning?: string | null
+          recommendation_type?: string | null
+          recommended_items?: Json | null
+          user_id?: string
+          weather_context?: Json | null
+        }
+        Relationships: []
+      }
       outfit_combinations: {
         Row: {
           created_at: string
@@ -105,6 +147,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_behavior_analytics: {
+        Row: {
+          event_data: Json | null
+          event_type: string
+          id: string
+          outfit_id: string | null
+          shopping_item_id: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          outfit_id?: string | null
+          shopping_item_id?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          outfit_id?: string | null
+          shopping_item_id?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_behavior_analytics_outfit_id_fkey"
+            columns: ["outfit_id"]
+            isOneToOne: false
+            referencedRelation: "outfit_combinations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_behavior_analytics_shopping_item_id_fkey"
+            columns: ["shopping_item_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_favorites: {
         Row: {
           created_at: string
@@ -133,6 +220,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_style_profiles: {
+        Row: {
+          analysis_image_url: string | null
+          body_type: string | null
+          color_analysis: Json | null
+          created_at: string
+          face_shape: string | null
+          id: string
+          preferred_colors: string[] | null
+          preferred_fabrics: string[] | null
+          preferred_patterns: string[] | null
+          skin_tone: string | null
+          style_confidence_score: number | null
+          style_personality: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_image_url?: string | null
+          body_type?: string | null
+          color_analysis?: Json | null
+          created_at?: string
+          face_shape?: string | null
+          id?: string
+          preferred_colors?: string[] | null
+          preferred_fabrics?: string[] | null
+          preferred_patterns?: string[] | null
+          skin_tone?: string | null
+          style_confidence_score?: number | null
+          style_personality?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_image_url?: string | null
+          body_type?: string | null
+          color_analysis?: Json | null
+          created_at?: string
+          face_shape?: string | null
+          id?: string
+          preferred_colors?: string[] | null
+          preferred_fabrics?: string[] | null
+          preferred_patterns?: string[] | null
+          skin_tone?: string | null
+          style_confidence_score?: number | null
+          style_personality?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       wardrobe_items: {
         Row: {
@@ -190,7 +328,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_recommendations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
