@@ -2,6 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { User, LogOut, Menu, X, Home, Calendar, Users, TrendingUp, Shirt, BarChart3 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -33,6 +39,14 @@ const Header = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/');
+  };
+
+  const handleSignIn = () => {
+    navigate('/auth');
+  };
+
+  const handleRegister = () => {
+    navigate('/auth');
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -135,12 +149,28 @@ const Header = () => {
                 </div>
               </>
             ) : (
-              <Button
-                onClick={() => navigate('/auth')}
-                className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700"
-              >
-                Sign In
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white rounded-md transition-colors">
+                    <span className="text-lg">👤</span>
+                    <span className="text-sm font-medium">Account</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg border border-gray-200">
+                  <DropdownMenuItem 
+                    onClick={handleSignIn}
+                    className="cursor-pointer hover:bg-rose-50 focus:bg-rose-50"
+                  >
+                    Sign In
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleRegister}
+                    className="cursor-pointer hover:bg-rose-50 focus:bg-rose-50"
+                  >
+                    Register
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
