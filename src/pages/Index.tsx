@@ -68,9 +68,9 @@ const Index = () => {
                 </p>
               </div>
               <EventInput onEventSubmit={handleEventSubmit} />
+              <WeatherDisplay />
               <DailyOutfitAssistant />
               <StyleInspiration />
-              <WeatherDisplay />
               <TrendingNow />
             </div>
           </div>
