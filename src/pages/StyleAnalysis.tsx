@@ -3,6 +3,7 @@ import React from 'react';
 import Header from '@/components/Header';
 import StyleProfile from '@/components/StyleProfile';
 import AIRecommendations from '@/components/AIRecommendations';
+import CommunityFeed from '@/components/CommunityFeed';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StyleAnalysis = () => {
@@ -13,14 +14,15 @@ const StyleAnalysis = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Style Analysis</h1>
           <p className="text-gray-600">
-            AI-powered style insights and personalized outfit recommendations
+            AI-powered style insights, personalized recommendations, and community inspiration
           </p>
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Style Profile</TabsTrigger>
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
+            <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile" className="mt-6">
@@ -29,6 +31,10 @@ const StyleAnalysis = () => {
           
           <TabsContent value="recommendations" className="mt-6">
             <AIRecommendations />
+          </TabsContent>
+          
+          <TabsContent value="community" className="mt-6">
+            <CommunityFeed />
           </TabsContent>
         </Tabs>
       </main>
