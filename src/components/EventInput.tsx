@@ -31,7 +31,7 @@ const EventInput = ({ onEventSubmit }: { onEventSubmit: (event: string) => void 
           What's the occasion?
         </h2>
         <p className="text-gray-600 mb-8">
-          Tell us about your event and we'll create the perfect outfit, considering weather, dress code, and your personal style.
+          Tell us about your event and we'll create the perfect outfit, considering weather, location, dress code, and your personal style.
         </p>
         
         <form onSubmit={handleSubmit} className="mb-6">
@@ -72,3 +72,4 @@ const EventInput = ({ onEventSubmit }: { onEventSubmit: (event: string) => void 
 };
 
 export default EventInput;
+
