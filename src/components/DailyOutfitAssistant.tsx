@@ -1,36 +1,72 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { googleCalendarService, CalendarEvent } from '@/services/googleCalendarService';
+import CalendarSync from './CalendarSync';
 
 const DailyOutfitAssistant = () => {
-  const todaysEvents = [
+  const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Mock events as fallback
+  const mockEvents: CalendarEvent[] = [
     {
-      id: 1,
+      id: "1",
       name: "Team Meeting",
       time: "9:00 AM",
       location: "Conference Room A",
       dressCode: "Business Casual",
-      type: "work"
+      type: "work",
+      start: new Date().toISOString(),
+      end: new Date().toISOString()
     },
     {
-      id: 2,
+      id: "2",
       name: "Lunch with Sarah",
       time: "12:30 PM",
       location: "The Garden Cafe",
       dressCode: "Smart Casual",
-      type: "social"
+      type: "social",
+      start: new Date().toISOString(),
+      end: new Date().toISOString()
     },
     {
-      id: 3,
+      id: "3",
       name: "Yoga Class",
       time: "6:00 PM",
       location: "Downtown Studio",
       dressCode: "Activewear",
-      type: "fitness"
+      type: "fitness",
+      start: new Date().toISOString(),
+      end: new Date().toISOString()
     }
   ];
+
+  const loadEvents = async () => {
+    setIsLoading(true);
+    try {
+      // Try to load synced events first
+      const syncedEvents = await googleCalendarService.getSyncedEvents();
+      
+      if (syncedEvents.length > 0) {
+        setTodaysEvents(syncedEvents);
+      } else {
+        // Fall back to mock events if no synced events available
+        setTodaysEvents(mockEvents);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setTodaysEvents(mockEvents);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
 
   const getDressCodeColor = (dressCode: string) => {
     switch (dressCode.toLowerCase()) {
@@ -55,7 +91,7 @@ const DailyOutfitAssistant = () => {
     console.log('Getting recommendations for all events:', todaysEvents);
   };
 
-  const handleViewStyles = (eventId: number) => {
+  const handleViewStyles = (eventId: string) => {
     const event = todaysEvents.find(e => e.id === eventId);
     toast({
       title: `Viewing Styles for ${event?.name}`,
@@ -71,6 +107,17 @@ const DailyOutfitAssistant = () => {
     });
     console.log('Viewing all smart recommendations');
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 mb-8">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading your events...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 mb-8">
@@ -90,6 +137,11 @@ const DailyOutfitAssistant = () => {
         >
           Get All Recommendations
         </Button>
+      </div>
+
+      {/* Calendar Sync Component */}
+      <div className="mb-6">
+        <CalendarSync onEventsUpdated={loadEvents} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -143,7 +195,7 @@ const DailyOutfitAssistant = () => {
             </div>
             <div>
               <p className="font-medium text-gray-800">Smart Recommendations Ready</p>
-              <p className="text-sm text-gray-600">3 personalized outfits curated for today's events</p>
+              <p className="text-sm text-gray-600">{todaysEvents.length} personalized outfits curated for today's events</p>
             </div>
           </div>
           <Button 
