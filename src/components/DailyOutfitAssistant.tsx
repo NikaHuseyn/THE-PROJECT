@@ -2,6 +2,7 @@
 import React from 'react';
 import { Calendar, Clock, MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 const DailyOutfitAssistant = () => {
   const todaysEvents = [
@@ -46,6 +47,31 @@ const DailyOutfitAssistant = () => {
     }
   };
 
+  const handleGetAllRecommendations = () => {
+    toast({
+      title: "Generating Outfit Recommendations",
+      description: "We're creating personalized outfits for all your events today!",
+    });
+    console.log('Getting recommendations for all events:', todaysEvents);
+  };
+
+  const handleViewStyles = (eventId: number) => {
+    const event = todaysEvents.find(e => e.id === eventId);
+    toast({
+      title: `Viewing Styles for ${event?.name}`,
+      description: `Showing outfit recommendations for ${event?.dressCode.toLowerCase()} dress code.`,
+    });
+    console.log('Viewing styles for event:', event);
+  };
+
+  const handleViewAll = () => {
+    toast({
+      title: "Opening All Recommendations",
+      description: "Displaying all curated outfits for today's events.",
+    });
+    console.log('Viewing all smart recommendations');
+  };
+
   return (
     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-8 mb-8">
       <div className="flex items-center justify-between mb-6">
@@ -58,7 +84,10 @@ const DailyOutfitAssistant = () => {
             Get personalized outfit recommendations based on your calendar events and preferences
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white">
+        <Button 
+          className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
+          onClick={handleGetAllRecommendations}
+        >
           Get All Recommendations
         </Button>
       </div>
@@ -92,7 +121,12 @@ const DailyOutfitAssistant = () => {
             <div className="border-t pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-500">Outfit recommendation</span>
-                <Button size="sm" variant="outline" className="text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                  onClick={() => handleViewStyles(event.id)}
+                >
                   View Styles
                 </Button>
               </div>
@@ -112,7 +146,11 @@ const DailyOutfitAssistant = () => {
               <p className="text-sm text-gray-600">3 personalized outfits curated for today's events</p>
             </div>
           </div>
-          <Button variant="outline" className="border-indigo-200 text-indigo-600 hover:bg-indigo-50">
+          <Button 
+            variant="outline" 
+            className="border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+            onClick={handleViewAll}
+          >
             View All
           </Button>
         </div>
