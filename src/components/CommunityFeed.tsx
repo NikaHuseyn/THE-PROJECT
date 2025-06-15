@@ -18,6 +18,11 @@ const CommunityFeed = () => {
     // TODO: Implement sharing functionality
   };
 
+  const handleCreatePost = async (postData: { caption: string; tags?: string[]; image_urls: string[] }): Promise<void> => {
+    await createPost(postData);
+    setShowPostForm(false);
+  };
+
   if (loading) {
     return <LoadingState />;
   }
@@ -47,7 +52,7 @@ const CommunityFeed = () => {
 
       {showPostForm && (
         <PostCreationForm
-          onCreatePost={createPost}
+          onCreatePost={handleCreatePost}
           onClose={() => setShowPostForm(false)}
         />
       )}

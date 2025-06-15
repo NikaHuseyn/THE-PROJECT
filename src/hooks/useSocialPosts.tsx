@@ -41,7 +41,7 @@ export const useSocialPosts = () => {
         .from('posts')
         .select(`
           *,
-          social_profiles!inner (
+          social_profiles (
             display_name,
             avatar_url
           )
@@ -69,7 +69,7 @@ export const useSocialPosts = () => {
         }));
       }
 
-      setPosts(postsWithLikeStatus);
+      setPosts(postsWithLikeStatus as SocialPost[]);
     } catch (err) {
       console.error('Error fetching posts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch posts');
@@ -78,7 +78,7 @@ export const useSocialPosts = () => {
     }
   };
 
-  const createPost = async (postData: CreatePostData) => {
+  const createPost = async (postData: CreatePostData): Promise<void> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -106,7 +106,6 @@ export const useSocialPosts = () => {
       });
 
       fetchPosts(); // Refresh posts
-      return data;
     } catch (err) {
       console.error('Error creating post:', err);
       throw err;
