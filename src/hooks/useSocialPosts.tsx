@@ -51,25 +51,48 @@ export const useSocialPosts = () => {
       if (fetchError) throw fetchError;
 
       // Then get likes for each post if user is authenticated
-      let postsWithLikeStatus = postsData || [];
+      let postsWithLikeStatus: SocialPost[] = [];
       
-      if (user && postsData) {
-        const postIds = postsData.map(post => post.id);
-        const { data: likesData } = await supabase
-          .from('likes')
-          .select('post_id')
-          .in('post_id', postIds)
-          .eq('user_id', user.id);
+      if (postsData) {
+        if (user) {
+          const postIds = postsData.map(post => post.id);
+          const { data: likesData } = await supabase
+            .from('likes')
+            .select('post_id')
+            .in('post_id', postIds)
+            .eq('user_id', user.id);
 
-        const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
-        
-        postsWithLikeStatus = postsData.map(post => ({
-          ...post,
-          user_liked: likedPostIds.has(post.id)
-        }));
+          const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
+          
+          postsWithLikeStatus = postsData.map(post => ({
+            id: post.id,
+            user_id: post.user_id,
+            image_urls: post.image_urls,
+            caption: post.caption,
+            tags: post.tags,
+            likes_count: post.likes_count,
+            comments_count: post.comments_count,
+            created_at: post.created_at,
+            social_profiles: post.social_profiles,
+            user_liked: likedPostIds.has(post.id)
+          }));
+        } else {
+          postsWithLikeStatus = postsData.map(post => ({
+            id: post.id,
+            user_id: post.user_id,
+            image_urls: post.image_urls,
+            caption: post.caption,
+            tags: post.tags,
+            likes_count: post.likes_count,
+            comments_count: post.comments_count,
+            created_at: post.created_at,
+            social_profiles: post.social_profiles,
+            user_liked: false
+          }));
+        }
       }
 
-      setPosts(postsWithLikeStatus as SocialPost[]);
+      setPosts(postsWithLikeStatus);
     } catch (err) {
       console.error('Error fetching posts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch posts');
