@@ -1,19 +1,24 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import EventInput from '@/components/EventInput';
 import OutfitCard from '@/components/OutfitCard';
+import UKBrandOutfitCard from '@/components/UKBrandOutfitCard';
 import AccessoriesSection from '@/components/AccessoriesSection';
 import WeatherDisplay from '@/components/WeatherDisplay';
 import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
 import StyleInspiration from '@/components/StyleInspiration';
 import TrendingNow from '@/components/TrendingNow';
+import { generateOutfitRecommendations } from '@/services/shoppingService';
+import type { OutfitRecommendation } from '@/services/shoppingService';
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [currentEvent, setCurrentEvent] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [ukBrandOutfits, setUkBrandOutfits] = useState<OutfitRecommendation[]>([]);
+  const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -65,9 +70,20 @@ const Index = () => {
     }
   ];
 
-  const handleEventSubmit = (event: string) => {
+  const handleEventSubmit = async (event: string) => {
     setCurrentEvent(event);
+    setIsLoadingOutfits(true);
     setShowRecommendations(true);
+    
+    try {
+      console.log('Fetching UK brand recommendations for:', event);
+      const recommendations = await generateOutfitRecommendations(event);
+      setUkBrandOutfits(recommendations);
+    } catch (error) {
+      console.error('Error generating outfit recommendations:', error);
+    } finally {
+      setIsLoadingOutfits(false);
+    }
   };
 
   return (
@@ -83,8 +99,7 @@ const Index = () => {
                   Your Personal Stylist
                 </h1>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  Get perfectly curated outfits for any occasion, considering weather, dress code, and your unique style. 
-                  Buy or rent stunning pieces that arrive exactly when you need them.
+                  Get perfectly curated outfits for any occasion from top UK brands. Buy or rent stunning pieces that arrive exactly when you need them.
                 </p>
                 {!isAuthenticated && (
                   <p className="text-sm text-gray-500 mt-4">
@@ -103,7 +118,10 @@ const Index = () => {
           <div>
             <div className="mb-8">
               <button 
-                onClick={() => setShowRecommendations(false)}
+                onClick={() => {
+                  setShowRecommendations(false);
+                  setUkBrandOutfits([]);
+                }}
                 className="text-rose-600 hover:text-rose-700 mb-4 font-medium"
               >
                 ← Back to search
@@ -112,27 +130,54 @@ const Index = () => {
                 Perfect Outfits for "{currentEvent}"
               </h2>
               <p className="text-gray-600">
-                Curated just for you, considering weather, dress code, and style preferences
+                Curated from top UK brands, considering weather, dress code, and style preferences
               </p>
             </div>
 
             <WeatherDisplay />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-              {sampleOutfits.map((outfit) => (
-                <OutfitCard key={outfit.id} outfit={outfit} />
-              ))}
-            </div>
+            {isLoadingOutfits ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                <span className="ml-3 text-lg text-gray-600">Finding perfect outfits from UK brands...</span>
+              </div>
+            ) : (
+              <>
+                {ukBrandOutfits.length > 0 && (
+                  <div className="mb-12">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                      From Top UK Brands
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {ukBrandOutfits.map((outfit) => (
+                        <UKBrandOutfitCard key={outfit.id} outfit={outfit} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-8">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                    Additional Style Options
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {sampleOutfits.map((outfit) => (
+                      <OutfitCard key={outfit.id} outfit={outfit} />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <AccessoriesSection />
 
-            <div className="mt-12 bg-gradient-to-r from-rose-100 to-pink-100 rounded-2xl p-8 text-center">
+            <div className="mt-12 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-2xl p-8 text-center">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                Delivery Guarantee
+                UK Brand Guarantee
               </h3>
               <p className="text-gray-700 max-w-2xl mx-auto">
-                All orders arrive 24-48 hours before your event. We track everything to ensure you're perfectly styled and on time. 
-                Free styling consultations included with every rental.
+                All recommendations feature authentic pieces from top UK retailers including ASOS, Next, John Lewis, and more. 
+                Fast delivery across the UK with easy returns and rental options available.
               </p>
             </div>
           </div>
