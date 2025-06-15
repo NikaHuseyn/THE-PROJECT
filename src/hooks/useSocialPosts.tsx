@@ -36,21 +36,30 @@ export const useSocialPosts = () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
-      // First get posts with social profiles
+      // Get posts first
       const { data: postsData, error: fetchError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          social_profiles (
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      // Then get likes for each post if user is authenticated
+      // Get social profiles separately
+      const userIds = postsData?.map(post => post.user_id) || [];
+      const { data: profilesData } = await supabase
+        .from('social_profiles')
+        .select('user_id, display_name, avatar_url')
+        .in('user_id', userIds);
+
+      // Create a map of profiles by user_id
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.user_id, {
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url
+        });
+      });
+
       let postsWithLikeStatus: SocialPost[] = [];
       
       if (postsData) {
@@ -73,7 +82,7 @@ export const useSocialPosts = () => {
             likes_count: post.likes_count,
             comments_count: post.comments_count,
             created_at: post.created_at,
-            social_profiles: post.social_profiles,
+            social_profiles: profilesMap.get(post.user_id) || null,
             user_liked: likedPostIds.has(post.id)
           }));
         } else {
@@ -86,7 +95,7 @@ export const useSocialPosts = () => {
             likes_count: post.likes_count,
             comments_count: post.comments_count,
             created_at: post.created_at,
-            social_profiles: post.social_profiles,
+            social_profiles: profilesMap.get(post.user_id) || null,
             user_liked: false
           }));
         }
