@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import StyleProfile from '@/components/StyleProfile';
@@ -6,6 +7,7 @@ import CommunityFeed from '@/components/CommunityFeed';
 import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
 import MultiDayCalendarOverview from '@/components/MultiDayCalendarOverview';
 import OutfitTimelineView from '@/components/OutfitTimelineView';
+import DailyOutfitSnapshot from '@/components/DailyOutfitSnapshot';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StyleAnalysis = () => {
@@ -25,6 +27,9 @@ const StyleAnalysis = () => {
             AI-powered style insights, personalized recommendations, and community inspiration
           </p>
         </div>
+
+        {/* Daily Outfit Snapshot at the top */}
+        <DailyOutfitSnapshot />
 
         <Tabs defaultValue="recommendations" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
