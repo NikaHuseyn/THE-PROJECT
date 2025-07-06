@@ -13,44 +13,49 @@ export interface CalendarEvent {
 }
 
 class GoogleCalendarService {
+  private isGapiLoaded = false;
+  private isGsiLoaded = false;
   private accessToken: string | null = null;
 
-  async initializeGoogleAuth(): Promise<void> {
+  async initializeGoogleAPIs(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (typeof window === 'undefined' || !window.gapi) {
-        reject(new Error('Google API not loaded'));
-        return;
-      }
-
-      window.gapi.load('auth2', () => {
-        window.gapi.auth2.init({
-          client_id: 'YOUR_GOOGLE_CLIENT_ID', // This will need to be configured
-        }).then(() => {
+      const checkAPIs = () => {
+        if (window.gapi && window.google) {
+          this.isGapiLoaded = true;
+          this.isGsiLoaded = true;
           resolve();
-        }).catch(reject);
-      });
+        } else {
+          setTimeout(checkAPIs, 100);
+        }
+      };
+      checkAPIs();
     });
   }
 
   async signInToGoogle(): Promise<boolean> {
     try {
-      if (!window.gapi?.auth2) {
-        await this.initializeGoogleAuth();
-      }
+      await this.initializeGoogleAPIs();
 
-      const authInstance = window.gapi.auth2.getAuthInstance();
-      const user = await authInstance.signIn({
-        scope: 'https://www.googleapis.com/auth/calendar.readonly'
+      return new Promise((resolve) => {
+        window.gapi.load('auth2', () => {
+          window.gapi.auth2.init({
+            client_id: '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com', // Demo client ID - would need real one
+            scope: 'https://www.googleapis.com/auth/calendar.readonly'
+          }).then(() => {
+            const authInstance = window.gapi.auth2.getAuthInstance();
+            return authInstance.signIn();
+          }).then(async (user: any) => {
+            this.accessToken = user.getAuthResponse().access_token;
+            await this.saveCalendarConnection(user.getBasicProfile().getEmail());
+            resolve(true);
+          }).catch((error: any) => {
+            console.error('Google sign-in failed:', error);
+            resolve(false);
+          });
+        });
       });
-
-      this.accessToken = user.getAuthResponse().access_token;
-      
-      // Store the connection in our database
-      await this.saveCalendarConnection(user.getBasicProfile().getEmail());
-      
-      return true;
     } catch (error) {
-      console.error('Google sign-in failed:', error);
+      console.error('Google API initialization failed:', error);
       return false;
     }
   }
@@ -59,8 +64,7 @@ class GoogleCalendarService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Using type assertion to work around the temporary TypeScript issue
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('user_calendar_connections')
       .upsert({
         user_id: user.id,
@@ -79,11 +83,10 @@ class GoogleCalendarService {
   async fetchTodaysEvents(): Promise<CalendarEvent[]> {
     try {
       if (!this.accessToken) {
-        // Try to get stored access token
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
-        const { data: connection } = await (supabase as any)
+        const { data: connection } = await supabase
           .from('user_calendar_connections')
           .select('access_token')
           .eq('user_id', user.id)
@@ -117,7 +120,6 @@ class GoogleCalendarService {
       const data = await response.json();
       const events = data.items || [];
 
-      // Transform Google Calendar events to our format
       const transformedEvents: CalendarEvent[] = events.map((event: any) => ({
         id: event.id,
         name: event.summary || 'Untitled Event',
@@ -129,9 +131,7 @@ class GoogleCalendarService {
         end: event.end.dateTime || event.end.date
       }));
 
-      // Save synced events to our database
       await this.saveSyncedEvents(transformedEvents);
-
       return transformedEvents;
     } catch (error) {
       console.error('Error fetching calendar events:', error);
@@ -184,16 +184,14 @@ class GoogleCalendarService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Clear existing events for today
     const today = new Date().toISOString().split('T')[0];
-    await (supabase as any)
+    await supabase
       .from('synced_calendar_events')
       .delete()
       .eq('user_id', user.id)
       .gte('start_time', today)
       .lt('start_time', new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
 
-    // Insert new events
     if (events.length > 0) {
       const eventsToInsert = events.map(event => ({
         user_id: user.id,
@@ -208,7 +206,7 @@ class GoogleCalendarService {
         provider: 'google'
       }));
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('synced_calendar_events')
         .insert(eventsToInsert);
 
@@ -223,7 +221,7 @@ class GoogleCalendarService {
     if (!user) return [];
 
     const today = new Date().toISOString().split('T')[0];
-    const { data: events, error } = await (supabase as any)
+    const { data: events, error } = await supabase
       .from('synced_calendar_events')
       .select('*')
       .eq('user_id', user.id)
@@ -249,10 +247,10 @@ class GoogleCalendarService {
   }
 }
 
-// Declare global gapi types
 declare global {
   interface Window {
     gapi: any;
+    google: any;
   }
 }
 

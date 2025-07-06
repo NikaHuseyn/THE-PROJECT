@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface DailyRecommendationSettings {
   enabled: boolean;
-  time: string; // Format: "HH:MM"
+  time: string;
   includeWeather: boolean;
   includeCalendar: boolean;
   autoGenerate: boolean;
@@ -52,11 +52,9 @@ export const useDailyRecommendations = () => {
       const scheduledTime = new Date();
       scheduledTime.setHours(hours, minutes, 0, 0);
       
-      // If current time is past scheduled time, generate recommendations
       if (now >= scheduledTime) {
         generateDailyRecommendations();
       } else {
-        // Schedule for later today
         const timeUntilScheduled = scheduledTime.getTime() - now.getTime();
         setTimeout(() => {
           generateDailyRecommendations();
@@ -65,27 +63,65 @@ export const useDailyRecommendations = () => {
     }
   };
 
+  const getCurrentPosition = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser'));
+        return;
+      }
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes cache
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        (error) => {
+          console.error('Geolocation error:', error);
+          reject(error);
+        },
+        options
+      );
+    });
+  };
+
   const generateDailyRecommendations = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.error('No active session for daily recommendations');
+        return;
+      }
 
-      // Generate weather-based recommendation
       let weatherData = null;
-      if (settings.includeWeather && 'geolocation' in navigator) {
+      if (settings.includeWeather) {
         try {
           const position = await getCurrentPosition();
-          const { data } = await supabase.functions.invoke('weather-recommendations', {
-            body: { lat: position.coords.latitude, lon: position.coords.longitude }
+          console.log('Got location:', position.coords.latitude, position.coords.longitude);
+          
+          const { data, error } = await supabase.functions.invoke('weather-recommendations', {
+            body: { 
+              lat: position.coords.latitude, 
+              lon: position.coords.longitude 
+            }
           });
-          weatherData = data;
+          
+          if (error) {
+            console.error('Weather API error:', error);
+          } else {
+            weatherData = data;
+            console.log('Weather data received:', weatherData);
+          }
         } catch (error) {
           console.error('Weather fetch failed:', error);
+          // Continue without weather data - don't fail the whole process
         }
       }
 
       // Generate general daily recommendation
-      await supabase.functions.invoke('generate-ai-recommendations', {
+      const { error: recError } = await supabase.functions.invoke('generate-ai-recommendations', {
         body: {
           recommendationType: 'daily_outfit',
           weatherData,
@@ -95,6 +131,11 @@ export const useDailyRecommendations = () => {
           Authorization: `Bearer ${session.access_token}`
         }
       });
+
+      if (recError) {
+        console.error('Error generating AI recommendation:', recError);
+        throw recError;
+      }
 
       // Generate calendar-based recommendations if enabled
       if (settings.includeCalendar) {
@@ -126,11 +167,10 @@ export const useDailyRecommendations = () => {
             });
           }
         } catch (error) {
-          console.error('Calendar events fetch failed:', error);
+          console.error('Calendar events processing failed:', error);
         }
       }
 
-      // Mark as generated for today
       const today = new Date().toDateString();
       localStorage.setItem('lastDailyRecommendation', today);
       setLastGenerated(today);
@@ -140,12 +180,6 @@ export const useDailyRecommendations = () => {
       console.error('Error generating daily recommendations:', error);
       toast.error('Failed to generate daily recommendations');
     }
-  };
-
-  const getCurrentPosition = (): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject);
-    });
   };
 
   const shouldShowGenerateButton = () => {
