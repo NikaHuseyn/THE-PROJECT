@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import StyleProfile from '@/components/StyleProfile';
 import AIRecommendations from '@/components/AIRecommendations';
 import CommunityFeed from '@/components/CommunityFeed';
+import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StyleAnalysis = () => {
@@ -18,19 +19,26 @@ const StyleAnalysis = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Style Profile</TabsTrigger>
+        <Tabs defaultValue="recommendations" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
+            <TabsTrigger value="profile">Style Profile</TabsTrigger>
+            <TabsTrigger value="settings">Daily Settings</TabsTrigger>
             <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="recommendations" className="mt-6">
+            <AIRecommendations />
+          </TabsContent>
           
           <TabsContent value="profile" className="mt-6">
             <StyleProfile />
           </TabsContent>
           
-          <TabsContent value="recommendations" className="mt-6">
-            <AIRecommendations />
+          <TabsContent value="settings" className="mt-6">
+            <div className="max-w-2xl mx-auto">
+              <DailyRecommendationSettings />
+            </div>
           </TabsContent>
           
           <TabsContent value="community" className="mt-6">

@@ -20,13 +20,11 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get the authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
     }
 
-    // Get user from JWT token
     const { data: { user }, error: userError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
@@ -35,7 +33,12 @@ serve(async (req) => {
       throw new Error('Invalid authentication');
     }
 
-    const { recommendationType = 'daily_outfit', weatherData, occasion } = await req.json();
+    const { 
+      recommendationType = 'daily_outfit', 
+      weatherData, 
+      occasion, 
+      eventDetails 
+    } = await req.json();
 
     // Fetch user's style profile
     const { data: styleProfile } = await supabase
@@ -51,8 +54,16 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .limit(20);
 
-    // Create AI prompt based on user data
-    const prompt = `You are an expert fashion stylist. Create a personalized outfit recommendation based on the following information:
+    // Fetch recent shopping items for inspiration
+    const { data: shoppingItems } = await supabase
+      .from('shopping_items')
+      .select('name, brand, category, price, colors, description')
+      .eq('in_stock', true)
+      .order('created_at', { ascending: false })
+      .limit(15);
+
+    // Enhanced AI prompt with more context
+    const prompt = `You are an expert fashion stylist with deep knowledge of current trends, color theory, body types, and occasion-appropriate dressing. Create a highly personalized outfit recommendation.
 
 USER STYLE PROFILE:
 - Body Type: ${styleProfile?.body_type || 'Not specified'}
@@ -61,40 +72,109 @@ USER STYLE PROFILE:
 - Style Personality: ${styleProfile?.style_personality?.join(', ') || 'None specified'}
 - Preferred Patterns: ${styleProfile?.preferred_patterns?.join(', ') || 'None specified'}
 - Preferred Fabrics: ${styleProfile?.preferred_fabrics?.join(', ') || 'None specified'}
+- Preferred Brands: ${styleProfile?.preferred_brands?.join(', ') || 'None specified'}
 - Budget Range: $${styleProfile?.budget_min || 0} - $${styleProfile?.budget_max || 1000}
 - Style Confidence: ${styleProfile?.style_confidence_score ? Math.round(styleProfile.style_confidence_score * 100) + '%' : 'Not specified'}
+- Height: ${styleProfile?.height_cm ? styleProfile.height_cm + 'cm' : 'Not specified'}
+- Size Preferences: Top ${styleProfile?.standard_size_top || 'N/A'}, Bottom ${styleProfile?.standard_size_bottom || 'N/A'}, Shoes ${styleProfile?.standard_size_shoes || 'N/A'}
 
 WARDROBE CONTEXT:
-${wardrobeItems?.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'})`).join('\n') || 'No wardrobe items available'}
+${wardrobeItems?.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'}, ${item.brand || 'brand not specified'})`).join('\n') || 'No wardrobe items available'}
+
+AVAILABLE SHOPPING ITEMS FOR INSPIRATION:
+${shoppingItems?.map(item => `- ${item.name} by ${item.brand || 'Unknown'} (${item.category}, $${item.price}, Available in: ${item.colors?.join(', ') || 'Various colors'})`).join('\n') || 'No shopping items available'}
 
 OCCASION: ${occasion || 'Daily casual wear'}
 
+${eventDetails ? `
+EVENT DETAILS:
+- Event: ${eventDetails.name}
+- Location: ${eventDetails.location || 'Not specified'}
+- Dress Code: ${eventDetails.dressCode || 'Smart Casual'}
+- Event Type: ${eventDetails.type || 'General'}
+` : ''}
+
 WEATHER CONTEXT:
-${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weatherData.condition}, Humidity: ${weatherData.humidity}%` : 'Weather not specified'}
+${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weatherData.condition}, Humidity: ${weatherData.humidity}%, Location: ${weatherData.location}` : 'Weather not specified'}
+
+STYLING BRIEF:
+${recommendationType === 'event_outfit' ? 
+  'Create an outfit specifically tailored for this event, considering the dress code, location, and social context.' :
+  'Create a versatile daily outfit that reflects the user\'s personal style while being practical for their lifestyle.'
+}
 
 Please provide a detailed outfit recommendation in the following JSON format:
 {
   "recommended_items": {
-    "top": { "name": "item name", "confidence": 0.9, "reasoning": "why this works" },
-    "bottom": { "name": "item name", "confidence": 0.85, "reasoning": "why this works" },
-    "shoes": { "name": "item name", "confidence": 0.8, "reasoning": "why this works" },
-    "accessories": [{ "name": "item name", "confidence": 0.7, "reasoning": "why this works" }],
-    "outerwear": { "name": "item name", "confidence": 0.75, "reasoning": "why this works" }
+    "top": { 
+      "name": "specific item name", 
+      "confidence": 0.9, 
+      "reasoning": "detailed explanation of why this works for the user's body type, style preferences, and occasion",
+      "styling_tips": "how to wear this piece effectively",
+      "alternatives": ["alternative option 1", "alternative option 2"]
+    },
+    "bottom": { 
+      "name": "specific item name", 
+      "confidence": 0.85, 
+      "reasoning": "detailed explanation",
+      "styling_tips": "how to style this piece",
+      "alternatives": ["alternative option 1", "alternative option 2"]
+    },
+    "shoes": { 
+      "name": "specific item name", 
+      "confidence": 0.8, 
+      "reasoning": "detailed explanation",
+      "styling_tips": "how to choose and style shoes",
+      "alternatives": ["alternative option 1", "alternative option 2"]
+    },
+    "accessories": [
+      { 
+        "name": "specific accessory name", 
+        "confidence": 0.7, 
+        "reasoning": "why this accessory complements the outfit",
+        "styling_tips": "how to incorporate this accessory"
+      }
+    ],
+    "outerwear": { 
+      "name": "specific outerwear name", 
+      "confidence": 0.75, 
+      "reasoning": "weather and style considerations",
+      "styling_tips": "layering advice",
+      "alternatives": ["alternative option 1", "alternative option 2"]
+    }
   },
   "overall_confidence": 0.87,
-  "style_reasoning": "Comprehensive explanation of why this outfit works for the user's body type, preferences, occasion, and weather",
-  "styling_tips": ["tip 1", "tip 2", "tip 3"],
+  "style_reasoning": "Comprehensive explanation of the outfit's cohesiveness, how it flatters the user's body type, reflects their style preferences, suits the occasion, and works with the weather",
+  "color_analysis": "Detailed explanation of color choices and how they work with the user's preferences and complexion",
+  "fit_guidance": "Specific advice on fit and silhouette based on body type and preferences",
+  "styling_tips": [
+    "Professional tip 1 about proportions and silhouette",
+    "Practical advice about comfort and functionality", 
+    "Style enhancement tip about accessories or details",
+    "Maintenance or care tip for the recommended pieces"
+  ],
   "alternative_options": {
-    "if_cooler": "Alternative suggestions if weather gets cooler",
-    "if_warmer": "Alternative suggestions if weather gets warmer",
-    "dressy_version": "How to dress this up for a more formal occasion",
-    "casual_version": "How to dress this down for a more casual occasion"
+    "if_cooler": "Specific layering suggestions if temperature drops",
+    "if_warmer": "Modifications for warmer weather",
+    "dressy_version": "How to elevate this look for more formal occasions",
+    "casual_version": "How to dress down for more relaxed settings",
+    "budget_friendly": "More affordable alternatives that achieve similar look",
+    "investment_pieces": "Key items worth investing in for long-term wardrobe building"
+  },
+  "shopping_suggestions": {
+    "priority_items": ["item 1 to buy first", "item 2 to buy second"],
+    "brands_to_consider": ["brand 1", "brand 2", "brand 3"],
+    "price_ranges": {
+      "budget": "Under $50 options",
+      "mid_range": "$50-150 options", 
+      "investment": "$150+ investment pieces"
+    }
   }
 }
 
-Focus on creating a cohesive, stylish outfit that matches the user's preferences, body type, and the occasion. Consider color coordination, proportion, and current fashion trends while staying true to their personal style.`;
+Focus on creating a cohesive, stylish outfit that authentically represents the user's personal style while being appropriate for the occasion and weather. Consider current fashion trends but prioritize timeless style principles and the user's individual preferences.`;
 
-    // Call OpenAI API
+    // Call OpenAI API with enhanced model
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -102,16 +182,16 @@ Focus on creating a cohesive, stylish outfit that matches the user's preferences
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o', // Using more powerful model for better fashion advice
         messages: [
           {
             role: 'system',
-            content: 'You are a professional fashion stylist with expertise in personal styling, color theory, body types, and current fashion trends. Always respond with valid JSON in the exact format requested.'
+            content: 'You are a world-class fashion stylist and personal shopping expert with extensive knowledge of fashion history, current trends, color theory, body types, and styling techniques. You have worked with celebrities, fashion magazines, and luxury brands. Your recommendations are always practical, stylish, and perfectly tailored to each individual client. Always respond with valid JSON in the exact format requested.'
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 3000, // Increased for more detailed responses
       }),
     });
 
@@ -125,7 +205,6 @@ Focus on creating a cohesive, stylish outfit that matches the user's preferences
 
     try {
       const content = aiResponse.choices[0].message.content.trim();
-      // Try to extract JSON from the response
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         recommendationData = JSON.parse(jsonMatch[0]);
@@ -134,16 +213,31 @@ Focus on creating a cohesive, stylish outfit that matches the user's preferences
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      // Fallback recommendation structure
+      // Enhanced fallback recommendation
       recommendationData = {
         recommended_items: {
-          top: { name: 'Classic White Button-Down Shirt', confidence: 0.8, reasoning: 'Versatile and timeless piece' },
-          bottom: { name: 'Well-Fitted Dark Jeans', confidence: 0.85, reasoning: 'Flattering and versatile' },
-          shoes: { name: 'Clean White Sneakers', confidence: 0.9, reasoning: 'Comfortable and stylish' }
+          top: { 
+            name: 'Classic White Button-Down Shirt', 
+            confidence: 0.8, 
+            reasoning: 'Versatile and timeless piece that works for multiple occasions',
+            styling_tips: 'Can be worn tucked in for professional look or loose for casual style'
+          },
+          bottom: { 
+            name: 'Well-Fitted Dark Jeans or Tailored Trousers', 
+            confidence: 0.85, 
+            reasoning: 'Flattering and versatile bottom that pairs well with many tops',
+            styling_tips: 'Choose high-waisted for elongating effect'
+          },
+          shoes: { 
+            name: 'Clean White Sneakers or Leather Loafers', 
+            confidence: 0.9, 
+            reasoning: 'Comfortable yet stylish footwear suitable for multiple occasions',
+            styling_tips: 'Keep shoes clean and in good condition for polished appearance'
+          }
         },
         overall_confidence: 0.8,
-        style_reasoning: 'A classic, versatile outfit that works for most body types and occasions.',
-        styling_tips: ['Ensure proper fit', 'Add personal accessories', 'Consider the occasion']
+        style_reasoning: 'A classic, versatile outfit foundation that works for most body types and occasions while allowing for personal expression through accessories.',
+        styling_tips: ['Ensure proper fit across all pieces', 'Add personal accessories to make the look your own', 'Consider the specific occasion when styling']
       };
     }
 
@@ -158,7 +252,7 @@ Focus on creating a cohesive, stylish outfit that matches the user's preferences
         weather_context: weatherData,
         confidence_score: recommendationData.overall_confidence,
         reasoning: recommendationData.style_reasoning,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       })
       .select()
       .single();
@@ -172,7 +266,10 @@ Focus on creating a cohesive, stylish outfit that matches the user's preferences
       recommendation: savedRecommendation,
       ai_insights: {
         styling_tips: recommendationData.styling_tips,
-        alternative_options: recommendationData.alternative_options
+        alternative_options: recommendationData.alternative_options,
+        color_analysis: recommendationData.color_analysis,
+        fit_guidance: recommendationData.fit_guidance,
+        shopping_suggestions: recommendationData.shopping_suggestions
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
