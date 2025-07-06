@@ -55,17 +55,17 @@ const StylePreferencesForm = ({ profile, onUpdate }: StylePreferencesFormProps) 
 
   const addToArray = (fieldName: string, value: string, setState: (value: string) => void) => {
     if (value.trim()) {
-      const currentArray = watchedValues[fieldName] || [];
+      const currentArray = watchedValues[fieldName as keyof typeof watchedValues] as string[] || [];
       if (!currentArray.includes(value.trim())) {
-        setValue(fieldName, [...currentArray, value.trim()]);
+        setValue(fieldName as any, [...currentArray, value.trim()]);
         setState('');
       }
     }
   };
 
   const removeFromArray = (fieldName: string, index: number) => {
-    const currentArray = watchedValues[fieldName] || [];
-    setValue(fieldName, currentArray.filter((_, i) => i !== index));
+    const currentArray = watchedValues[fieldName as keyof typeof watchedValues] as string[] || [];
+    setValue(fieldName as any, currentArray.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: any) => {
