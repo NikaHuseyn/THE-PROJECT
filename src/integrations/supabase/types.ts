@@ -354,6 +354,54 @@ export type Database = {
         }
         Relationships: []
       }
+      synced_calendar_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          dress_code: string | null
+          end_time: string
+          event_type: string | null
+          external_event_id: string
+          id: string
+          location: string | null
+          provider: string
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dress_code?: string | null
+          end_time: string
+          event_type?: string | null
+          external_event_id: string
+          id?: string
+          location?: string | null
+          provider?: string
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dress_code?: string | null
+          end_time?: string
+          event_type?: string | null
+          external_event_id?: string
+          id?: string
+          location?: string | null
+          provider?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_behavior_analytics: {
         Row: {
           event_data: Json | null
@@ -398,6 +446,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_calendar_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          provider: string
+          provider_account_id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          provider_account_id: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          provider_account_id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_favorites: {
         Row: {

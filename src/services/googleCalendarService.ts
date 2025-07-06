@@ -59,7 +59,8 @@ class GoogleCalendarService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    const { error } = await supabase
+    // Using type assertion to work around the temporary TypeScript issue
+    const { error } = await (supabase as any)
       .from('user_calendar_connections')
       .upsert({
         user_id: user.id,
@@ -82,7 +83,7 @@ class GoogleCalendarService {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
-        const { data: connection } = await supabase
+        const { data: connection } = await (supabase as any)
           .from('user_calendar_connections')
           .select('access_token')
           .eq('user_id', user.id)
@@ -185,7 +186,7 @@ class GoogleCalendarService {
 
     // Clear existing events for today
     const today = new Date().toISOString().split('T')[0];
-    await supabase
+    await (supabase as any)
       .from('synced_calendar_events')
       .delete()
       .eq('user_id', user.id)
@@ -207,7 +208,7 @@ class GoogleCalendarService {
         provider: 'google'
       }));
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('synced_calendar_events')
         .insert(eventsToInsert);
 
@@ -222,7 +223,7 @@ class GoogleCalendarService {
     if (!user) return [];
 
     const today = new Date().toISOString().split('T')[0];
-    const { data: events, error } = await supabase
+    const { data: events, error } = await (supabase as any)
       .from('synced_calendar_events')
       .select('*')
       .eq('user_id', user.id)
@@ -235,7 +236,7 @@ class GoogleCalendarService {
       return [];
     }
 
-    return (events || []).map(event => ({
+    return (events || []).map((event: any) => ({
       id: event.external_event_id || event.id,
       name: event.title,
       time: this.formatEventTime({ dateTime: event.start_time }),
