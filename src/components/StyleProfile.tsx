@@ -1,15 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X, Camera, Palette, User, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import BasicInfoSection from './profile/BasicInfoSection';
+import StylePreferencesSection from './profile/StylePreferencesSection';
+import ColorAnalysisSection from './profile/ColorAnalysisSection';
 
 interface StyleProfile {
   id?: string;
@@ -56,10 +53,6 @@ const StyleProfile = () => {
   const queryClient = useQueryClient();
   const [profile, setProfile] = useState<StyleProfile | null>(null);
   const [analysisImage, setAnalysisImage] = useState<File | null>(null);
-  const [newPreferredColor, setNewPreferredColor] = useState('');
-  const [newPreferredPattern, setNewPreferredPattern] = useState('');
-  const [newPreferredFabric, setNewPreferredFabric] = useState('');
-  const [newStylePersonality, setNewStylePersonality] = useState('');
 
   const { data: userProfile, isLoading } = useQuery({
     queryKey: ['userStyleProfile'],
@@ -83,7 +76,6 @@ const StyleProfile = () => {
 
   useEffect(() => {
     if (userProfile) {
-      // Transform the data to match our interface
       const transformedProfile: StyleProfile = {
         ...userProfile,
         notification_preferences: typeof userProfile.notification_preferences === 'object' 
@@ -144,27 +136,8 @@ const StyleProfile = () => {
     }
   };
 
-  const addToArray = (arrayName: keyof StyleProfile, value: string, setter: (value: string) => void) => {
-    if (value.trim() && profile) {
-      const currentArray = (profile[arrayName] as string[]) || [];
-      if (!currentArray.includes(value.trim())) {
-        setProfile({
-          ...profile,
-          [arrayName]: [...currentArray, value.trim()],
-        });
-        setter('');
-      }
-    }
-  };
-
-  const removeFromArray = (arrayName: keyof StyleProfile, index: number) => {
-    if (profile) {
-      const currentArray = (profile[arrayName] as string[]) || [];
-      setProfile({
-        ...profile,
-        [arrayName]: currentArray.filter((_, i) => i !== index),
-      });
-    }
+  const handleProfileChange = (updates: Partial<StyleProfile>) => {
+    setProfile(prev => prev ? { ...prev, ...updates } : null);
   };
 
   if (isLoading) {
@@ -186,237 +159,22 @@ const StyleProfile = () => {
         <p className="text-gray-600">Create and customize your personal style preferences</p>
       </div>
 
-      {/* Basic Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Basic Information <span className="text-sm text-gray-500 font-normal">(Optional)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="body_type">Body Type</Label>
-              <Input
-                id="body_type"
-                value={profile?.body_type || ''}
-                onChange={(e) => setProfile(prev => prev ? { ...prev, body_type: e.target.value } : null)}
-                placeholder="e.g., Apple, Pear, Hourglass"
-              />
-            </div>
-            <div>
-              <TooltipProvider>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="style_confidence">Style Confidence (1-10)</Label>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-4 w-4 text-gray-400" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Style confidence refers to how comfortable and confident you feel about your personal style and fashion choices. It's a self-assessment score that helps the AI understand your current relationship with fashion and styling.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </TooltipProvider>
-              <Input
-                id="style_confidence"
-                type="number"
-                min="1"
-                max="10"
-                value={profile?.style_confidence_score || ''}
-                onChange={(e) => setProfile(prev => prev ? { ...prev, style_confidence_score: Number(e.target.value) } : null)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <BasicInfoSection 
+        profile={profile} 
+        onProfileChange={handleProfileChange}
+      />
 
-      {/* Color Preferences */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
-            Style Preferences <span className="text-sm text-gray-500 font-normal">(Optional)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Preferred Colors */}
-          <div>
-            <Label className="text-base font-semibold">Preferred Colors</Label>
-            <div className="flex flex-wrap gap-2 mt-2 mb-3">
-              {profile?.preferred_colors?.map((color, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                  {color}
-                  <button
-                    onClick={() => removeFromArray('preferred_colors', index)}
-                    className="hover:text-red-500"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a preferred color"
-                value={newPreferredColor}
-                onChange={(e) => setNewPreferredColor(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addToArray('preferred_colors', newPreferredColor, setNewPreferredColor)}
-              />
-              <Button
-                onClick={() => addToArray('preferred_colors', newPreferredColor, setNewPreferredColor)}
-                disabled={!newPreferredColor.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      <StylePreferencesSection 
+        profile={profile} 
+        onProfileChange={handleProfileChange}
+      />
 
-          {/* Preferred Patterns */}
-          <div>
-            <Label className="text-base font-semibold">Preferred Patterns</Label>
-            <div className="flex flex-wrap gap-2 mt-2 mb-3">
-              {profile?.preferred_patterns?.map((pattern, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                  {pattern}
-                  <button
-                    onClick={() => removeFromArray('preferred_patterns', index)}
-                    className="hover:text-red-500"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a preferred pattern"
-                value={newPreferredPattern}
-                onChange={(e) => setNewPreferredPattern(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addToArray('preferred_patterns', newPreferredPattern, setNewPreferredPattern)}
-              />
-              <Button
-                onClick={() => addToArray('preferred_patterns', newPreferredPattern, setNewPreferredPattern)}
-                disabled={!newPreferredPattern.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      <ColorAnalysisSection 
+        profile={profile} 
+        analysisImage={analysisImage}
+        onAnalysisImageChange={setAnalysisImage}
+      />
 
-          {/* Preferred Fabrics */}
-          <div>
-            <Label className="text-base font-semibold">Preferred Fabrics</Label>
-            <div className="flex flex-wrap gap-2 mt-2 mb-3">
-              {profile?.preferred_fabrics?.map((fabric, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                  {fabric}
-                  <button
-                    onClick={() => removeFromArray('preferred_fabrics', index)}
-                    className="hover:text-red-500"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a preferred fabric"
-                value={newPreferredFabric}
-                onChange={(e) => setNewPreferredFabric(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addToArray('preferred_fabrics', newPreferredFabric, setNewPreferredFabric)}
-              />
-              <Button
-                onClick={() => addToArray('preferred_fabrics', newPreferredFabric, setNewPreferredFabric)}
-                disabled={!newPreferredFabric.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Style Personality */}
-          <div>
-            <Label className="text-base font-semibold">Style Personality</Label>
-            <div className="flex flex-wrap gap-2 mt-2 mb-3">
-              {profile?.style_personality?.map((personality, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                  {personality}
-                  <button
-                    onClick={() => removeFromArray('style_personality', index)}
-                    className="hover:text-red-500"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a style personality trait"
-                value={newStylePersonality}
-                onChange={(e) => setNewStylePersonality(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addToArray('style_personality', newStylePersonality, setNewStylePersonality)}
-              />
-              <Button
-                onClick={() => addToArray('style_personality', newStylePersonality, setNewStylePersonality)}
-                disabled={!newStylePersonality.trim()}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Color Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5" />
-            Color Analysis <span className="text-sm text-gray-500 font-normal">(Optional)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="analysis_image">Upload Photo for Analysis</Label>
-              <Input
-                id="analysis_image"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setAnalysisImage(e.target.files?.[0] || null)}
-                className="mt-1"
-              />
-            </div>
-            {profile?.analysis_image_url && (
-              <div>
-                <Label>Current Analysis Image</Label>
-                <img
-                  src={profile.analysis_image_url}
-                  alt="Color analysis"
-                  className="mt-2 max-w-xs rounded-lg"
-                />
-              </div>
-            )}
-            {profile?.color_analysis && (
-              <div>
-                <Label>Analysis Results</Label>
-                <Textarea
-                  value={JSON.stringify(profile.color_analysis, null, 2)}
-                  readOnly
-                  rows={6}
-                  className="mt-1 font-mono text-sm"
-                />
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
       <div className="flex justify-center">
         <Button
           onClick={handleSaveProfile}
