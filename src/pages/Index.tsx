@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
@@ -9,6 +10,7 @@ import WeatherDisplay from '@/components/WeatherDisplay';
 import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
 import StyleInspiration from '@/components/StyleInspiration';
 import TrendingNow from '@/components/TrendingNow';
+import CalendarRecommendationsSection from '@/components/CalendarRecommendationsSection';
 import { generateOutfitRecommendations } from '@/services/shoppingService';
 import type { OutfitRecommendation } from '@/services/shoppingService';
 import { Loader2 } from 'lucide-react';
@@ -109,7 +111,10 @@ const Index = () => {
               </div>
               <EventInput onEventSubmit={handleEventSubmit} />
               <WeatherDisplay />
-              {isAuthenticated && <DailyOutfitAssistant />}
+              
+              {/* Calendar Integration Section - shown after weather */}
+              {isAuthenticated && <CalendarRecommendationsSection />}
+              
               <StyleInspiration />
               <TrendingNow />
             </div>
