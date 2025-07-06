@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, DollarSign, Calendar, Store } from 'lucide-react';
+import { ShoppingBag, Calendar, Store } from 'lucide-react';
 import { format } from 'date-fns';
 
 const PurchaseHistory = () => {
@@ -34,14 +34,6 @@ const PurchaseHistory = () => {
     },
   });
 
-  const totalSpent = purchaseHistory?.reduce((total, purchase) => {
-    return total + (purchase.purchase_price || 0);
-  }, 0) || 0;
-
-  const totalCommission = purchaseHistory?.reduce((total, purchase) => {
-    return total + (purchase.affiliate_commission || 0);
-  }, 0) || 0;
-
   if (isLoading) {
     return (
       <Card>
@@ -64,8 +56,8 @@ const PurchaseHistory = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Summary Card - Only Total Purchases */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -74,30 +66,6 @@ const PurchaseHistory = () => {
                 <p className="text-2xl font-bold">{purchaseHistory?.length || 0}</p>
               </div>
               <ShoppingBag className="h-8 w-8 text-rose-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                <p className="text-2xl font-bold">${totalSpent.toFixed(2)}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Commissions Earned</p>
-                <p className="text-2xl font-bold">${totalCommission.toFixed(2)}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
@@ -153,11 +121,6 @@ const PurchaseHistory = () => {
                           {purchase.purchase_price && (
                             <p className="text-lg font-semibold text-gray-900">
                               ${purchase.purchase_price}
-                            </p>
-                          )}
-                          {purchase.affiliate_commission && (
-                            <p className="text-sm text-green-600">
-                              +${purchase.affiliate_commission} commission
                             </p>
                           )}
                         </div>
