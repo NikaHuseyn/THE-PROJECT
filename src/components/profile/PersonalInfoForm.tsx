@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +25,6 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
       height_cm: profile?.height_cm || '',
       weight_kg: profile?.weight_kg || '',
       face_shape: profile?.face_shape || '',
-      skin_tone: profile?.skin_tone || '',
       body_type: profile?.body_type || '',
     }
   });
@@ -250,7 +248,7 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="face_shape">Face Shape</Label>
+              <Label htmlFor="face_shape">Face Shape <span className="text-sm text-gray-500">(Optional)</span></Label>
               <Input
                 id="face_shape"
                 {...register('face_shape')}
@@ -259,22 +257,13 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="skin_tone">Skin Tone</Label>
+              <Label htmlFor="body_type">Body Type <span className="text-sm text-gray-500">(Optional)</span></Label>
               <Input
-                id="skin_tone"
-                {...register('skin_tone')}
-                placeholder="Warm, Cool, Neutral"
+                id="body_type"
+                {...register('body_type')}
+                placeholder="Apple, Pear, Hourglass, Rectangle, etc."
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="body_type">Body Type</Label>
-            <Input
-              id="body_type"
-              {...register('body_type')}
-              placeholder="Apple, Pear, Hourglass, Rectangle, etc."
-            />
           </div>
 
           <Button 
