@@ -16,6 +16,7 @@ class GoogleCalendarService {
   private isGapiLoaded = false;
   private isGsiLoaded = false;
   private accessToken: string | null = null;
+  private isDemoMode = true; // Set to true for demo mode
 
   async initializeGoogleAPIs(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -34,12 +35,18 @@ class GoogleCalendarService {
 
   async signInToGoogle(): Promise<boolean> {
     try {
+      if (this.isDemoMode) {
+        // Simulate successful connection in demo mode
+        await this.simulateDemoConnection();
+        return true;
+      }
+
       await this.initializeGoogleAPIs();
 
       return new Promise((resolve) => {
         window.gapi.load('auth2', () => {
           window.gapi.auth2.init({
-            client_id: '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com', // Demo client ID - would need real one
+            client_id: '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com', // Demo client ID
             scope: 'https://www.googleapis.com/auth/calendar.readonly'
           }).then(() => {
             const authInstance = window.gapi.auth2.getAuthInstance();
@@ -57,6 +64,30 @@ class GoogleCalendarService {
     } catch (error) {
       console.error('Google API initialization failed:', error);
       return false;
+    }
+  }
+
+  private async simulateDemoConnection(): Promise<void> {
+    // Simulate connection delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Save demo connection
+    const { error } = await supabase
+      .from('user_calendar_connections')
+      .upsert({
+        user_id: user.id,
+        provider: 'google',
+        provider_account_id: 'demo@example.com',
+        access_token: 'demo_token',
+        is_active: true
+      });
+
+    if (error) {
+      console.error('Error saving demo calendar connection:', error);
+      throw error;
     }
   }
 
@@ -82,6 +113,10 @@ class GoogleCalendarService {
 
   async fetchTodaysEvents(): Promise<CalendarEvent[]> {
     try {
+      if (this.isDemoMode) {
+        return this.generateDemoEvents();
+      }
+
       if (!this.accessToken) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
@@ -135,8 +170,49 @@ class GoogleCalendarService {
       return transformedEvents;
     } catch (error) {
       console.error('Error fetching calendar events:', error);
+      if (this.isDemoMode) {
+        return this.generateDemoEvents();
+      }
       return [];
     }
+  }
+
+  private generateDemoEvents(): CalendarEvent[] {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    return [
+      {
+        id: 'demo-1',
+        name: 'Morning Team Meeting',
+        time: '9:00 AM',
+        location: 'Conference Room A',
+        dressCode: 'Business Casual',
+        type: 'work',
+        start: `${today}T09:00:00Z`,
+        end: `${today}T10:00:00Z`
+      },
+      {
+        id: 'demo-2',
+        name: 'Lunch with Sarah',
+        time: '12:30 PM',
+        location: 'Cafe Downtown',
+        dressCode: 'Smart Casual',
+        type: 'social',
+        start: `${today}T12:30:00Z`,
+        end: `${today}T13:30:00Z`
+      },
+      {
+        id: 'demo-3',
+        name: 'Evening Yoga Class',
+        time: '6:00 PM',
+        location: 'Wellness Studio',
+        dressCode: 'Activewear',
+        type: 'fitness',
+        start: `${today}T18:00:00Z`,
+        end: `${today}T19:00:00Z`
+      }
+    ];
   }
 
   private formatEventTime(start: any): string {
