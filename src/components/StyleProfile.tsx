@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Camera, Palette, User } from 'lucide-react';
+import { Plus, X, Camera, Palette, User, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StyleProfile {
   id?: string;
@@ -191,7 +191,7 @@ const StyleProfile = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Basic Information
+            Basic Information <span className="text-sm text-gray-500 font-normal">(Optional)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -206,7 +206,19 @@ const StyleProfile = () => {
               />
             </div>
             <div>
-              <Label htmlFor="style_confidence">Style Confidence (1-10)</Label>
+              <TooltipProvider>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="style_confidence">Style Confidence (1-10)</Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-4 w-4 text-gray-400" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Style confidence refers to how comfortable and confident you feel about your personal style and fashion choices. It's a self-assessment score that helps the AI understand your current relationship with fashion and styling.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TooltipProvider>
               <Input
                 id="style_confidence"
                 type="number"
@@ -225,7 +237,7 @@ const StyleProfile = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            Style Preferences
+            Style Preferences <span className="text-sm text-gray-500 font-normal">(Optional)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -364,7 +376,7 @@ const StyleProfile = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" />
-            Color Analysis
+            Color Analysis <span className="text-sm text-gray-500 font-normal">(Optional)</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
