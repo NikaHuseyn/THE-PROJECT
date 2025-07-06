@@ -210,6 +210,98 @@ export type Database = {
         }
         Relationships: []
       }
+      outfit_history: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          id: string
+          occasion: string | null
+          outfit_id: string | null
+          photo_url: string | null
+          user_id: string
+          user_notes: string | null
+          weather_data: Json | null
+          worn_date: string
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          occasion?: string | null
+          outfit_id?: string | null
+          photo_url?: string | null
+          user_id: string
+          user_notes?: string | null
+          weather_data?: Json | null
+          worn_date: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          occasion?: string | null
+          outfit_id?: string | null
+          photo_url?: string | null
+          user_id?: string
+          user_notes?: string | null
+          weather_data?: Json | null
+          worn_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outfit_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "synced_calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outfit_history_outfit_id_fkey"
+            columns: ["outfit_id"]
+            isOneToOne: false
+            referencedRelation: "outfit_combinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outfit_ratings: {
+        Row: {
+          created_at: string
+          feedback_text: string | null
+          id: string
+          outfit_id: string | null
+          rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          outfit_id?: string | null
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string | null
+          id?: string
+          outfit_id?: string | null
+          rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outfit_ratings_outfit_id_fkey"
+            columns: ["outfit_id"]
+            isOneToOne: false
+            referencedRelation: "outfit_combinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           caption: string | null
@@ -512,56 +604,264 @@ export type Database = {
           },
         ]
       }
-      user_style_profiles: {
+      user_oauth_connections: {
         Row: {
-          analysis_image_url: string | null
-          body_type: string | null
-          color_analysis: Json | null
+          access_token: string | null
           created_at: string
-          face_shape: string | null
           id: string
-          preferred_colors: string[] | null
-          preferred_fabrics: string[] | null
-          preferred_patterns: string[] | null
-          skin_tone: string | null
-          style_confidence_score: number | null
-          style_personality: string[] | null
+          is_active: boolean | null
+          provider: string
+          provider_user_id: string
+          refresh_token: string | null
+          scope: string[] | null
+          token_expires_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          analysis_image_url?: string | null
-          body_type?: string | null
-          color_analysis?: Json | null
+          access_token?: string | null
           created_at?: string
-          face_shape?: string | null
           id?: string
-          preferred_colors?: string[] | null
-          preferred_fabrics?: string[] | null
-          preferred_patterns?: string[] | null
-          skin_tone?: string | null
-          style_confidence_score?: number | null
-          style_personality?: string[] | null
+          is_active?: boolean | null
+          provider: string
+          provider_user_id: string
+          refresh_token?: string | null
+          scope?: string[] | null
+          token_expires_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          analysis_image_url?: string | null
-          body_type?: string | null
-          color_analysis?: Json | null
+          access_token?: string | null
           created_at?: string
-          face_shape?: string | null
           id?: string
-          preferred_colors?: string[] | null
-          preferred_fabrics?: string[] | null
-          preferred_patterns?: string[] | null
-          skin_tone?: string | null
-          style_confidence_score?: number | null
-          style_personality?: string[] | null
+          is_active?: boolean | null
+          provider?: string
+          provider_user_id?: string
+          refresh_token?: string | null
+          scope?: string[] | null
+          token_expires_at?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      user_purchases: {
+        Row: {
+          affiliate_commission: number | null
+          created_at: string
+          id: string
+          order_reference: string | null
+          purchase_date: string
+          purchase_price: number | null
+          retailer: string | null
+          shopping_item_id: string | null
+          user_id: string
+        }
+        Insert: {
+          affiliate_commission?: number | null
+          created_at?: string
+          id?: string
+          order_reference?: string | null
+          purchase_date: string
+          purchase_price?: number | null
+          retailer?: string | null
+          shopping_item_id?: string | null
+          user_id: string
+        }
+        Update: {
+          affiliate_commission?: number | null
+          created_at?: string
+          id?: string
+          order_reference?: string | null
+          purchase_date?: string
+          purchase_price?: number | null
+          retailer?: string | null
+          shopping_item_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_shopping_item_id_fkey"
+            columns: ["shopping_item_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sizes: {
+        Row: {
+          brand: string | null
+          category: string
+          created_at: string
+          id: string
+          notes: string | null
+          size_value: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          size_value: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          size_value?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_style_profiles: {
+        Row: {
+          analysis_image_url: string | null
+          body_type: string | null
+          budget_max: number | null
+          budget_min: number | null
+          color_analysis: Json | null
+          created_at: string
+          data_export_requested: boolean | null
+          disliked_colors: string[] | null
+          disliked_styles: string[] | null
+          display_name: string | null
+          face_shape: string | null
+          fit_preference: string | null
+          gdpr_consent_date: string | null
+          height_cm: number | null
+          id: string
+          notification_preferences: Json | null
+          preferred_brands: string[] | null
+          preferred_colors: string[] | null
+          preferred_fabrics: string[] | null
+          preferred_patterns: string[] | null
+          preferred_retailers: string[] | null
+          profile_photo_url: string | null
+          public_profile_enabled: boolean | null
+          skin_tone: string | null
+          standard_size_bottom: string | null
+          standard_size_shoes: string | null
+          standard_size_top: string | null
+          style_confidence_score: number | null
+          style_personality: string[] | null
+          updated_at: string
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          analysis_image_url?: string | null
+          body_type?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          color_analysis?: Json | null
+          created_at?: string
+          data_export_requested?: boolean | null
+          disliked_colors?: string[] | null
+          disliked_styles?: string[] | null
+          display_name?: string | null
+          face_shape?: string | null
+          fit_preference?: string | null
+          gdpr_consent_date?: string | null
+          height_cm?: number | null
+          id?: string
+          notification_preferences?: Json | null
+          preferred_brands?: string[] | null
+          preferred_colors?: string[] | null
+          preferred_fabrics?: string[] | null
+          preferred_patterns?: string[] | null
+          preferred_retailers?: string[] | null
+          profile_photo_url?: string | null
+          public_profile_enabled?: boolean | null
+          skin_tone?: string | null
+          standard_size_bottom?: string | null
+          standard_size_shoes?: string | null
+          standard_size_top?: string | null
+          style_confidence_score?: number | null
+          style_personality?: string[] | null
+          updated_at?: string
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          analysis_image_url?: string | null
+          body_type?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          color_analysis?: Json | null
+          created_at?: string
+          data_export_requested?: boolean | null
+          disliked_colors?: string[] | null
+          disliked_styles?: string[] | null
+          display_name?: string | null
+          face_shape?: string | null
+          fit_preference?: string | null
+          gdpr_consent_date?: string | null
+          height_cm?: number | null
+          id?: string
+          notification_preferences?: Json | null
+          preferred_brands?: string[] | null
+          preferred_colors?: string[] | null
+          preferred_fabrics?: string[] | null
+          preferred_patterns?: string[] | null
+          preferred_retailers?: string[] | null
+          profile_photo_url?: string | null
+          public_profile_enabled?: boolean | null
+          skin_tone?: string | null
+          standard_size_bottom?: string | null
+          standard_size_shoes?: string | null
+          standard_size_top?: string | null
+          style_confidence_score?: number | null
+          style_personality?: string[] | null
+          updated_at?: string
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
+      user_wishlist: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          priority: number | null
+          shopping_item_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priority?: number | null
+          shopping_item_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          priority?: number | null
+          shopping_item_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_wishlist_shopping_item_id_fkey"
+            columns: ["shopping_item_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wardrobe_items: {
         Row: {
