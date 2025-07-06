@@ -1,0 +1,246 @@
+
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Plus, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface SizePreferencesFormProps {
+  profile: any;
+  onUpdate: () => void;
+}
+
+const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [newSizeCategory, setNewSizeCategory] = useState('');
+  const [newSizeValue, setNewSizeValue] = useState('');
+  const [newSizeBrand, setNewSizeBrand] = useState('');
+
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+    defaultValues: {
+      standard_size_top: profile?.standard_size_top || '',
+      standard_size_bottom: profile?.standard_size_bottom || '',
+      standard_size_shoes: profile?.standard_size_shoes || '',
+      fit_preference: profile?.fit_preference || '',
+    }
+  });
+
+  const { data: userSizes } = useQuery({
+    queryKey: ['userSizes'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data, error } = await supabase
+        .from('user_sizes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('category');
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addSizeMutation = useMutation({
+    mutationFn: async ({ category, size_value, brand }: { category: string; size_value: string; brand?: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error } = await supabase
+        .from('user_sizes')
+        .upsert({
+          user_id: user.id,
+          category,
+          size_value,
+          brand: brand || null,
+        }, { onConflict: 'user_id,category,brand' });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userSizes'] });
+      setNewSizeCategory('');
+      setNewSizeValue('');
+      setNewSizeBrand('');
+      toast({
+        title: "Success",
+        description: "Size preference added successfully!",
+      });
+    },
+  });
+
+  const deleteSizeMutation = useMutation({
+    mutationFn: async (sizeId: string) => {
+      const { error } = await supabase
+        .from('user_sizes')
+        .delete()
+        .eq('id', sizeId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userSizes'] });
+      toast({
+        title: "Success",
+        description: "Size preference removed successfully!",
+      });
+    },
+  });
+
+  const onSubmit = async (data: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const profileData = {
+        user_id: user.id,
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('user_style_profiles')
+        .upsert(profileData, { onConflict: 'user_id' });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Size preferences updated successfully!",
+      });
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update size preferences. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddSize = () => {
+    if (newSizeCategory && newSizeValue) {
+      addSizeMutation.mutate({
+        category: newSizeCategory,
+        size_value: newSizeValue,
+        brand: newSizeBrand,
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Standard Sizes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="standard_size_top">Top Size</Label>
+                <Input
+                  id="standard_size_top"
+                  {...register('standard_size_top')}
+                  placeholder="S, M, L, XL, etc."
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="standard_size_bottom">Bottom Size</Label>
+                <Input
+                  id="standard_size_bottom"
+                  {...register('standard_size_bottom')}
+                  placeholder="28, 30, 32, etc."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="standard_size_shoes">Shoe Size</Label>
+                <Input
+                  id="standard_size_shoes"
+                  {...register('standard_size_shoes')}
+                  placeholder="8, 9, 10, etc."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fit_preference">Fit Preference</Label>
+              <Select {...register('fit_preference')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your preferred fit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tight">Tight Fit</SelectItem>
+                  <SelectItem value="regular">Regular Fit</SelectItem>
+                  <SelectItem value="loose">Loose Fit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Updating...' : 'Update Standard Sizes'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Brand-Specific Sizes</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {userSizes?.map((size) => (
+              <Badge key={size.id} variant="secondary" className="flex items-center gap-2">
+                {size.brand ? `${size.brand} - ` : ''}{size.category}: {size.size_value}
+                <button
+                  onClick={() => deleteSizeMutation.mutate(size.id)}
+                  className="ml-1 hover:text-red-500"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Input
+              placeholder="Category (e.g., jeans)"
+              value={newSizeCategory}
+              onChange={(e) => setNewSizeCategory(e.target.value)}
+            />
+            <Input
+              placeholder="Size (e.g., 32)"
+              value={newSizeValue}
+              onChange={(e) => setNewSizeValue(e.target.value)}
+            />
+            <Input
+              placeholder="Brand (optional)"
+              value={newSizeBrand}
+              onChange={(e) => setNewSizeBrand(e.target.value)}
+            />
+            <Button onClick={handleAddSize} disabled={!newSizeCategory || !newSizeValue}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Size
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default SizePreferencesForm;

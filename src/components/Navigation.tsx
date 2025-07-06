@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Shirt, BarChart3 } from 'lucide-react';
+import { Home, Shirt, BarChart3, User } from 'lucide-react';
 
 interface NavigationProps {
   user: any;
@@ -17,6 +17,7 @@ const Navigation = ({ user }: NavigationProps) => {
     { path: '/', label: 'Home', icon: Home },
     { path: '/wardrobe', label: 'Wardrobe', icon: Shirt, requiresAuth: true },
     { path: '/style-analysis', label: 'Style Analysis', icon: BarChart3 },
+    { path: '/profile', label: 'Profile', icon: User, requiresAuth: true },
   ];
 
   return (
