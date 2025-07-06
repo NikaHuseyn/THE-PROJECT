@@ -1,13 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Upload, X } from 'lucide-react';
 
 interface PersonalInfoFormProps {
   profile: any;
@@ -16,10 +16,13 @@ interface PersonalInfoFormProps {
 
 const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+  const [isUploading, setIsUploading] = useState(false);
+  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(profile?.profile_photo_url || null);
+  
+  const { register, handleSubmit, formState: { isSubmitting }, setValue } = useForm({
     defaultValues: {
       display_name: profile?.display_name || '',
-      profile_photo_url: profile?.profile_photo_url || '',
       height_cm: profile?.height_cm || '',
       weight_kg: profile?.weight_kg || '',
       face_shape: profile?.face_shape || '',
@@ -28,14 +31,108 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
     }
   });
 
-  const onSubmit = async (data: any) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProfilePhotoFile(file);
+      
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const uploadProfilePhoto = async (file: File): Promise<string | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/profile-photo.${fileExt}`;
+
+      // Delete existing profile photo if it exists
+      if (profile?.profile_photo_url) {
+        const oldPath = profile.profile_photo_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage
+            .from('profile-photos')
+            .remove([`${user.id}/${oldPath}`]);
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload profile photo. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const removeProfilePhoto = () => {
+    setProfilePhotoFile(null);
+    setPreviewUrl(null);
+    // Reset file input
+    const fileInput = document.getElementById('profile_photo') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const onSubmit = async (data: any) => {
+    try {
+      setIsUploading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      let profilePhotoUrl = profile?.profile_photo_url;
+
+      // Upload new profile photo if one was selected
+      if (profilePhotoFile) {
+        profilePhotoUrl = await uploadProfilePhoto(profilePhotoFile);
+        if (!profilePhotoUrl) {
+          setIsUploading(false);
+          return; // Upload failed, don't continue
+        }
+      }
+
       const profileData = {
         user_id: user.id,
         ...data,
+        profile_photo_url: profilePhotoUrl,
         height_cm: data.height_cm ? parseInt(data.height_cm) : null,
         weight_kg: data.weight_kg ? parseFloat(data.weight_kg) : null,
         updated_at: new Date().toISOString(),
@@ -51,6 +148,9 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
         title: "Success",
         description: "Personal information updated successfully!",
       });
+      
+      // Reset file state
+      setProfilePhotoFile(null);
       onUpdate();
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -59,6 +159,8 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
         description: "Failed to update personal information. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -80,13 +182,46 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="profile_photo_url">Profile Photo URL</Label>
-              <Input
-                id="profile_photo_url"
-                type="url"
-                {...register('profile_photo_url')}
-                placeholder="https://example.com/photo.jpg"
-              />
+              <Label htmlFor="profile_photo">Profile Photo</Label>
+              <div className="space-y-3">
+                {previewUrl && (
+                  <div className="relative inline-block">
+                    <img
+                      src={previewUrl}
+                      alt="Profile preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeProfilePhoto}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="profile_photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('profile_photo')?.click()}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {previewUrl ? 'Change Photo' : 'Upload Photo'}
+                  </Button>
+                  <span className="text-sm text-gray-500">
+                    Optional (max 5MB)
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -142,8 +277,12 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
             />
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Updating...' : 'Update Personal Information'}
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || isUploading} 
+            className="w-full"
+          >
+            {isUploading ? 'Uploading...' : isSubmitting ? 'Updating...' : 'Update Personal Information'}
           </Button>
         </form>
       </CardContent>
