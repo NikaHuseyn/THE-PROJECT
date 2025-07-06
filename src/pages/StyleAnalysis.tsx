@@ -1,13 +1,20 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import StyleProfile from '@/components/StyleProfile';
 import AIRecommendations from '@/components/AIRecommendations';
 import CommunityFeed from '@/components/CommunityFeed';
 import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
+import MultiDayCalendarOverview from '@/components/MultiDayCalendarOverview';
+import OutfitTimelineView from '@/components/OutfitTimelineView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StyleAnalysis = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleDaySelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50">
       <Header />
@@ -20,10 +27,11 @@ const StyleAnalysis = () => {
         </div>
 
         <Tabs defaultValue="recommendations" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+            <TabsTrigger value="timeline">Timeline & Feedback</TabsTrigger>
             <TabsTrigger value="profile">Style Profile</TabsTrigger>
-            <TabsTrigger value="settings">Daily Settings</TabsTrigger>
             <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
           
@@ -31,14 +39,19 @@ const StyleAnalysis = () => {
             <AIRecommendations />
           </TabsContent>
           
-          <TabsContent value="profile" className="mt-6">
-            <StyleProfile />
+          <TabsContent value="calendar" className="mt-6">
+            <div className="space-y-6">
+              <MultiDayCalendarOverview onDaySelect={handleDaySelect} />
+              <OutfitTimelineView selectedDate={selectedDate} />
+            </div>
           </TabsContent>
           
-          <TabsContent value="settings" className="mt-6">
-            <div className="max-w-2xl mx-auto">
-              <DailyRecommendationSettings />
-            </div>
+          <TabsContent value="timeline" className="mt-6">
+            <OutfitTimelineView selectedDate={selectedDate} />
+          </TabsContent>
+          
+          <TabsContent value="profile" className="mt-6">
+            <StyleProfile />
           </TabsContent>
           
           <TabsContent value="community" className="mt-6">
