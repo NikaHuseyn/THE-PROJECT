@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Calendar, Sparkles, Clock, MapPin, Connect, Wand2, Star, ArrowRight } from 'lucide-react';
+import { Calendar, Sparkles, Clock, MapPin, Link, Wand2, Star, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -219,7 +218,7 @@ const CalendarRecommendationsSection = () => {
               </>
             ) : (
               <>
-                <Connect className="h-5 w-5 mr-2" />
+                <Link className="h-5 w-5 mr-2" />
                 Connect Calendar & Get AI Recommendations
                 <ArrowRight className="h-5 w-5 ml-2" />
               </>
