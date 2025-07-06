@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
-import { MapPin, Thermometer, Cloud, Sun, CloudRain, Wind, Droplets } from 'lucide-react';
+import { MapPin, Thermometer, Cloud, Sun, CloudRain, Wind, Droplets, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WeatherData {
   temperature: number;
@@ -9,6 +11,8 @@ interface WeatherData {
   windSpeed: number;
   location: string;
   clothingRecommendations: string[];
+  description: string;
+  feelsLike: number;
 }
 
 const WeatherDisplay = () => {
@@ -16,36 +20,21 @@ const WeatherDisplay = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock weather data function (in a real app, you'd use a weather API)
-  const getMockWeatherData = (lat: number, lon: number): WeatherData => {
-    const temp = Math.floor(Math.random() * 30) + 50; // 50-80°F
-    const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear'];
-    const condition = conditions[Math.floor(Math.random() * conditions.length)];
-    
-    let clothingRecommendations: string[] = [];
-    
-    if (temp >= 75) {
-      clothingRecommendations = ['Light fabrics', 'Sundresses', 'Breathable cotton', 'Sandals', 'Light colors'];
-    } else if (temp >= 65) {
-      clothingRecommendations = ['Light layers', 'Cardigans', 'Jeans', 'Comfortable flats', 'Light jacket'];
-    } else if (temp >= 55) {
-      clothingRecommendations = ['Sweaters', 'Jackets', 'Closed-toe shoes', 'Long pants', 'Layered outfits'];
-    } else {
-      clothingRecommendations = ['Warm coats', 'Boots', 'Scarves', 'Heavy fabrics', 'Dark colors'];
-    }
+  const fetchWeatherData = async (lat: number, lon: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('weather-recommendations', {
+        body: { lat, lon }
+      });
 
-    if (condition.includes('Rain')) {
-      clothingRecommendations.push('Waterproof jacket', 'Umbrella');
-    }
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch weather data');
+      }
 
-    return {
-      temperature: temp,
-      condition,
-      humidity: Math.floor(Math.random() * 40) + 40,
-      windSpeed: Math.floor(Math.random() * 15) + 5,
-      location: 'Your Location',
-      clothingRecommendations
-    };
+      return data;
+    } catch (error) {
+      console.error('Error fetching weather:', error);
+      throw error;
+    }
   };
 
   const getLocation = () => {
@@ -59,22 +48,24 @@ const WeatherDisplay = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // In a real app, you'd fetch weather data from an API here
-        const weatherData = getMockWeatherData(latitude, longitude);
-        setWeather(weatherData);
-        setLoading(false);
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const weatherData = await fetchWeatherData(latitude, longitude);
+          setWeather(weatherData);
+        } catch (error) {
+          console.error('Error getting weather data:', error);
+          setError('Failed to fetch weather data. Please try again.');
+        } finally {
+          setLoading(false);
+        }
       },
       (error) => {
         console.error('Error getting location:', error);
-        // Fallback to mock data
-        const weatherData = getMockWeatherData(40.7128, -74.0060); // NYC coordinates
-        setWeather(weatherData);
-        setError('Using default location');
+        setError('Unable to get your location. Please enable location services.');
         setLoading(false);
       },
-      { timeout: 10000 }
+      { timeout: 10000, enableHighAccuracy: true }
     );
   };
 
@@ -83,17 +74,19 @@ const WeatherDisplay = () => {
   }, []);
 
   const getWeatherIcon = (condition: string) => {
-    if (condition.includes('Sun') || condition.includes('Clear')) {
+    const conditionLower = condition.toLowerCase();
+    if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
       return <Sun className="h-8 w-8 text-yellow-500" />;
-    } else if (condition.includes('Rain')) {
+    } else if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
       return <CloudRain className="h-8 w-8 text-blue-500" />;
-    } else if (condition.includes('Cloud')) {
+    } else if (conditionLower.includes('cloud')) {
       return <Cloud className="h-8 w-8 text-gray-500" />;
     }
     return <Sun className="h-8 w-8 text-yellow-500" />;
   };
 
   const getTemperatureColor = (temp: number) => {
+    if (temp >= 80) return 'text-red-600';
     if (temp >= 75) return 'text-red-500';
     if (temp >= 65) return 'text-orange-500';
     if (temp >= 55) return 'text-blue-500';
@@ -104,18 +97,20 @@ const WeatherDisplay = () => {
     return (
       <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-lg p-4 mb-6 border border-sky-100">
         <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-600"></div>
-          <span className="ml-2 text-sm text-sky-700">Getting weather...</span>
+          <RefreshCw className="animate-spin h-6 w-6 text-sky-600 mr-2" />
+          <span className="text-sm text-sky-700">Getting weather data...</span>
         </div>
       </div>
     );
   }
 
-  if (!weather) {
+  if (!weather || error) {
     return (
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 mb-6 border border-gray-200">
         <div className="text-center">
-          <p className="text-gray-600 text-sm mb-3">Unable to get weather information</p>
+          <p className="text-gray-600 text-sm mb-3">
+            {error || 'Unable to get weather information'}
+          </p>
           <Button onClick={getLocation} variant="outline" size="sm">
             Try Again
           </Button>
@@ -133,14 +128,14 @@ const WeatherDisplay = () => {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-800 flex items-center">
-              Today's Weather
+              Live Weather
               <MapPin className="h-3 w-3 ml-1 text-sky-600" />
             </h3>
             <p className="text-xs text-gray-600">{weather.location}</p>
-            {error && <p className="text-xs text-amber-600">{error}</p>}
           </div>
         </div>
         <Button onClick={getLocation} variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 text-xs">
+          <RefreshCw className="h-3 w-3 mr-1" />
           Refresh
         </Button>
       </div>
@@ -155,7 +150,11 @@ const WeatherDisplay = () => {
                 {weather.temperature}°F
               </span>
             </div>
-            <span className="text-gray-600 text-sm">{weather.condition}</span>
+            <span className="text-gray-600 text-sm capitalize">{weather.description}</span>
+          </div>
+
+          <div className="text-xs text-gray-600 mb-2">
+            Feels like {weather.feelsLike}°F
           </div>
 
           <div className="flex items-center space-x-4 text-xs text-gray-600">
@@ -170,21 +169,26 @@ const WeatherDisplay = () => {
           </div>
         </div>
 
-        {/* Clothing Recommendations */}
+        {/* AI-Powered Clothing Recommendations */}
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2 text-sm">
-            Perfect Weather For:
+          <h4 className="font-semibold text-gray-800 mb-2 text-sm flex items-center">
+            🤖 AI Recommendations
           </h4>
           <div className="flex flex-wrap gap-1">
             {weather.clothingRecommendations.slice(0, 4).map((item, index) => (
               <span 
                 key={index}
-                className="text-xs bg-sky-100 text-sky-700 px-2 py-1 rounded-full border border-sky-200"
+                className="text-xs bg-gradient-to-r from-sky-100 to-indigo-100 text-sky-700 px-2 py-1 rounded-full border border-sky-200"
               >
                 {item}
               </span>
             ))}
           </div>
+          {weather.clothingRecommendations.length > 4 && (
+            <p className="text-xs text-gray-500 mt-1">
+              +{weather.clothingRecommendations.length - 4} more suggestions
+            </p>
+          )}
         </div>
       </div>
     </div>
