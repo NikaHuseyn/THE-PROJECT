@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Palette } from 'lucide-react';
-import ArrayInputField from './ArrayInputField';
+import ArrayInputSection from './forms/ArrayInputSection';
 
 interface StyleProfile {
   preferred_colors?: string[];
@@ -17,24 +17,24 @@ interface StylePreferencesSectionProps {
 }
 
 const StylePreferencesSection = ({ profile, onProfileChange }: StylePreferencesSectionProps) => {
-  const addToArray = (arrayName: keyof StyleProfile, value: string) => {
-    if (profile) {
-      const currentArray = (profile[arrayName] as string[]) || [];
-      if (!currentArray.includes(value)) {
-        onProfileChange({
-          [arrayName]: [...currentArray, value],
-        });
-      }
+  const handleAddToArray = (arrayName: keyof StyleProfile, value: string) => {
+    if (!profile) return;
+    
+    const currentArray = (profile[arrayName] as string[]) || [];
+    if (!currentArray.includes(value)) {
+      onProfileChange({
+        [arrayName]: [...currentArray, value],
+      });
     }
   };
 
-  const removeFromArray = (arrayName: keyof StyleProfile, index: number) => {
-    if (profile) {
-      const currentArray = (profile[arrayName] as string[]) || [];
-      onProfileChange({
-        [arrayName]: currentArray.filter((_, i) => i !== index),
-      });
-    }
+  const handleRemoveFromArray = (arrayName: keyof StyleProfile, index: number) => {
+    if (!profile) return;
+    
+    const currentArray = (profile[arrayName] as string[]) || [];
+    onProfileChange({
+      [arrayName]: currentArray.filter((_, i) => i !== index),
+    });
   };
 
   return (
@@ -46,36 +46,40 @@ const StylePreferencesSection = ({ profile, onProfileChange }: StylePreferencesS
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <ArrayInputField
-          label="Preferred Colors"
-          items={profile?.preferred_colors}
+        <ArrayInputSection
+          title="Preferred Colors"
           placeholder="Add a preferred color"
-          onAdd={(item) => addToArray('preferred_colors', item)}
-          onRemove={(index) => removeFromArray('preferred_colors', index)}
+          values={profile?.preferred_colors || []}
+          onAdd={(value) => handleAddToArray('preferred_colors', value)}
+          onRemove={(index) => handleRemoveFromArray('preferred_colors', index)}
+          maxItems={10}
         />
 
-        <ArrayInputField
-          label="Preferred Patterns"
-          items={profile?.preferred_patterns}
+        <ArrayInputSection
+          title="Preferred Patterns"
           placeholder="Add a preferred pattern"
-          onAdd={(item) => addToArray('preferred_patterns', item)}
-          onRemove={(index) => removeFromArray('preferred_patterns', index)}
+          values={profile?.preferred_patterns || []}
+          onAdd={(value) => handleAddToArray('preferred_patterns', value)}
+          onRemove={(index) => handleRemoveFromArray('preferred_patterns', index)}
+          maxItems={8}
         />
 
-        <ArrayInputField
-          label="Preferred Fabrics"
-          items={profile?.preferred_fabrics}
+        <ArrayInputSection
+          title="Preferred Fabrics"
           placeholder="Add a preferred fabric"
-          onAdd={(item) => addToArray('preferred_fabrics', item)}
-          onRemove={(index) => removeFromArray('preferred_fabrics', index)}
+          values={profile?.preferred_fabrics || []}
+          onAdd={(value) => handleAddToArray('preferred_fabrics', value)}
+          onRemove={(index) => handleRemoveFromArray('preferred_fabrics', index)}
+          maxItems={8}
         />
 
-        <ArrayInputField
-          label="Style Personality"
-          items={profile?.style_personality}
+        <ArrayInputSection
+          title="Style Personality"
           placeholder="Add a style personality trait"
-          onAdd={(item) => addToArray('style_personality', item)}
-          onRemove={(index) => removeFromArray('style_personality', index)}
+          values={profile?.style_personality || []}
+          onAdd={(value) => handleAddToArray('style_personality', value)}
+          onRemove={(index) => handleRemoveFromArray('style_personality', index)}
+          maxItems={6}
         />
       </CardContent>
     </Card>
