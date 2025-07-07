@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { User, Settings, Heart, ShoppingBag, Calendar, BarChart3, Palette } from 'lucide-react';
+import { User, Settings, Heart, ShoppingBag, Calendar, BarChart3 } from 'lucide-react';
 import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
 import SizePreferencesForm from '@/components/profile/SizePreferencesForm';
 import StylePreferencesForm from '@/components/profile/StylePreferencesForm';
@@ -99,7 +99,7 @@ const Profile = () => {
 
           {/* Profile Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-8">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-7">
               <TabsTrigger value="personal" className="flex items-center space-x-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Personal</span>
@@ -111,10 +111,6 @@ const Profile = () => {
               <TabsTrigger value="style" className="flex items-center space-x-2">
                 <Heart className="h-4 w-4" />
                 <span className="hidden sm:inline">Style</span>
-              </TabsTrigger>
-              <TabsTrigger value="styleprofile" className="flex items-center space-x-2">
-                <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Style Profile</span>
               </TabsTrigger>
               <TabsTrigger value="wishlist" className="flex items-center space-x-2">
                 <ShoppingBag className="h-4 w-4" />
@@ -143,11 +139,10 @@ const Profile = () => {
             </TabsContent>
 
             <TabsContent value="style">
-              <StylePreferencesForm profile={profile} onUpdate={handleProfileUpdate} />
-            </TabsContent>
-
-            <TabsContent value="styleprofile">
-              <StyleProfile />
+              <div className="space-y-6">
+                <StyleProfile />
+                <StylePreferencesForm profile={profile} onUpdate={handleProfileUpdate} />
+              </div>
             </TabsContent>
 
             <TabsContent value="wishlist">
