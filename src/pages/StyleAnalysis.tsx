@@ -1,12 +1,9 @@
 
 import React, { useState } from 'react';
 import Header from '@/components/Header';
-import AIRecommendations from '@/components/AIRecommendations';
-import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
 import MultiDayCalendarOverview from '@/components/MultiDayCalendarOverview';
 import OutfitTimelineView from '@/components/OutfitTimelineView';
 import UnifiedDailyPlan from '@/components/UnifiedDailyPlan';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StyleAnalysis = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -26,26 +23,23 @@ const StyleAnalysis = () => {
           </p>
         </div>
 
-        {/* Unified Daily Plan at the top */}
+        {/* Unified Daily Plan with AI recommendations at the top */}
         <UnifiedDailyPlan />
 
-        <Tabs defaultValue="recommendations" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-          </TabsList>
+        {/* Calendar Planning Section */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Calendar Planning</h2>
+            <p className="text-gray-600">
+              View your calendar and plan outfits for upcoming events
+            </p>
+          </div>
           
-          <TabsContent value="recommendations" className="mt-6">
-            <AIRecommendations />
-          </TabsContent>
-          
-          <TabsContent value="calendar" className="mt-6">
-            <div className="space-y-6">
-              <MultiDayCalendarOverview onDaySelect={handleDaySelect} />
-              <OutfitTimelineView selectedDate={selectedDate} />
-            </div>
-          </TabsContent>
-        </Tabs>
+          <div className="space-y-6">
+            <MultiDayCalendarOverview onDaySelect={handleDaySelect} />
+            <OutfitTimelineView selectedDate={selectedDate} />
+          </div>
+        </div>
       </main>
     </div>
   );
