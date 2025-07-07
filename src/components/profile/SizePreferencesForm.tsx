@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import SizeGuide from './SizeGuide';
 
 interface SizePreferencesFormProps {
   profile: any;
@@ -146,8 +147,9 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Standard Sizes</CardTitle>
+          <SizeGuide />
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -157,8 +159,11 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
                 <Input
                   id="standard_size_top"
                   {...register('standard_size_top')}
-                  placeholder="S, M, L, XL, etc."
+                  placeholder="UK: 8, 10, 12 or US: S, M, L"
                 />
+                <p className="text-xs text-gray-500">
+                  Enter UK size (6-20) or letter size (XS-XXL)
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -166,8 +171,11 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
                 <Input
                   id="standard_size_bottom"
                   {...register('standard_size_bottom')}
-                  placeholder="28, 30, 32, etc."
+                  placeholder="UK: 8, 10, 12 or US: 28, 30, 32"
                 />
+                <p className="text-xs text-gray-500">
+                  Enter UK size (6-20) or waist measurement
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -175,8 +183,11 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
                 <Input
                   id="standard_size_shoes"
                   {...register('standard_size_shoes')}
-                  placeholder="8, 9, 10, etc."
+                  placeholder="UK: 5, 6, 7 or US: 7.5, 8.5, 9.5"
                 />
+                <p className="text-xs text-gray-500">
+                  Enter UK size (3-12) or US equivalent
+                </p>
               </div>
             </div>
 
@@ -230,7 +241,7 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
               onChange={(e) => setNewSizeCategory(e.target.value)}
             />
             <Input
-              placeholder="Size (e.g., 32)"
+              placeholder="Size (e.g., UK 10, US M)"
               value={newSizeValue}
               onChange={(e) => setNewSizeValue(e.target.value)}
             />
