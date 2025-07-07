@@ -30,10 +30,9 @@ const StyleAnalysis = () => {
         <UnifiedDailyPlan />
 
         <Tabs defaultValue="recommendations" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline & Feedback</TabsTrigger>
           </TabsList>
           
           <TabsContent value="recommendations" className="mt-6">
@@ -45,10 +44,6 @@ const StyleAnalysis = () => {
               <MultiDayCalendarOverview onDaySelect={handleDaySelect} />
               <OutfitTimelineView selectedDate={selectedDate} />
             </div>
-          </TabsContent>
-          
-          <TabsContent value="timeline" className="mt-6">
-            <OutfitTimelineView selectedDate={selectedDate} />
           </TabsContent>
         </Tabs>
       </main>
