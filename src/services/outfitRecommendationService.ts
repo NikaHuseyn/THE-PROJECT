@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface WardrobeItem {
@@ -9,6 +8,7 @@ interface WardrobeItem {
   brand?: string;
   size?: string;
   tags?: string[];
+  created_at?: string;
 }
 
 interface UserProfile {
@@ -308,10 +308,12 @@ class OutfitRecommendationService {
     }
 
     // Recent addition bonus (encouraging variety)
-    const daysSinceAdded = Math.floor(
-      (Date.now() - new Date(item.created_at || 0).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (daysSinceAdded < 30) score += 10;
+    if (item.created_at) {
+      const daysSinceAdded = Math.floor(
+        (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysSinceAdded < 30) score += 10;
+    }
 
     return score;
   }

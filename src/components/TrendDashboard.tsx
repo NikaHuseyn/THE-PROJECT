@@ -7,6 +7,7 @@ import { TrendingUp, Calendar, MapPin, Sparkles, Eye, Heart, Star } from 'lucide
 import { useBehaviorAnalytics } from '@/hooks/useBehaviorAnalytics';
 import { useFashionTrends } from '@/hooks/useFashionTrends';
 import { useSeasonalForecasts } from '@/hooks/useSeasonalForecasts';
+import TrendDataSync from './TrendDataSync';
 
 const TrendDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -79,6 +80,9 @@ const TrendDashboard = () => {
         </div>
       </div>
 
+      {/* Trend Data Integration Panel */}
+      <TrendDataSync />
+
       {/* Seasonal Forecast Card */}
       {latestForecast && (
         <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
@@ -99,7 +103,7 @@ const TrendDashboard = () => {
                 <div>
                   <h4 className="font-medium text-gray-800 mb-2">Key Trends</h4>
                   <div className="space-y-1">
-                    {latestForecast.key_trends.map((trend, index) => (
+                    {latestForecast.key_trends?.map((trend, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {trend}
                       </Badge>
@@ -110,7 +114,7 @@ const TrendDashboard = () => {
                 <div>
                   <h4 className="font-medium text-gray-800 mb-2">Color Palette</h4>
                   <div className="flex flex-wrap gap-1">
-                    {latestForecast.color_palette?.map((color, index) => (
+                    {latestForecast.color_palette?.map((color: any, index: number) => (
                       <div
                         key={index}
                         className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
@@ -124,7 +128,7 @@ const TrendDashboard = () => {
                 <div>
                   <h4 className="font-medium text-gray-800 mb-2">Must-Have Items</h4>
                   <div className="space-y-1">
-                    {latestForecast.must_have_items.slice(0, 2).map((item, index) => (
+                    {latestForecast.must_have_items?.slice(0, 2).map((item, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
                         {item}
                       </Badge>
@@ -164,6 +168,7 @@ const TrendDashboard = () => {
       ) : trends.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-600">No trends found for the selected category.</p>
+          <p className="text-sm text-gray-500 mt-2">Try syncing with external data sources above.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,6 +183,11 @@ const TrendDashboard = () => {
                   <div>
                     <CardTitle className="text-lg">{trend.name}</CardTitle>
                     <p className="text-sm text-gray-600">{trend.category}</p>
+                    {trend.source && (
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {trend.source}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     {trend.popularity_rank && (
