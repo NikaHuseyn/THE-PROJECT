@@ -1,12 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Thermometer, Sun, Cloud, Eye, ChevronLeft, ChevronRight, Sparkles, Wand2, Star, Link, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, Thermometer, Sun, Cloud, Eye, ChevronLeft, ChevronRight, Sparkles, Wand2, Star, Link, ArrowRight, Shirt, Footprints, Watch, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { googleCalendarService, CalendarEvent } from '@/services/googleCalendarService';
+
+interface OutfitRecommendation {
+  top: string;
+  bottom: string;
+  shoes: string;
+  accessories: string[];
+  colors: string[];
+  notes: string;
+}
 
 interface Event {
   id: string;
@@ -18,6 +26,7 @@ interface Event {
   weatherIcon?: string;
   hasAIRecommendation?: boolean;
   aiReasoning?: string;
+  outfitRecommendation?: OutfitRecommendation;
 }
 
 interface AIRecommendation {
@@ -37,8 +46,9 @@ const UnifiedDailyPlan = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [expandedOutfit, setExpandedOutfit] = useState<string | null>(null);
 
-  // Mock events for today
+  // Mock events for today with detailed outfit recommendations
   const mockEvents: Event[] = [
     {
       id: '1',
@@ -49,7 +59,15 @@ const UnifiedDailyPlan = () => {
       temperature: 18,
       weatherIcon: 'cloud',
       hasAIRecommendation: true,
-      aiReasoning: 'Perfect professional look for cooler weather. The navy blazer provides warmth while maintaining a polished appearance.'
+      aiReasoning: 'Perfect professional look for cooler weather. The navy blazer provides warmth while maintaining a polished appearance.',
+      outfitRecommendation: {
+        top: 'Navy blazer with crisp white button-down shirt',
+        bottom: 'Charcoal grey tailored trousers',
+        shoes: 'Brown leather oxford shoes',
+        accessories: ['Silver watch', 'Brown leather belt', 'Navy pocket square'],
+        colors: ['Navy', 'White', 'Charcoal', 'Brown'],
+        notes: 'Layer with a light sweater underneath for extra warmth. The brown accessories add warmth to the cool color palette.'
+      }
     },
     {
       id: '2',
@@ -60,7 +78,15 @@ const UnifiedDailyPlan = () => {
       temperature: 22,
       weatherIcon: 'sun',
       hasAIRecommendation: true,
-      aiReasoning: 'Elevated casual style ideal for outdoor dining. Light layers work perfectly for the warming afternoon temperature.'
+      aiReasoning: 'Elevated casual style ideal for outdoor dining. Light layers work perfectly for the warming afternoon temperature.',
+      outfitRecommendation: {
+        top: 'Light blue chambray shirt, sleeves rolled up',
+        bottom: 'Khaki chinos',
+        shoes: 'White leather sneakers',
+        accessories: ['Brown leather watch', 'Sunglasses', 'Canvas belt'],
+        colors: ['Light Blue', 'Khaki', 'White', 'Brown'],
+        notes: 'Perfect for transitioning from indoor to outdoor dining. The chambray breathes well in warmer weather.'
+      }
     },
     {
       id: '3',
@@ -71,7 +97,15 @@ const UnifiedDailyPlan = () => {
       temperature: 16,
       weatherIcon: 'cloud',
       hasAIRecommendation: true,
-      aiReasoning: 'Functional yet stylish activewear. Breathable fabrics with light layering for post-workout comfort in cooler evening air.'
+      aiReasoning: 'Functional yet stylish activewear. Breathable fabrics with light layering for post-workout comfort in cooler evening air.',
+      outfitRecommendation: {
+        top: 'Moisture-wicking long-sleeve top in sage green',
+        bottom: 'High-waisted black leggings',
+        shoes: 'Non-slip yoga shoes or barefoot',
+        accessories: ['Hair tie', 'Water bottle', 'Yoga mat', 'Light jacket for after'],
+        colors: ['Sage Green', 'Black'],
+        notes: 'Bring a light jacket for the walk home. Choose fabrics that move with you and keep you comfortable throughout practice.'
+      }
     }
   ];
 
@@ -236,11 +270,11 @@ const UnifiedDailyPlan = () => {
   };
 
   const handleViewOutfit = (eventId: string) => {
-    const event = events.find(e => e.id === eventId);
-    toast({
-      title: "Opening Outfit Suggestions",
-      description: `Showing personalized outfits for ${event?.name}`,
-    });
+    if (expandedOutfit === eventId) {
+      setExpandedOutfit(null);
+    } else {
+      setExpandedOutfit(eventId);
+    }
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -462,9 +496,84 @@ const UnifiedDailyPlan = () => {
                         className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                        View AI-Styled Outfit
+                        {expandedOutfit === event.id ? 'Hide Outfit' : 'View AI-Styled Outfit'}
                       </Button>
                     </div>
+
+                    {/* Detailed Outfit Recommendation */}
+                    {expandedOutfit === event.id && event.outfitRecommendation && (
+                      <div className="mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-100">
+                        <div className="flex items-center mb-4">
+                          <Shirt className="h-5 w-5 text-indigo-600 mr-2" />
+                          <h4 className="text-lg font-semibold text-gray-800">Your AI-Styled Outfit</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div className="flex items-start space-x-3">
+                              <Shirt className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+                              <div>
+                                <h5 className="font-medium text-gray-800 mb-1">Top</h5>
+                                <p className="text-sm text-gray-600">{event.outfitRecommendation.top}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start space-x-3">
+                              <div className="h-5 w-5 bg-gray-600 rounded mt-1 flex-shrink-0"></div>
+                              <div>
+                                <h5 className="font-medium text-gray-800 mb-1">Bottom</h5>
+                                <p className="text-sm text-gray-600">{event.outfitRecommendation.bottom}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start space-x-3">
+                              <Footprints className="h-5 w-5 text-brown-600 mt-1 flex-shrink-0" />
+                              <div>
+                                <h5 className="font-medium text-gray-800 mb-1">Shoes</h5>
+                                <p className="text-sm text-gray-600">{event.outfitRecommendation.shoes}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div className="flex items-start space-x-3">
+                              <Watch className="h-5 w-5 text-amber-600 mt-1 flex-shrink-0" />
+                              <div>
+                                <h5 className="font-medium text-gray-800 mb-1">Accessories</h5>
+                                <div className="flex flex-wrap gap-1">
+                                  {event.outfitRecommendation.accessories.map((accessory, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                      {accessory}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start space-x-3">
+                              <Palette className="h-5 w-5 text-pink-600 mt-1 flex-shrink-0" />
+                              <div>
+                                <h5 className="font-medium text-gray-800 mb-1">Color Palette</h5>
+                                <div className="flex flex-wrap gap-1">
+                                  {event.outfitRecommendation.colors.map((color, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {color}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {event.outfitRecommendation.notes && (
+                          <div className="mt-4 p-4 bg-white/50 rounded-lg border border-white/50">
+                            <h5 className="font-medium text-gray-800 mb-2">Styling Notes</h5>
+                            <p className="text-sm text-gray-600 leading-relaxed">{event.outfitRecommendation.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
