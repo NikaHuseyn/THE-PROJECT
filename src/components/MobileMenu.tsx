@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Home, Shirt, BarChart3, User, LogOut } from 'lucide-react';
+import { Menu, X, Home, Shirt, BarChart3, Users, User, LogOut } from 'lucide-react';
 
 interface MobileMenuProps {
   user: any;
@@ -21,6 +21,7 @@ const MobileMenu = ({ user, mobileMenuOpen, setMobileMenuOpen, onSignOut }: Mobi
     { path: '/', label: 'Home', icon: Home },
     { path: '/wardrobe', label: 'Wardrobe', icon: Shirt, requiresAuth: true },
     { path: '/style-analysis', label: 'Style Analysis', icon: BarChart3 },
+    { path: '/community', label: 'Community', icon: Users },
   ];
 
   return (

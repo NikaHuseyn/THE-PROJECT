@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import Header from '@/components/Header';
 import StyleProfile from '@/components/StyleProfile';
 import AIRecommendations from '@/components/AIRecommendations';
-import CommunityFeed from '@/components/CommunityFeed';
 import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
 import MultiDayCalendarOverview from '@/components/MultiDayCalendarOverview';
 import OutfitTimelineView from '@/components/OutfitTimelineView';
@@ -24,7 +23,7 @@ const StyleAnalysis = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Style Analysis</h1>
           <p className="text-gray-600">
-            AI-powered style insights, personalized recommendations, and community inspiration
+            AI-powered style insights, personalized recommendations, and calendar integration
           </p>
         </div>
 
@@ -32,12 +31,11 @@ const StyleAnalysis = () => {
         <DailyOutfitSnapshot />
 
         <Tabs defaultValue="recommendations" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
             <TabsTrigger value="timeline">Timeline & Feedback</TabsTrigger>
             <TabsTrigger value="profile">Style Profile</TabsTrigger>
-            <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
           
           <TabsContent value="recommendations" className="mt-6">
@@ -57,10 +55,6 @@ const StyleAnalysis = () => {
           
           <TabsContent value="profile" className="mt-6">
             <StyleProfile />
-          </TabsContent>
-          
-          <TabsContent value="community" className="mt-6">
-            <CommunityFeed />
           </TabsContent>
         </Tabs>
       </main>
