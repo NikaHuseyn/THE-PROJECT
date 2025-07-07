@@ -1,138 +1,104 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share2, Eye, Camera } from 'lucide-react';
-import { format } from 'date-fns';
-
-interface SocialPost {
-  id: string;
-  user_id: string;
-  image_urls: string[];
-  caption: string | null;
-  tags: string[] | null;
-  likes_count: number;
-  comments_count: number;
-  created_at: string;
-  social_profiles: {
-    display_name: string | null;
-    avatar_url: string | null;
-  } | null;
-  user_liked?: boolean;
-}
+import PostInteractions from './PostInteractions';
+import { formatDistanceToNow } from 'date-fns';
 
 interface PostCardProps {
-  post: SocialPost;
+  post: {
+    id: string;
+    user_id: string;
+    image_urls: string[];
+    caption: string | null;
+    tags: string[] | null;
+    likes_count: number;
+    comments_count: number;
+    created_at: string;
+    social_profiles: {
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+    user_liked?: boolean;
+  };
   onToggleLike: (postId: string) => void;
   onShare: (postId: string) => void;
 }
 
 const PostCard = ({ post, onToggleLike, onShare }: PostCardProps) => {
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'now';
-    if (diffInHours < 24) return `${diffInHours}h`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d`;
-    return format(date, 'MMM d');
-  };
-
-  const getOccasionColor = (tags?: string[] | null) => {
-    if (!tags || tags.length === 0) return 'bg-gray-100 text-gray-800';
-    
-    const firstTag = tags[0];
-    const colors: { [key: string]: string } = {
-      'Business': 'bg-blue-100 text-blue-800',
-      'Brunch': 'bg-green-100 text-green-800',
-      'Date': 'bg-pink-100 text-pink-800',
-      'Casual': 'bg-yellow-100 text-yellow-800',
-      'New': 'bg-purple-100 text-purple-800',
-      'Style': 'bg-rose-100 text-rose-800'
-    };
-    return colors[firstTag] || 'bg-gray-100 text-gray-800';
-  };
+  const displayName = post.social_profiles?.display_name || 'Anonymous User';
+  const avatarUrl = post.social_profiles?.avatar_url;
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {post.social_profiles?.display_name?.charAt(0) || 'U'}
-              </span>
-            </div>
-            <div>
-              <p className="font-medium">
-                {post.social_profiles?.display_name || 'Anonymous User'}
-              </p>
-              <p className="text-sm text-gray-500">{getTimeAgo(post.created_at)} ago</p>
-            </div>
+      <CardContent className="p-0">
+        {/* User Header */}
+        <div className="p-4 flex items-center space-x-3">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={avatarUrl || undefined} />
+            <AvatarFallback className="bg-gradient-to-r from-rose-500 to-pink-600 text-white">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <p className="font-medium text-gray-900">{displayName}</p>
+            <p className="text-xs text-gray-500">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </p>
           </div>
-          {post.tags && post.tags.length > 0 && (
-            <Badge className={getOccasionColor(post.tags)}>
-              {post.tags[0]}
-            </Badge>
+        </div>
+
+        {/* Image */}
+        {post.image_urls.length > 0 && (
+          <div className="relative aspect-square">
+            <img
+              src={post.image_urls[0]}
+              alt="Outfit post"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.src = '/placeholder.svg';
+              }}
+            />
+            {post.image_urls.length > 1 && (
+              <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-full text-xs">
+                +{post.image_urls.length - 1}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Caption and Content */}
+        <div className="p-4">
+          {post.caption && (
+            <p className="text-gray-800 mb-3 leading-relaxed">
+              {post.caption}
+            </p>
           )}
+
+          {/* Tags */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {post.tags.map((tag, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs"
+                >
+                  #{tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Interactions */}
+          <PostInteractions
+            post={post}
+            onToggleLike={onToggleLike}
+            onShare={onShare}
+          />
         </div>
-      </CardHeader>
-      
-      <div className="aspect-square bg-gray-100 flex items-center justify-center">
-        <Camera className="h-12 w-12 text-gray-400" />
-        <span className="ml-2 text-gray-500">Outfit Photo</span>
-      </div>
-      
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onToggleLike(post.id)}
-              className={`flex items-center space-x-1 ${post.user_liked ? 'text-red-500' : 'text-gray-600'}`}
-            >
-              <Heart className={`h-4 w-4 ${post.user_liked ? 'fill-current' : ''}`} />
-              <span>{post.likes_count}</span>
-            </Button>
-            
-            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600">
-              <MessageCircle className="h-4 w-4" />
-              <span>{post.comments_count}</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onShare(post.id)}
-              className="flex items-center space-x-1 text-gray-600"
-            >
-              <Share2 className="h-4 w-4" />
-              <span>Share</span>
-            </Button>
-          </div>
-          
-          <Button variant="ghost" size="sm" className="text-gray-500">
-            <Eye className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {post.caption && (
-          <p className="text-gray-800 mb-3">{post.caption}</p>
-        )}
-        
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {post.tags.map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                #{tag}
-              </Badge>
-            ))}
-          </div>
-        )}
       </CardContent>
     </Card>
   );

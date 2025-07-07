@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, Users } from 'lucide-react';
 import { useSocialPosts } from '@/hooks/useSocialPosts';
@@ -8,10 +8,56 @@ import PostCard from './community/PostCard';
 import EmptyState from './community/EmptyState';
 import LoadingState from './community/LoadingState';
 import ErrorState from './community/ErrorState';
+import CommunityStats from './community/CommunityStats';
+import { supabase } from '@/integrations/supabase/client';
 
 const CommunityFeed = () => {
   const { posts, loading, error, createPost, toggleLike } = useSocialPosts();
   const [showPostForm, setShowPostForm] = useState(false);
+  const [stats, setStats] = useState({
+    totalPosts: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    activeUsers: 0
+  });
+
+  const fetchCommunityStats = async () => {
+    try {
+      // Get total posts
+      const { count: postsCount } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total likes
+      const { count: likesCount } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total comments
+      const { count: commentsCount } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true });
+
+      // Get active users (users who have posted)
+      const { count: activeUsersCount } = await supabase
+        .from('social_profiles')
+        .select('*', { count: 'exact', head: true })
+        .gt('posts_count', 0);
+
+      setStats({
+        totalPosts: postsCount || 0,
+        totalLikes: likesCount || 0,
+        totalComments: commentsCount || 0,
+        activeUsers: activeUsersCount || 0
+      });
+    } catch (err) {
+      console.error('Error fetching community stats:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCommunityStats();
+  }, [posts]);
 
   const handleShare = (postId: string) => {
     console.log('Sharing post:', postId);
@@ -49,6 +95,8 @@ const CommunityFeed = () => {
           Share Outfit
         </Button>
       </div>
+
+      <CommunityStats stats={stats} />
 
       {showPostForm && (
         <PostCreationForm

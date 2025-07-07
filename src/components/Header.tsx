@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from './Navigation';
 import UserMenu from './UserMenu';
 import MobileMenu from './MobileMenu';
+import NotificationBell from './NotificationBell';
 
 const Header = () => {
   const [user, setUser] = useState<any>(null);
@@ -78,6 +79,7 @@ const Header = () => {
           <Navigation user={user} />
 
           <div className="flex items-center space-x-4">
+            {user && <NotificationBell />}
             <MobileMenu 
               user={user}
               mobileMenuOpen={mobileMenuOpen}
