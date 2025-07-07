@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Crystal, Calendar, Sparkles, TrendingUp, Globe, Users, Eye, Zap } from 'lucide-react';
+import { Gem, Calendar, Sparkles, TrendingUp, Globe, Users, Eye, Zap } from 'lucide-react';
 
 interface SeasonalTrend {
   id: string;
@@ -124,7 +123,7 @@ const TrendForecast = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <Crystal className="h-6 w-6 mr-2" />
+            <Gem className="h-6 w-6 mr-2" />
             Trend Forecast
           </h2>
           <p className="text-gray-600">AI-powered predictions for upcoming fashion trends</p>

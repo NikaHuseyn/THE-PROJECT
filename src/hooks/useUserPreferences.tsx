@@ -100,13 +100,20 @@ export const useUserPreferences = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Prepare the update object with proper typing
+      const updateData: any = {
+        user_id: user.id,
+        ...updates
+      };
+
+      // Convert notification_preferences to the expected JSON format
+      if (updates.notification_preferences) {
+        updateData.notification_preferences = updates.notification_preferences as any;
+      }
+
       const { error: updateError } = await supabase
         .from('user_style_profiles')
-        .upsert({
-          user_id: user.id,
-          ...updates,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(updateData, { onConflict: 'user_id' });
 
       if (updateError) throw updateError;
 

@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { GoogleCalendarService } from '@/services/googleCalendarService';
 
 interface CalendarEvent {
   id: string;
@@ -71,8 +70,9 @@ export const useCalendarEvents = () => {
   const connectCalendar = async () => {
     try {
       setIsLoading(true);
-      const calendarService = new GoogleCalendarService();
-      await calendarService.authorize();
+      // For now, we'll just simulate a calendar connection
+      // In a real implementation, this would handle OAuth flow
+      console.log('Calendar connection initiated');
       await checkConnection();
       if (isConnected) {
         await fetchEvents();
@@ -88,7 +88,6 @@ export const useCalendarEvents = () => {
   const syncEvents = async () => {
     try {
       setIsLoading(true);
-      const calendarService = new GoogleCalendarService();
       // Sync recent events
       await fetchEvents();
     } catch (err) {
