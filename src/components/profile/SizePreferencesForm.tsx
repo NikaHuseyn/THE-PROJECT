@@ -40,9 +40,9 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
   const bottomSize = watch('standard_size_bottom');
   const shoeSize = watch('standard_size_shoes');
 
-  const ukTopSizes = ['6', '8', '10', '12', '14', '16', '18', '20', '22', '24'];
-  const ukBottomSizes = ['6', '8', '10', '12', '14', '16', '18', '20', '22', '24'];
-  const ukShoeSizes = ['3', '3.5', '4', '4.5', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'];
+  const ukTopSizes = ['4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28'];
+  const ukBottomSizes = ['4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28'];
+  const ukShoeSizes = ['2', '2.5', '3', '3.5', '4', '4.5', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12', '12.5', '13'];
 
   const { data: userSizes } = useQuery({
     queryKey: ['userSizes'],
