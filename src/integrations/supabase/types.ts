@@ -132,6 +132,60 @@ export type Database = {
           },
         ]
       }
+      fashion_trends: {
+        Row: {
+          category: string
+          colors: string[] | null
+          created_at: string
+          description: string | null
+          external_id: string | null
+          growth_rate: string | null
+          id: string
+          image_url: string | null
+          name: string
+          occasions: string[] | null
+          popularity_rank: number | null
+          season: string | null
+          source: string | null
+          trend_score: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          growth_rate?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          occasions?: string[] | null
+          popularity_rank?: number | null
+          season?: string | null
+          source?: string | null
+          trend_score?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          growth_rate?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          occasions?: string[] | null
+          popularity_rank?: number | null
+          season?: string | null
+          source?: string | null
+          trend_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string
@@ -402,6 +456,48 @@ export type Database = {
         }
         Relationships: []
       }
+      seasonal_forecasts: {
+        Row: {
+          color_palette: Json | null
+          confidence_score: number
+          created_at: string
+          description: string | null
+          id: string
+          influencing_factors: string[] | null
+          key_trends: string[] | null
+          must_have_items: string[] | null
+          season: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          color_palette?: Json | null
+          confidence_score?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          influencing_factors?: string[] | null
+          key_trends?: string[] | null
+          must_have_items?: string[] | null
+          season: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          color_palette?: Json | null
+          confidence_score?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          influencing_factors?: string[] | null
+          key_trends?: string[] | null
+          must_have_items?: string[] | null
+          season?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       shopping_items: {
         Row: {
           affiliate_url: string | null
@@ -549,6 +645,80 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      trend_analytics: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          trend_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          trend_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          trend_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trend_analytics_trend_id_fkey"
+            columns: ["trend_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_trends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trend_predictions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          key_drivers: string[] | null
+          probability: number
+          risk_level: string | null
+          timeframe: string | null
+          trend_name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key_drivers?: string[] | null
+          probability?: number
+          risk_level?: string | null
+          timeframe?: string | null
+          trend_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key_drivers?: string[] | null
+          probability?: number
+          risk_level?: string | null
+          timeframe?: string | null
+          trend_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
