@@ -1,85 +1,68 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { googleCalendarService } from '@/services/googleCalendarService';
+import { GoogleCalendarService } from '@/services/googleCalendarService';
 
 interface CalendarEvent {
   id: string;
   title: string;
   start_time: string;
   end_time: string;
-  location?: string;
   description?: string;
-  dress_code?: string;
+  location?: string;
   event_type?: string;
+  dress_code?: string;
 }
 
-export const useCalendarEvents = (date?: Date) => {
+export const useCalendarEvents = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasConnection, setHasConnection] = useState<boolean | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const checkCalendarConnection = async () => {
+  const checkConnection = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setHasConnection(false);
-        return false;
-      }
+      if (!user) return;
 
-      const { data: connection } = await supabase
+      const { data: connections } = await supabase
         .from('user_calendar_connections')
         .select('*')
         .eq('user_id', user.id)
-        .eq('provider', 'google')
-        .eq('is_active', true)
-        .single();
+        .eq('is_active', true);
 
-      const connectionExists = !!connection;
-      setHasConnection(connectionExists);
-      return connectionExists;
-    } catch (error) {
-      console.error('Error checking calendar connection:', error);
-      setHasConnection(false);
-      return false;
+      setIsConnected(connections && connections.length > 0);
+    } catch (err) {
+      console.error('Error checking calendar connection:', err);
     }
   };
 
-  const loadEvents = async (targetDate?: Date) => {
+  const fetchEvents = async (days = 7) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('No authenticated user');
-      }
+      if (!user) throw new Error('User not authenticated');
 
-      const dateToUse = targetDate || date || new Date();
-      const startOfDay = new Date(dateToUse);
-      startOfDay.setHours(0, 0, 0, 0);
-      
-      const endOfDay = new Date(dateToUse);
-      endOfDay.setHours(23, 59, 59, 999);
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(startDate.getDate() + days);
 
-      const { data: syncedEvents, error: fetchError } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('synced_calendar_events')
         .select('*')
         .eq('user_id', user.id)
-        .gte('start_time', startOfDay.toISOString())
-        .lte('start_time', endOfDay.toISOString())
+        .gte('start_time', startDate.toISOString())
+        .lte('start_time', endDate.toISOString())
         .order('start_time', { ascending: true });
 
-      if (fetchError) {
-        throw fetchError;
-      }
+      if (fetchError) throw fetchError;
 
-      setEvents(syncedEvents || []);
+      setEvents(data || []);
     } catch (err) {
-      console.error('Error loading calendar events:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load events');
-      setEvents([]);
+      console.error('Error fetching calendar events:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch events');
     } finally {
       setIsLoading(false);
     }
@@ -87,54 +70,57 @@ export const useCalendarEvents = (date?: Date) => {
 
   const connectCalendar = async () => {
     try {
-      setError(null);
-      const success = await googleCalendarService.signInToGoogle();
-      if (success) {
-        await checkCalendarConnection();
-        await loadEvents();
+      setIsLoading(true);
+      const calendarService = new GoogleCalendarService();
+      await calendarService.authorize();
+      await checkConnection();
+      if (isConnected) {
+        await fetchEvents();
       }
-      return success;
-    } catch (error) {
-      console.error('Error connecting calendar:', error);
-      setError('Failed to connect calendar');
-      return false;
+    } catch (err) {
+      console.error('Error connecting calendar:', err);
+      setError(err instanceof Error ? err.message : 'Failed to connect calendar');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const syncEvents = async () => {
-    if (!hasConnection) return false;
-    
     try {
-      setError(null);
-      // This would trigger a sync with the external calendar service
-      await googleCalendarService.syncEvents();
-      await loadEvents();
-      return true;
-    } catch (error) {
-      console.error('Error syncing events:', error);
-      setError('Failed to sync events');
-      return false;
+      setIsLoading(true);
+      const calendarService = new GoogleCalendarService();
+      // Sync recent events
+      await fetchEvents();
+    } catch (err) {
+      console.error('Error syncing events:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sync events');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const refreshEvents = () => {
+    fetchEvents();
+  };
+
   useEffect(() => {
-    checkCalendarConnection();
+    checkConnection();
   }, []);
 
   useEffect(() => {
-    if (hasConnection && date) {
-      loadEvents(date);
+    if (isConnected) {
+      fetchEvents();
     }
-  }, [hasConnection, date]);
+  }, [isConnected]);
 
   return {
     events,
     isLoading,
     error,
-    hasConnection,
-    loadEvents,
+    isConnected,
+    fetchEvents,
     connectCalendar,
     syncEvents,
-    checkCalendarConnection
+    refreshEvents
   };
 };

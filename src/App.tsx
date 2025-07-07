@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Wardrobe from "./pages/Wardrobe";
 import StyleAnalysis from "./pages/StyleAnalysis";
+import FashionTrends from "./pages/FashionTrends";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/wardrobe" element={<Wardrobe />} />
           <Route path="/style-analysis" element={<StyleAnalysis />} />
+          <Route path="/fashion-trends" element={<FashionTrends />} />
           <Route path="/community" element={<Community />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

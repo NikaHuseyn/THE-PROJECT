@@ -3,136 +3,110 @@ import React from 'react';
 import ArrayInputSection from './ArrayInputSection';
 
 interface StylePreferencesGridProps {
-  watchedValues: any;
+  preferences: any;
+  newValues: {
+    preferredColors: string;
+    dislikedColors: string;
+    preferredPatterns: string;
+    preferredFabrics: string;
+    stylePersonality: string;
+    dislikedStyles: string;
+    preferredBrands: string;
+    preferredRetailers: string;
+  };
+  setNewValues: {
+    setNewPreferredColors: (value: string) => void;
+    setNewDislikedColors: (value: string) => void;
+    setNewPreferredPatterns: (value: string) => void;
+    setNewPreferredFabrics: (value: string) => void;
+    setNewStylePersonality: (value: string) => void;
+    setNewDislikedStyles: (value: string) => void;
+    setNewPreferredBrands: (value: string) => void;
+    setNewPreferredRetailers: (value: string) => void;
+  };
   addToArray: (fieldName: string, value: string, setState: (value: string) => void) => void;
   removeFromArray: (fieldName: string, index: number) => void;
-  newPreferredColor: string;
-  setNewPreferredColor: (value: string) => void;
-  newDislikedColor: string;
-  setNewDislikedColor: (value: string) => void;
-  newPreferredPattern: string;
-  setNewPreferredPattern: (value: string) => void;
-  newPreferredFabric: string;
-  setNewPreferredFabric: (value: string) => void;
-  newStylePersonality: string;
-  setNewStylePersonality: (value: string) => void;
-  newDislikedStyle: string;
-  setNewDislikedStyle: (value: string) => void;
-  newPreferredBrand: string;
-  setNewPreferredBrand: (value: string) => void;
-  newPreferredRetailer: string;
-  setNewPreferredRetailer: (value: string) => void;
 }
 
 const StylePreferencesGrid = ({
-  watchedValues,
+  preferences,
+  newValues,
+  setNewValues,
   addToArray,
   removeFromArray,
-  newPreferredColor,
-  setNewPreferredColor,
-  newDislikedColor,
-  setNewDislikedColor,
-  newPreferredPattern,
-  setNewPreferredPattern,
-  newPreferredFabric,
-  setNewPreferredFabric,
-  newStylePersonality,
-  setNewStylePersonality,
-  newDislikedStyle,
-  setNewDislikedStyle,
-  newPreferredBrand,
-  setNewPreferredBrand,
-  newPreferredRetailer,
-  setNewPreferredRetailer,
 }: StylePreferencesGridProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <ArrayInputSection
         title="Preferred Colors"
-        fieldName="preferred_colors"
-        placeholder="Add a color you love"
-        newValue={newPreferredColor}
-        setNewValue={setNewPreferredColor}
-        values={watchedValues.preferred_colors}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a color..."
+        values={preferences.preferred_colors || []}
+        onAdd={(value) => addToArray('preferred_colors', value, setNewValues.setNewPreferredColors)}
+        onRemove={(index) => removeFromArray('preferred_colors', index)}
+        maxItems={10}
       />
 
       <ArrayInputSection
         title="Disliked Colors"
-        fieldName="disliked_colors"
-        placeholder="Add a color you avoid"
-        newValue={newDislikedColor}
-        setNewValue={setNewDislikedColor}
-        values={watchedValues.disliked_colors}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a color..."
+        values={preferences.disliked_colors || []}
+        onAdd={(value) => addToArray('disliked_colors', value, setNewValues.setNewDislikedColors)}
+        onRemove={(index) => removeFromArray('disliked_colors', index)}
+        maxItems={10}
       />
 
       <ArrayInputSection
         title="Preferred Patterns"
-        fieldName="preferred_patterns"
-        placeholder="e.g., Stripes, Floral, Geometric"
-        newValue={newPreferredPattern}
-        setNewValue={setNewPreferredPattern}
-        values={watchedValues.preferred_patterns}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a pattern..."
+        values={preferences.preferred_patterns || []}
+        onAdd={(value) => addToArray('preferred_patterns', value, setNewValues.setNewPreferredPatterns)}
+        onRemove={(index) => removeFromArray('preferred_patterns', index)}
+        maxItems={8}
       />
 
       <ArrayInputSection
         title="Preferred Fabrics"
-        fieldName="preferred_fabrics"
-        placeholder="e.g., Cotton, Silk, Denim"
-        newValue={newPreferredFabric}
-        setNewValue={setNewPreferredFabric}
-        values={watchedValues.preferred_fabrics}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a fabric..."
+        values={preferences.preferred_fabrics || []}
+        onAdd={(value) => addToArray('preferred_fabrics', value, setNewValues.setNewPreferredFabrics)}
+        onRemove={(index) => removeFromArray('preferred_fabrics', index)}
+        maxItems={10}
       />
 
       <ArrayInputSection
         title="Style Personality"
-        fieldName="style_personality"
-        placeholder="e.g., Minimalist, Bohemian, Classic"
-        newValue={newStylePersonality}
-        setNewValue={setNewStylePersonality}
-        values={watchedValues.style_personality}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a style..."
+        values={preferences.style_personality || []}
+        onAdd={(value) => addToArray('style_personality', value, setNewValues.setNewStylePersonality)}
+        onRemove={(index) => removeFromArray('style_personality', index)}
+        maxItems={5}
       />
 
       <ArrayInputSection
         title="Disliked Styles"
-        fieldName="disliked_styles"
-        placeholder="Styles you prefer to avoid"
-        newValue={newDislikedStyle}
-        setNewValue={setNewDislikedStyle}
-        values={watchedValues.disliked_styles}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a style..."
+        values={preferences.disliked_styles || []}
+        onAdd={(value) => addToArray('disliked_styles', value, setNewValues.setNewDislikedStyles)}
+        onRemove={(index) => removeFromArray('disliked_styles', index)}
+        maxItems={8}
       />
 
       <ArrayInputSection
         title="Preferred Brands"
-        fieldName="preferred_brands"
-        placeholder="Your favorite fashion brands"
-        newValue={newPreferredBrand}
-        setNewValue={setNewPreferredBrand}
-        values={watchedValues.preferred_brands}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a brand..."
+        values={preferences.preferred_brands || []}
+        onAdd={(value) => addToArray('preferred_brands', value, setNewValues.setNewPreferredBrands)}
+        onRemove={(index) => removeFromArray('preferred_brands', index)}
+        maxItems={15}
       />
 
       <ArrayInputSection
         title="Preferred Retailers"
-        fieldName="preferred_retailers"
-        placeholder="Where you like to shop"
-        newValue={newPreferredRetailer}
-        setNewValue={setNewPreferredRetailer}
-        values={watchedValues.preferred_retailers}
-        addToArray={addToArray}
-        removeFromArray={removeFromArray}
+        placeholder="Add a retailer..."
+        values={preferences.preferred_retailers || []}
+        onAdd={(value) => addToArray('preferred_retailers', value, setNewValues.setNewPreferredRetailers)}
+        onRemove={(index) => removeFromArray('preferred_retailers', index)}
+        maxItems={10}
       />
     </div>
   );
