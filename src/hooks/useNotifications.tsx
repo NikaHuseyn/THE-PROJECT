@@ -33,8 +33,14 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0);
+      // Type assertion to ensure the data matches our Notification interface
+      const typedNotifications = (data || []).map(item => ({
+        ...item,
+        type: item.type as 'like' | 'comment' | 'follow'
+      })) as Notification[];
+
+      setNotifications(typedNotifications);
+      setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
     } catch (err) {
       console.error('Error fetching notifications:', err);
     } finally {
@@ -84,11 +90,9 @@ export const useNotifications = () => {
     fetchNotifications();
 
     // Set up real-time subscription for notifications
-    const { data: { user } } = supabase.auth.getUser();
-    
     const setupRealtimeSubscription = async () => {
-      const userData = await user;
-      if (!userData) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       const channel = supabase
         .channel('notifications')
@@ -98,10 +102,14 @@ export const useNotifications = () => {
             event: 'INSERT',
             schema: 'public',
             table: 'notifications',
-            filter: `user_id=eq.${userData.id}`
+            filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            const newNotification = payload.new as Notification;
+            const newNotification = {
+              ...payload.new,
+              type: payload.new.type as 'like' | 'comment' | 'follow'
+            } as Notification;
+            
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
             
