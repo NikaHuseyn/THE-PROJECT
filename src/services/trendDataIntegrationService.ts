@@ -32,24 +32,24 @@ class TrendDataIntegrationService {
     console.log('Starting trend data integration...');
     
     try {
-      // Call the Google Trends edge function for real data
+      // Call edge functions for real data
       const googleTrendsPromise = this.fetchGoogleTrendsViaEdgeFunction();
+      const pinterestTrendsPromise = this.fetchPinterestTrendsViaEdgeFunction();
       
-      // Keep the mock data for Pinterest and Instagram for now
-      const [googleTrendsResult, pinterestTrends, instagramTrends] = await Promise.allSettled([
+      // Keep the mock data for Instagram for now
+      const [googleTrendsResult, pinterestTrendsResult, instagramTrends] = await Promise.allSettled([
         googleTrendsPromise,
-        this.fetchPinterestTrends(),
+        pinterestTrendsPromise,
         this.fetchInstagramTrends()
       ]);
 
-      // The Google Trends edge function handles data storage internally
+      // Both Google Trends and Pinterest edge functions handle data storage internally
       if (googleTrendsResult.status === 'rejected') {
         console.error('Google Trends integration failed:', googleTrendsResult.reason);
       }
 
-      // Process Pinterest and Instagram data as before
-      if (pinterestTrends.status === 'fulfilled') {
-        await this.processPinterestTrends(pinterestTrends.value);
+      if (pinterestTrendsResult.status === 'rejected') {
+        console.error('Pinterest Trends integration failed:', pinterestTrendsResult.reason);
       }
 
       if (instagramTrends.status === 'fulfilled') {
@@ -78,6 +78,19 @@ class TrendDataIntegrationService {
     }
 
     console.log('Google Trends integration result:', data);
+  }
+
+  private async fetchPinterestTrendsViaEdgeFunction(): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('pinterest-trends-integration', {
+      body: {}
+    });
+
+    if (error) {
+      console.error('Error calling Pinterest Trends edge function:', error);
+      throw error;
+    }
+
+    console.log('Pinterest Trends integration result:', data);
   }
 
   private async fetchPinterestTrends(): Promise<PinterestTrendData[]> {
