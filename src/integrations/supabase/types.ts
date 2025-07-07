@@ -83,6 +83,50 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          moderator_notes: string | null
+          post_id: string
+          report_reason: string | null
+          report_type: string
+          reporter_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          moderator_notes?: string | null
+          post_id: string
+          report_reason?: string | null
+          report_type: string
+          reporter_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          moderator_notes?: string | null
+          post_id?: string
+          report_reason?: string | null
+          report_type?: string
+          reporter_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followers: {
         Row: {
           created_at: string
@@ -307,10 +351,13 @@ export type Database = {
           caption: string | null
           comments_count: number | null
           created_at: string
+          flag_reason: string | null
           id: string
           image_urls: string[]
           is_featured: boolean | null
+          is_flagged: boolean | null
           likes_count: number | null
+          moderated_at: string | null
           product_links: Json | null
           tags: string[] | null
           updated_at: string
@@ -320,10 +367,13 @@ export type Database = {
           caption?: string | null
           comments_count?: number | null
           created_at?: string
+          flag_reason?: string | null
           id?: string
           image_urls: string[]
           is_featured?: boolean | null
+          is_flagged?: boolean | null
           likes_count?: number | null
+          moderated_at?: string | null
           product_links?: Json | null
           tags?: string[] | null
           updated_at?: string
@@ -333,10 +383,13 @@ export type Database = {
           caption?: string | null
           comments_count?: number | null
           created_at?: string
+          flag_reason?: string | null
           id?: string
           image_urls?: string[]
           is_featured?: boolean | null
+          is_flagged?: boolean | null
           likes_count?: number | null
+          moderated_at?: string | null
           product_links?: Json | null
           tags?: string[] | null
           updated_at?: string
@@ -490,6 +543,36 @@ export type Database = {
           start_time?: string
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_description: string | null
+          badge_name: string
+          badge_type: string
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_name: string
+          badge_type: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_name?: string
+          badge_type?: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -916,7 +999,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      style_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          badge_count: number | null
+          display_name: string | null
+          posts_count: number | null
+          style_score: number | null
+          total_likes: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_recommendations: {

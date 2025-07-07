@@ -9,6 +9,7 @@ import EmptyState from './community/EmptyState';
 import LoadingState from './community/LoadingState';
 import ErrorState from './community/ErrorState';
 import CommunityStats from './community/CommunityStats';
+import Leaderboard from './community/Leaderboard';
 import { supabase } from '@/integrations/supabase/client';
 
 const CommunityFeed = () => {
@@ -78,55 +79,63 @@ const CommunityFeed = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <Users className="h-6 w-6 mr-2" />
-            Community Feed
-          </h2>
-          <p className="text-gray-600">Get inspired by the community and share your style</p>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Feed */}
+      <div className="lg:col-span-2 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <Users className="h-6 w-6 mr-2" />
+              Community Feed
+            </h2>
+            <p className="text-gray-600">Get inspired by the community and share your style</p>
+          </div>
+          <Button
+            onClick={() => setShowPostForm(!showPostForm)}
+            className="bg-gradient-to-r from-pink-500 to-rose-600"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Share Outfit
+          </Button>
         </div>
-        <Button
-          onClick={() => setShowPostForm(!showPostForm)}
-          className="bg-gradient-to-r from-pink-500 to-rose-600"
-        >
-          <Camera className="h-4 w-4 mr-2" />
-          Share Outfit
-        </Button>
-      </div>
 
-      <CommunityStats stats={stats} />
+        <CommunityStats stats={stats} />
 
-      {showPostForm && (
-        <PostCreationForm
-          onCreatePost={handleCreatePost}
-          onClose={() => setShowPostForm(false)}
-        />
-      )}
+        {showPostForm && (
+          <PostCreationForm
+            onCreatePost={handleCreatePost}
+            onClose={() => setShowPostForm(false)}
+          />
+        )}
 
-      <div className="space-y-6">
-        {posts.length === 0 ? (
-          <EmptyState />
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onToggleLike={toggleLike}
-              onShare={handleShare}
-            />
-          ))
+        <div className="space-y-6">
+          {posts.length === 0 ? (
+            <EmptyState />
+          ) : (
+            posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onToggleLike={toggleLike}
+                onShare={handleShare}
+              />
+            ))
+          )}
+        </div>
+
+        {posts.length > 0 && (
+          <div className="text-center py-8">
+            <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50">
+              Load More Posts
+            </Button>
+          </div>
         )}
       </div>
 
-      {posts.length > 0 && (
-        <div className="text-center py-8">
-          <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50">
-            Load More Posts
-          </Button>
-        </div>
-      )}
+      {/* Sidebar */}
+      <div className="space-y-6">
+        <Leaderboard />
+      </div>
     </div>
   );
 };
