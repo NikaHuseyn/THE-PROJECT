@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import Header from '@/components/Header';
-import StyleProfile from '@/components/StyleProfile';
 import AIRecommendations from '@/components/AIRecommendations';
 import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
 import MultiDayCalendarOverview from '@/components/MultiDayCalendarOverview';
@@ -31,11 +30,10 @@ const StyleAnalysis = () => {
         <UnifiedDailyPlan />
 
         <Tabs defaultValue="recommendations" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
             <TabsTrigger value="timeline">Timeline & Feedback</TabsTrigger>
-            <TabsTrigger value="profile">Style Profile</TabsTrigger>
           </TabsList>
           
           <TabsContent value="recommendations" className="mt-6">
@@ -51,10 +49,6 @@ const StyleAnalysis = () => {
           
           <TabsContent value="timeline" className="mt-6">
             <OutfitTimelineView selectedDate={selectedDate} />
-          </TabsContent>
-          
-          <TabsContent value="profile" className="mt-6">
-            <StyleProfile />
           </TabsContent>
         </Tabs>
       </main>
