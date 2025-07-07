@@ -35,13 +35,14 @@ class TrendDataIntegrationService {
       // Call edge functions for real data
       const googleTrendsPromise = this.fetchGoogleTrendsViaEdgeFunction();
       const pinterestTrendsPromise = this.fetchPinterestTrendsViaEdgeFunction();
-      
       const instagramTrendsPromise = this.fetchInstagramTrendsViaEdgeFunction();
+      const wgsnTrendsPromise = this.fetchWGSNTrendsViaEdgeFunction();
       
-      const [googleTrendsResult, pinterestTrendsResult, instagramTrendsResult] = await Promise.allSettled([
+      const [googleTrendsResult, pinterestTrendsResult, instagramTrendsResult, wgsnTrendsResult] = await Promise.allSettled([
         googleTrendsPromise,
         pinterestTrendsPromise,
-        instagramTrendsPromise
+        instagramTrendsPromise,
+        wgsnTrendsPromise
       ]);
 
       // Both Google Trends and Pinterest edge functions handle data storage internally
@@ -55,6 +56,10 @@ class TrendDataIntegrationService {
 
       if (instagramTrendsResult.status === 'rejected') {
         console.error('Instagram Trends integration failed:', instagramTrendsResult.reason);
+      }
+
+      if (wgsnTrendsResult.status === 'rejected') {
+        console.error('WGSN Trends integration failed:', wgsnTrendsResult.reason);
       }
 
       // Generate seasonal forecasts and predictions
@@ -131,6 +136,19 @@ class TrendDataIntegrationService {
     }
 
     console.log('Instagram Trends integration result:', data);
+  }
+
+  private async fetchWGSNTrendsViaEdgeFunction(): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('wgsn-trends-integration', {
+      body: {}
+    });
+
+    if (error) {
+      console.error('Error calling WGSN Trends edge function:', error);
+      throw error;
+    }
+
+    console.log('WGSN Trends integration result:', data);
   }
 
   private async fetchInstagramTrends(): Promise<InstagramTrendData[]> {
