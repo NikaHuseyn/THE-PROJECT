@@ -25,7 +25,7 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
   const [newSizeValue, setNewSizeValue] = useState('');
   const [newSizeBrand, setNewSizeBrand] = useState('');
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
+  const { register, handleSubmit, formState: { isSubmitting }, setValue, watch } = useForm({
     defaultValues: {
       standard_size_top: profile?.standard_size_top || '',
       standard_size_bottom: profile?.standard_size_bottom || '',
@@ -33,6 +33,8 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
       fit_preference: profile?.fit_preference || '',
     }
   });
+
+  const fitPreference = watch('fit_preference');
 
   const { data: userSizes } = useQuery({
     queryKey: ['userSizes'],
@@ -105,6 +107,8 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
       const profileData = {
         user_id: user.id,
         ...data,
+        // Convert empty string to null for fit_preference to avoid constraint violation
+        fit_preference: data.fit_preference || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -178,7 +182,10 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
 
             <div className="space-y-2">
               <Label htmlFor="fit_preference">Fit Preference</Label>
-              <Select {...register('fit_preference')}>
+              <Select 
+                value={fitPreference} 
+                onValueChange={(value) => setValue('fit_preference', value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your preferred fit" />
                 </SelectTrigger>
