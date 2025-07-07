@@ -36,6 +36,13 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
   });
 
   const fitPreference = watch('fit_preference');
+  const topSize = watch('standard_size_top');
+  const bottomSize = watch('standard_size_bottom');
+  const shoeSize = watch('standard_size_shoes');
+
+  const ukTopSizes = ['6', '8', '10', '12', '14', '16', '18', '20', '22', '24'];
+  const ukBottomSizes = ['6', '8', '10', '12', '14', '16', '18', '20', '22', '24'];
+  const ukShoeSizes = ['3', '3.5', '4', '4.5', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12'];
 
   const { data: userSizes } = useQuery({
     queryKey: ['userSizes'],
@@ -156,37 +163,61 @@ const SizePreferencesForm = ({ profile, onUpdate }: SizePreferencesFormProps) =>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="standard_size_top">Top Size</Label>
-                <Input
-                  id="standard_size_top"
-                  {...register('standard_size_top')}
-                  placeholder="UK: 8, 10, 12 or US: S, M, L"
-                />
+                <Select 
+                  value={topSize} 
+                  onValueChange={(value) => setValue('standard_size_top', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select UK top size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ukTopSizes.map((size) => (
+                      <SelectItem key={size} value={size}>UK {size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-gray-500">
-                  Enter UK size (6-20) or letter size (XS-XXL)
+                  UK clothing sizes from smallest to largest
                 </p>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="standard_size_bottom">Bottom Size</Label>
-                <Input
-                  id="standard_size_bottom"
-                  {...register('standard_size_bottom')}
-                  placeholder="UK: 8, 10, 12 or US: 28, 30, 32"
-                />
+                <Select 
+                  value={bottomSize} 
+                  onValueChange={(value) => setValue('standard_size_bottom', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select UK bottom size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ukBottomSizes.map((size) => (
+                      <SelectItem key={size} value={size}>UK {size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-gray-500">
-                  Enter UK size (6-20) or waist measurement
+                  UK clothing sizes from smallest to largest
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="standard_size_shoes">Shoe Size</Label>
-                <Input
-                  id="standard_size_shoes"
-                  {...register('standard_size_shoes')}
-                  placeholder="UK: 5, 6, 7 or US: 7.5, 8.5, 9.5"
-                />
+                <Select 
+                  value={shoeSize} 
+                  onValueChange={(value) => setValue('standard_size_shoes', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select UK shoe size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ukShoeSizes.map((size) => (
+                      <SelectItem key={size} value={size}>UK {size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-gray-500">
-                  Enter UK size (3-12) or US equivalent
+                  UK shoe sizes from smallest to largest
                 </p>
               </div>
             </div>
