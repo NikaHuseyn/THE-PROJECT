@@ -36,11 +36,12 @@ class TrendDataIntegrationService {
       const googleTrendsPromise = this.fetchGoogleTrendsViaEdgeFunction();
       const pinterestTrendsPromise = this.fetchPinterestTrendsViaEdgeFunction();
       
-      // Keep the mock data for Instagram for now
-      const [googleTrendsResult, pinterestTrendsResult, instagramTrends] = await Promise.allSettled([
+      const instagramTrendsPromise = this.fetchInstagramTrendsViaEdgeFunction();
+      
+      const [googleTrendsResult, pinterestTrendsResult, instagramTrendsResult] = await Promise.allSettled([
         googleTrendsPromise,
         pinterestTrendsPromise,
-        this.fetchInstagramTrends()
+        instagramTrendsPromise
       ]);
 
       // Both Google Trends and Pinterest edge functions handle data storage internally
@@ -52,8 +53,8 @@ class TrendDataIntegrationService {
         console.error('Pinterest Trends integration failed:', pinterestTrendsResult.reason);
       }
 
-      if (instagramTrends.status === 'fulfilled') {
-        await this.processInstagramTrends(instagramTrends.value);
+      if (instagramTrendsResult.status === 'rejected') {
+        console.error('Instagram Trends integration failed:', instagramTrendsResult.reason);
       }
 
       // Generate seasonal forecasts and predictions
@@ -117,6 +118,19 @@ class TrendDataIntegrationService {
     ];
 
     return mockPinterestTrends;
+  }
+
+  private async fetchInstagramTrendsViaEdgeFunction(): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('instagram-trends-integration', {
+      body: {}
+    });
+
+    if (error) {
+      console.error('Error calling Instagram Trends edge function:', error);
+      throw error;
+    }
+
+    console.log('Instagram Trends integration result:', data);
   }
 
   private async fetchInstagramTrends(): Promise<InstagramTrendData[]> {
