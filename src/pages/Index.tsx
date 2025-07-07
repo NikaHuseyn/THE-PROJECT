@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import EventInput from '@/components/EventInput';
 import OutfitCard from '@/components/OutfitCard';
 import UKBrandOutfitCard from '@/components/UKBrandOutfitCard';
+import AIOutfitCard from '@/components/AIOutfitCard';
 import AccessoriesSection from '@/components/AccessoriesSection';
 import WeatherDisplay from '@/components/WeatherDisplay';
 import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
@@ -19,6 +20,7 @@ const Index = () => {
   const [currentEvent, setCurrentEvent] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [ukBrandOutfits, setUkBrandOutfits] = useState<OutfitRecommendation[]>([]);
+  const [aiRecommendation, setAiRecommendation] = useState<any>(null);
   const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
 
   useEffect(() => {
@@ -77,11 +79,66 @@ const Index = () => {
     setShowRecommendations(true);
     
     try {
-      console.log('Fetching UK brand recommendations for:', event);
-      const recommendations = await generateOutfitRecommendations(event);
-      setUkBrandOutfits(recommendations);
+      console.log('Generating AI-powered recommendations for:', event);
+      
+      // Get current weather data for better recommendations
+      let weatherData = null;
+      if ('geolocation' in navigator) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+          });
+          
+          const { data } = await supabase.functions.invoke('weather-recommendations', {
+            body: { lat: position.coords.latitude, lon: position.coords.longitude }
+          });
+          weatherData = data;
+        } catch (weatherError) {
+          console.log('Could not get weather data:', weatherError);
+        }
+      }
+
+      // Generate AI-powered recommendations
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
+          body: {
+            recommendationType: 'event_outfit',
+            weatherData,
+            occasion: event,
+            eventDetails: {
+              name: event,
+              dressCode: 'smart casual',
+              type: 'event'
+            }
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        if (error) throw error;
+
+        // Store AI recommendation separately
+        setAiRecommendation(data.recommendation);
+        
+        // Also get regular shopping recommendations for variety
+        const recommendations = await generateOutfitRecommendations(event);
+        setUkBrandOutfits(recommendations);
+      } else {
+        // Fallback to basic recommendations if not authenticated
+        const recommendations = await generateOutfitRecommendations(event);
+        setUkBrandOutfits(recommendations);
+      }
     } catch (error) {
       console.error('Error generating outfit recommendations:', error);
+      // Fallback to basic recommendations on error
+      try {
+        const recommendations = await generateOutfitRecommendations(event);
+        setUkBrandOutfits(recommendations);
+      } catch (fallbackError) {
+        console.error('Fallback recommendations also failed:', fallbackError);
+      }
     } finally {
       setIsLoadingOutfits(false);
     }
@@ -126,6 +183,7 @@ const Index = () => {
                 onClick={() => {
                   setShowRecommendations(false);
                   setUkBrandOutfits([]);
+                  setAiRecommendation(null);
                 }}
                 className="text-rose-600 hover:text-rose-700 mb-4 font-medium"
               >
@@ -148,6 +206,21 @@ const Index = () => {
               </div>
             ) : (
               <>
+                {aiRecommendation && (
+                  <div className="mb-12">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                      🤖 AI-Powered Styling Recommendation
+                    </h3>
+                    <div className="grid grid-cols-1 gap-8">
+                      <AIOutfitCard 
+                        recommendation={aiRecommendation}
+                        title={`Perfect Outfit for "${currentEvent}"`}
+                        description={aiRecommendation.reasoning || "Expertly curated by AI considering your event details, weather, and style preferences"}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {ukBrandOutfits.length > 0 && (
                   <div className="mb-12">
                     <h3 className="text-2xl font-bold text-gray-800 mb-6">
