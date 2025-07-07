@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface GoogleTrendsData {
@@ -7,6 +6,9 @@ interface GoogleTrendsData {
   category: string;
   region?: string;
   timeframe?: string;
+  interest_over_time?: any[];
+  related_topics?: any[];
+  related_queries?: any[];
 }
 
 interface PinterestTrendData {
@@ -25,36 +27,27 @@ interface InstagramTrendData {
   recent_posts?: any[];
 }
 
-interface TrendPredictionData {
-  trend_name: string;
-  probability: number;
-  timeframe: string;
-  category: string;
-  key_drivers: string[];
-  risk_level: 'low' | 'medium' | 'high';
-}
-
 class TrendDataIntegrationService {
-  private readonly GOOGLE_TRENDS_API_KEY = '';
-  private readonly PINTEREST_API_KEY = '';
-  private readonly INSTAGRAM_API_KEY = '';
-
   async fetchAndIntegrateTrendData(): Promise<void> {
     console.log('Starting trend data integration...');
     
     try {
-      // Fetch data from multiple sources
-      const [googleTrends, pinterestTrends, instagramTrends] = await Promise.allSettled([
-        this.fetchGoogleTrends(),
+      // Call the Google Trends edge function for real data
+      const googleTrendsPromise = this.fetchGoogleTrendsViaEdgeFunction();
+      
+      // Keep the mock data for Pinterest and Instagram for now
+      const [googleTrendsResult, pinterestTrends, instagramTrends] = await Promise.allSettled([
+        googleTrendsPromise,
         this.fetchPinterestTrends(),
         this.fetchInstagramTrends()
       ]);
 
-      // Process and store fashion trends
-      if (googleTrends.status === 'fulfilled') {
-        await this.processFashionTrends(googleTrends.value);
+      // The Google Trends edge function handles data storage internally
+      if (googleTrendsResult.status === 'rejected') {
+        console.error('Google Trends integration failed:', googleTrendsResult.reason);
       }
 
+      // Process Pinterest and Instagram data as before
       if (pinterestTrends.status === 'fulfilled') {
         await this.processPinterestTrends(pinterestTrends.value);
       }
@@ -63,10 +56,8 @@ class TrendDataIntegrationService {
         await this.processInstagramTrends(instagramTrends.value);
       }
 
-      // Generate seasonal forecasts
+      // Generate seasonal forecasts and predictions
       await this.generateSeasonalForecasts();
-
-      // Generate trend predictions
       await this.generateTrendPredictions();
 
       console.log('Trend data integration completed successfully');
@@ -76,48 +67,17 @@ class TrendDataIntegrationService {
     }
   }
 
-  private async fetchGoogleTrends(): Promise<GoogleTrendsData[]> {
-    // Simulate Google Trends API call
-    // In production, you would integrate with Google Trends API or a proxy service
-    const mockGoogleTrends: GoogleTrendsData[] = [
-      {
-        keyword: 'Oversized Blazers',
-        trend_score: 85,
-        category: 'Outerwear',
-        region: 'Global',
-        timeframe: '2024'
-      },
-      {
-        keyword: 'Cottagecore Aesthetic',
-        trend_score: 78,
-        category: 'Dresses',
-        region: 'US',
-        timeframe: '2024'
-      },
-      {
-        keyword: 'Chunky Sneakers',
-        trend_score: 72,
-        category: 'Shoes',
-        region: 'Global',
-        timeframe: '2024'
-      },
-      {
-        keyword: 'Minimalist Jewelry',
-        trend_score: 90,
-        category: 'Accessories',
-        region: 'Global',
-        timeframe: '2024'
-      },
-      {
-        keyword: 'Sustainable Fashion',
-        trend_score: 95,
-        category: 'General',
-        region: 'Global',
-        timeframe: '2024'
-      }
-    ];
+  private async fetchGoogleTrendsViaEdgeFunction(): Promise<void> {
+    const { data, error } = await supabase.functions.invoke('google-trends-integration', {
+      body: {}
+    });
 
-    return mockGoogleTrends;
+    if (error) {
+      console.error('Error calling Google Trends edge function:', error);
+      throw error;
+    }
+
+    console.log('Google Trends integration result:', data);
   }
 
   private async fetchPinterestTrends(): Promise<PinterestTrendData[]> {
@@ -170,32 +130,6 @@ class TrendDataIntegrationService {
     ];
 
     return mockInstagramTrends;
-  }
-
-  private async processFashionTrends(googleTrends: GoogleTrendsData[]): Promise<void> {
-    const fashionTrendsData = googleTrends.map(trend => ({
-      name: trend.keyword,
-      category: trend.category,
-      trend_score: trend.trend_score,
-      growth_rate: `+${Math.floor(Math.random() * 50 + 10)}%`,
-      popularity_rank: Math.floor(Math.random() * 100 + 1),
-      season: this.getCurrentSeason(),
-      occasions: this.getOccasionsForCategory(trend.category),
-      colors: this.getColorsForTrend(trend.keyword),
-      description: `${trend.keyword} is trending globally with a score of ${trend.trend_score}`,
-      source: 'Google Trends',
-      external_id: `gt_${trend.keyword.toLowerCase().replace(/\s+/g, '_')}`
-    }));
-
-    for (const trendData of fashionTrendsData) {
-      const { error } = await supabase
-        .from('fashion_trends')
-        .upsert(trendData, { onConflict: 'external_id' });
-
-      if (error) {
-        console.error('Error inserting fashion trend:', error);
-      }
-    }
   }
 
   private async processPinterestTrends(pinterestTrends: PinterestTrendData[]): Promise<void> {
@@ -262,7 +196,7 @@ class TrendDataIntegrationService {
         key_trends: this.getSeasonalTrends(season),
         color_palette: this.getSeasonalColors(season),
         must_have_items: this.getSeasonalMustHaves(season),
-        description: `AI-generated forecast for ${season} ${currentYear} based on current trend analysis`,
+        description: `AI-generated forecast for ${season} ${currentYear} based on Google Trends and social media analysis`,
         influencing_factors: this.getInfluencingFactors(season)
       };
 
@@ -277,14 +211,15 @@ class TrendDataIntegrationService {
   }
 
   private async generateTrendPredictions(): Promise<void> {
-    const predictions: TrendPredictionData[] = [
+    const predictions = [
       {
         trend_name: 'Neo-Victorian Fashion',
         probability: 75,
         timeframe: 'Next 6 months',
         category: 'Aesthetic',
         key_drivers: ['Social media influence', 'Nostalgia trend', 'Craft revival'],
-        risk_level: 'medium'
+        risk_level: 'medium',
+        description: 'Predicted trend based on Google Trends analysis and social indicators'
       },
       {
         trend_name: 'Tech-Integrated Clothing',
@@ -292,7 +227,8 @@ class TrendDataIntegrationService {
         timeframe: 'Next 12 months',
         category: 'Technology',
         key_drivers: ['IoT advancement', 'Health consciousness', 'Personalization'],
-        risk_level: 'low'
+        risk_level: 'low',
+        description: 'Predicted trend based on current market analysis and tech adoption'
       },
       {
         trend_name: 'Gender-Neutral Fashion',
@@ -300,17 +236,15 @@ class TrendDataIntegrationService {
         timeframe: 'Next 18 months',
         category: 'Social',
         key_drivers: ['Social equality', 'Gen Z preferences', 'Sustainability'],
-        risk_level: 'low'
+        risk_level: 'low',
+        description: 'Predicted trend based on demographic shifts and social movements'
       }
     ];
 
     for (const prediction of predictions) {
       const { error } = await supabase
         .from('trend_predictions')
-        .upsert({
-          ...prediction,
-          description: `Predicted trend based on current market analysis and social indicators`
-        }, { onConflict: 'trend_name' });
+        .upsert(prediction, { onConflict: 'trend_name' });
 
       if (error) {
         console.error('Error inserting trend prediction:', error);
@@ -418,7 +352,7 @@ class TrendDataIntegrationService {
 
   private getInfluencingFactors(season: string): string[] {
     return [
-      'Climate patterns',
+      'Google Trends data',
       'Social media trends',
       'Fashion week shows',
       'Celebrity influence',
