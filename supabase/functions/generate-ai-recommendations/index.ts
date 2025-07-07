@@ -20,17 +20,23 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    // Check for authentication but don't require it
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
+    let user = null;
+    let styleProfile = null;
+    let wardrobeItems = null;
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      throw new Error('Invalid authentication');
+    if (authHeader) {
+      try {
+        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser(
+          authHeader.replace('Bearer ', '')
+        );
+        if (!userError && authUser) {
+          user = authUser;
+        }
+      } catch (authError) {
+        console.log('Auth failed, proceeding as anonymous user:', authError);
+      }
     }
 
     const { 
@@ -40,19 +46,22 @@ serve(async (req) => {
       eventDetails 
     } = await req.json();
 
-    // Fetch user's style profile
-    const { data: styleProfile } = await supabase
-      .from('user_style_profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    // Fetch user's style profile and wardrobe items if authenticated
+    if (user) {
+      const { data: userStyleProfile } = await supabase
+        .from('user_style_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      styleProfile = userStyleProfile;
 
-    // Fetch user's wardrobe items for context
-    const { data: wardrobeItems } = await supabase
-      .from('wardrobe_items')
-      .select('*')
-      .eq('user_id', user.id)
-      .limit(20);
+      const { data: userWardrobeItems } = await supabase
+        .from('wardrobe_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .limit(20);
+      wardrobeItems = userWardrobeItems;
+    }
 
     // Fetch recent shopping items for inspiration
     const { data: shoppingItems } = await supabase
@@ -270,29 +279,46 @@ Focus on creating a cohesive, stylish outfit that authentically represents the u
       };
     }
 
-    // Save recommendation to database
-    const { data: savedRecommendation, error: saveError } = await supabase
-      .from('ai_recommendations')
-      .insert({
-        user_id: user.id,
-        recommendation_type: recommendationType,
-        recommended_items: recommendationData.recommended_items,
-        occasion,
-        weather_context: weatherData,
-        confidence_score: recommendationData.overall_confidence,
-        reasoning: recommendationData.style_reasoning,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      })
-      .select()
-      .single();
+    // Save recommendation to database only if user is authenticated
+    let savedRecommendation = null;
+    if (user) {
+      const { data: dbRecommendation, error: saveError } = await supabase
+        .from('ai_recommendations')
+        .insert({
+          user_id: user.id,
+          recommendation_type: recommendationType,
+          recommended_items: recommendationData.recommended_items,
+          occasion,
+          weather_context: weatherData,
+          confidence_score: recommendationData.overall_confidence,
+          reasoning: recommendationData.style_reasoning,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        })
+        .select()
+        .single();
 
-    if (saveError) {
-      console.error('Error saving recommendation:', saveError);
-      throw new Error('Failed to save recommendation');
+      if (saveError) {
+        console.error('Error saving recommendation:', saveError);
+        // Don't throw error, just log it and continue without saving
+      } else {
+        savedRecommendation = dbRecommendation;
+      }
     }
 
+    // Create recommendation response (with or without database record)
+    const recommendationResponse = savedRecommendation || {
+      id: 'anonymous-' + Date.now(),
+      recommendation_type: recommendationType,
+      recommended_items: recommendationData.recommended_items,
+      occasion,
+      weather_context: weatherData,
+      confidence_score: recommendationData.overall_confidence,
+      reasoning: recommendationData.style_reasoning,
+      created_at: new Date().toISOString()
+    };
+
     return new Response(JSON.stringify({
-      recommendation: savedRecommendation,
+      recommendation: recommendationResponse,
       ai_insights: {
         styling_tips: recommendationData.styling_tips,
         alternative_options: recommendationData.alternative_options,

@@ -98,44 +98,43 @@ const Index = () => {
         }
       }
 
-      // Generate AI-powered recommendations
+      // Generate AI-powered recommendations (works for both authenticated and anonymous users)
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
-          body: {
-            recommendationType: 'event_outfit',
-            weatherData,
-            occasion: event,
-            eventDetails: {
-              name: event,
-              dressCode: event.toLowerCase().includes('cocktail') ? 'cocktail' : 
-                        event.toLowerCase().includes('formal') ? 'formal' : 
-                        event.toLowerCase().includes('business') ? 'business' : 'smart casual',
-              type: 'event',
-              location: event.toLowerCase().includes('london') ? 'London' : 'Unknown'
-            }
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
+      
+      const headers = session ? {
+        Authorization: `Bearer ${session.access_token}`
+      } : {};
+
+      const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
+        body: {
+          recommendationType: 'event_outfit',
+          weatherData,
+          occasion: event,
+          eventDetails: {
+            name: event,
+            dressCode: event.toLowerCase().includes('cocktail') ? 'cocktail' : 
+                      event.toLowerCase().includes('formal') ? 'formal' : 
+                      event.toLowerCase().includes('business') ? 'business' : 'smart casual',
+            type: 'event',
+            location: event.toLowerCase().includes('london') ? 'London' : 'Unknown'
           }
-        });
+        },
+        headers
+      });
 
-        if (error) throw error;
-
-        // Store AI recommendation separately with ai_insights
+      if (!error && data) {
+        // Store AI recommendation with ai_insights
         setAiRecommendation({
           ...data.recommendation,
           ai_insights: data.ai_insights
         });
-        
-        // Also get regular shopping recommendations for variety
-        const recommendations = await generateOutfitRecommendations(event);
-        setUkBrandOutfits(recommendations);
       } else {
-        // Fallback to basic recommendations if not authenticated
-        const recommendations = await generateOutfitRecommendations(event);
-        setUkBrandOutfits(recommendations);
+        console.error('AI recommendations failed:', error);
       }
+      
+      // Also get regular shopping recommendations for variety
+      const recommendations = await generateOutfitRecommendations(event);
+      setUkBrandOutfits(recommendations);
     } catch (error) {
       console.error('Error generating outfit recommendations:', error);
       // Fallback to basic recommendations on error
