@@ -24,10 +24,9 @@ export const useContentReports = () => {
         .from('content_reports')
         .insert({
           reporter_id: user.id,
-          reported_post_id: reportData.postId || null,
-          reported_user_id: reportData.userId || null,
-          reason: reportData.reason,
-          description: reportData.description,
+          post_id: reportData.postId || null,
+          report_type: reportData.reason,
+          report_reason: reportData.description,
         });
 
       if (error) throw error;

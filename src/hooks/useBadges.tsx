@@ -26,28 +26,18 @@ export const useBadges = (userId?: string) => {
 
       const { data, error } = await supabase
         .from('user_badges')
-        .select(`
-          id,
-          earned_at,
-          badges (
-            id,
-            name,
-            description,
-            icon,
-            criteria
-          )
-        `)
+        .select('*')
         .eq('user_id', targetUserId)
         .order('earned_at', { ascending: false });
 
       if (error) throw error;
 
       const formattedBadges = data?.map(item => ({
-        id: item.badges.id,
-        name: item.badges.name,
-        description: item.badges.description,
-        icon: item.badges.icon,
-        criteria: item.badges.criteria,
+        id: item.id,
+        name: item.badge_name,
+        description: item.badge_description,
+        icon: null, // Since the current schema doesn't have icon field
+        criteria: item.metadata || {},
         earned_at: item.earned_at
       })) || [];
 
