@@ -1,44 +1,45 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { googleCalendarService } from '@/services/googleCalendarService';
-import { Event } from '@/components/daily-plan/EventCard';
+import { outfitRecommendationService } from '@/services/outfitRecommendationService';
 
-interface AIRecommendation {
+export interface Event {
   id: string;
-  occasion: string;
-  confidence_score: number;
-  reasoning: string;
-  recommended_items: any;
-  created_at: string;
+  name: string;
+  time: string;
+  location: string;
+  dressCode: string;
+  temperature?: number;
+  weatherIcon?: string;
+  hasAIRecommendation?: boolean;
+  aiReasoning?: string;
+  outfitRecommendation?: {
+    top: string;
+    bottom: string;
+    shoes: string;
+    accessories: string[];
+    colors: string[];
+    notes: string;
+  };
 }
 
 export const useDailyPlanData = (currentDate: Date) => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [aiRecommendations, setAiRecommendations] = useState<AIRecommendation[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
   const [hasCalendarConnection, setHasCalendarConnection] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock events data
+  // Mock events for demonstration
   const mockEvents: Event[] = [
     {
       id: '1',
-      name: 'Morning Meeting',
+      name: 'Morning Team Meeting',
       time: '9:00 AM',
-      location: 'Office Conference Room',
+      location: 'Conference Room A',
       dressCode: 'Business Casual',
       temperature: 18,
       weatherIcon: 'cloud',
-      hasAIRecommendation: true,
-      aiReasoning: 'Perfect professional look for cooler weather. The navy blazer provides warmth while maintaining a polished appearance.',
-      outfitRecommendation: {
-        top: 'Navy blazer with crisp white button-down shirt',
-        bottom: 'Charcoal grey tailored trousers',
-        shoes: 'Brown leather oxford shoes',
-        accessories: ['Silver watch', 'Brown leather belt', 'Navy pocket square'],
-        colors: ['Navy', 'White', 'Charcoal', 'Brown'],
-        notes: 'Layer with a light sweater underneath for extra warmth. The brown accessories add warmth to the cool color palette.'
-      }
+      hasAIRecommendation: true
     },
     {
       id: '2',
@@ -48,35 +49,17 @@ export const useDailyPlanData = (currentDate: Date) => {
       dressCode: 'Smart Casual',
       temperature: 22,
       weatherIcon: 'sun',
-      hasAIRecommendation: true,
-      aiReasoning: 'Elevated casual style ideal for outdoor dining. Light layers work perfectly for the warming afternoon temperature.',
-      outfitRecommendation: {
-        top: 'Light blue chambray shirt, sleeves rolled up',
-        bottom: 'Khaki chinos',
-        shoes: 'White leather sneakers',
-        accessories: ['Brown leather watch', 'Sunglasses', 'Canvas belt'],
-        colors: ['Light Blue', 'Khaki', 'White', 'Brown'],
-        notes: 'Perfect for transitioning from indoor to outdoor dining. The chambray breathes well in warmer weather.'
-      }
+      hasAIRecommendation: true
     },
     {
       id: '3',
-      name: 'Evening Yoga',
+      name: 'Evening Yoga Class',
       time: '6:00 PM',
       location: 'Downtown Studio',
       dressCode: 'Activewear',
       temperature: 16,
       weatherIcon: 'cloud',
-      hasAIRecommendation: true,
-      aiReasoning: 'Functional yet stylish activewear. Breathable fabrics with light layering for post-workout comfort in cooler evening air.',
-      outfitRecommendation: {
-        top: 'Moisture-wicking long-sleeve top in sage green',
-        bottom: 'High-waisted black leggings',
-        shoes: 'Non-slip yoga shoes or barefoot',
-        accessories: ['Hair tie', 'Water bottle', 'Yoga mat', 'Light jacket for after'],
-        colors: ['Sage Green', 'Black'],
-        notes: 'Bring a light jacket for the walk home. Choose fabrics that move with you and keep you comfortable throughout practice.'
-      }
+      hasAIRecommendation: true
     }
   ];
 
@@ -92,9 +75,8 @@ export const useDailyPlanData = (currentDate: Date) => {
         .from('user_calendar_connections')
         .select('*')
         .eq('user_id', user.id)
-        .eq('provider', 'google')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       setHasCalendarConnection(!!connection);
     } catch (error) {
@@ -107,34 +89,49 @@ export const useDailyPlanData = (currentDate: Date) => {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && hasCalendarConnection) {
-        const { data: syncedEvents } = await supabase
-          .from('synced_calendar_events')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('start_time', currentDate.toISOString().split('T')[0])
-          .lt('start_time', new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString());
+      if (!user) {
+        setEvents(mockEvents);
+        setIsLoading(false);
+        return;
+      }
 
-        if (syncedEvents && syncedEvents.length > 0) {
-          const formattedEvents: Event[] = syncedEvents.map(event => ({
-            id: event.id,
-            name: event.title,
-            time: new Date(event.start_time).toLocaleTimeString('en-US', { 
-              hour: 'numeric', 
-              minute: '2-digit', 
-              hour12: true 
-            }),
-            location: event.location || 'Location TBD',
-            dressCode: event.dress_code || 'Smart Casual',
-            temperature: Math.floor(Math.random() * 10) + 15,
-            weatherIcon: Math.random() > 0.5 ? 'sun' : 'cloud',
-            hasAIRecommendation: true
-          }));
-          setEvents(formattedEvents);
-        } else {
-          setEvents(mockEvents);
-        }
+      const startOfDay = new Date(currentDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(currentDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Try to load real calendar events
+      const { data: syncedEvents } = await supabase
+        .from('synced_calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('start_time', startOfDay.toISOString())
+        .lte('start_time', endOfDay.toISOString())
+        .order('start_time', { ascending: true });
+
+      if (syncedEvents && syncedEvents.length > 0) {
+        // Convert synced events to our format
+        const formattedEvents: Event[] = syncedEvents.map(event => ({
+          id: event.id,
+          name: event.title,
+          time: new Date(event.start_time).toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            hour12: true 
+          }),
+          location: event.location || 'Location TBD',
+          dressCode: event.dress_code || 'Smart Casual',
+          temperature: Math.floor(Math.random() * 10) + 15,
+          weatherIcon: Math.random() > 0.5 ? 'sun' : 'cloud',
+          hasAIRecommendation: true
+        }));
+
+        // Generate personalized recommendations
+        await generatePersonalizedRecommendations(formattedEvents);
+        setEvents(formattedEvents);
       } else {
+        // Use mock events and generate recommendations
+        await generatePersonalizedRecommendations(mockEvents);
         setEvents(mockEvents);
       }
     } catch (error) {
@@ -142,6 +139,64 @@ export const useDailyPlanData = (currentDate: Date) => {
       setEvents(mockEvents);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generatePersonalizedRecommendations = async (eventList: Event[]) => {
+    try {
+      // Convert events to calendar event format for the service
+      const calendarEvents = eventList.map(event => ({
+        id: event.id,
+        title: event.name,
+        start_time: new Date().toISOString(), // Current time for demo
+        location: event.location,
+        dress_code: event.dressCode,
+        event_type: 'general'
+      }));
+
+      // Generate personalized recommendations
+      const recommendations = await outfitRecommendationService.generatePersonalizedRecommendations(calendarEvents);
+      
+      // Update events with AI recommendations
+      const eventsWithRecommendations = eventList.map(event => {
+        const recommendation = recommendations.find(rec => rec.eventId === event.id);
+        if (recommendation) {
+          return {
+            ...event,
+            hasAIRecommendation: true,
+            aiReasoning: recommendation.reasoning,
+            outfitRecommendation: {
+              top: recommendation.top,
+              bottom: recommendation.bottom,
+              shoes: recommendation.shoes,
+              accessories: recommendation.accessories,
+              colors: recommendation.colors,
+              notes: recommendation.notes
+            }
+          };
+        }
+        return event;
+      });
+
+      setEvents(eventsWithRecommendations);
+      console.log('Generated personalized recommendations:', recommendations);
+    } catch (error) {
+      console.error('Error generating personalized recommendations:', error);
+      // Fallback to basic recommendations
+      const eventsWithBasicRecs = eventList.map(event => ({
+        ...event,
+        hasAIRecommendation: true,
+        aiReasoning: `Based on your ${event.dressCode.toLowerCase()} event, I recommend a professional yet comfortable look that aligns with current trends.`,
+        outfitRecommendation: {
+          top: `Professional ${event.dressCode.toLowerCase()} top`,
+          bottom: `Matching ${event.dressCode.toLowerCase()} bottom`,
+          shoes: 'Comfortable professional shoes',
+          accessories: ['Watch', 'Belt'],
+          colors: ['Navy', 'White', 'Gray'],
+          notes: `Perfect for ${event.dressCode.toLowerCase()} occasions with a modern twist.`
+        }
+      }));
+      setEvents(eventsWithBasicRecs);
     }
   };
 
@@ -174,14 +229,13 @@ export const useDailyPlanData = (currentDate: Date) => {
       loadTodaysEvents();
       loadAIRecommendations();
     }
-  }, [hasCalendarConnection, currentDate]);
+  }, [currentDate, hasCalendarConnection]);
 
   return {
     events,
     aiRecommendations,
     hasCalendarConnection,
     isLoading,
-    checkCalendarConnection,
     loadTodaysEvents,
     loadAIRecommendations
   };

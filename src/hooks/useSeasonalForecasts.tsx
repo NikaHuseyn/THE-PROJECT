@@ -39,10 +39,12 @@ export const useSeasonalForecasts = () => {
 
       if (fetchError) throw fetchError;
 
-      // Transform the data to match our interface
+      // Transform the data to match our interface with proper type checking
       const transformedData: SeasonalForecast[] = (data || []).map(item => ({
         ...item,
-        color_palette: item.color_palette as ColorPalette[] | null
+        color_palette: Array.isArray(item.color_palette) 
+          ? item.color_palette as unknown as ColorPalette[] 
+          : null
       }));
 
       setForecasts(transformedData);
