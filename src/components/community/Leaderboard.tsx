@@ -92,9 +92,9 @@ const Leaderboard = () => {
               </div>
               <div className="text-right">
                 <Badge variant="outline" className="mb-1">
-                  {entry.style_score} points
+                  {entry.score} points
                 </Badge>
-                {entry.badge_count && entry.badge_count > 0 && (
+                {entry.badge_count > 0 && (
                   <div className="text-xs text-gray-500">
                     {entry.badge_count} badges
                   </div>

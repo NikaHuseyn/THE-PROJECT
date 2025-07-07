@@ -28,23 +28,23 @@ interface ReportPostDialogProps {
 
 const ReportPostDialog = ({ postId, children }: ReportPostDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [reportType, setReportType] = useState<string>('');
-  const [reportReason, setReportReason] = useState('');
+  const [reason, setReason] = useState('');
+  const [description, setDescription] = useState('');
   const { submitReport, submitting } = useContentReports();
 
   const handleSubmit = async () => {
-    if (!reportType) return;
+    if (!reason) return;
 
     const success = await submitReport({
       postId,
-      reportType: reportType as any,
-      reportReason: reportReason.trim() || undefined,
+      reason,
+      description: description.trim() || undefined,
     });
 
     if (success) {
       setOpen(false);
-      setReportType('');
-      setReportReason('');
+      setReason('');
+      setDescription('');
     }
   };
 
@@ -67,8 +67,8 @@ const ReportPostDialog = ({ postId, children }: ReportPostDialogProps) => {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="report-type">Report Type</Label>
-            <Select value={reportType} onValueChange={setReportType}>
+            <Label htmlFor="reason">Reason</Label>
+            <Select value={reason} onValueChange={setReason}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a reason" />
               </SelectTrigger>
@@ -82,11 +82,11 @@ const ReportPostDialog = ({ postId, children }: ReportPostDialogProps) => {
             </Select>
           </div>
           <div>
-            <Label htmlFor="report-reason">Additional Details (Optional)</Label>
+            <Label htmlFor="description">Additional Details (Optional)</Label>
             <Textarea
-              id="report-reason"
-              value={reportReason}
-              onChange={(e) => setReportReason(e.target.value)}
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Provide more details about why you're reporting this post..."
               rows={3}
             />
@@ -97,7 +97,7 @@ const ReportPostDialog = ({ postId, children }: ReportPostDialogProps) => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!reportType || submitting}
+              disabled={!reason || submitting}
               className="bg-red-600 hover:bg-red-700"
             >
               {submitting ? 'Submitting...' : 'Submit Report'}

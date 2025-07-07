@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Award, Star, Heart, Users } from 'lucide-react';
+import { Award, Star, Heart, Users, Camera, TrendingUp } from 'lucide-react';
 
 interface BadgeDisplayProps {
   badges: Array<{
-    badge_type: string;
-    badge_name: string;
-    badge_description: string | null;
+    name: string;
+    description: string | null;
+    icon: string | null;
   }>;
   showDescription?: boolean;
   limit?: number;
@@ -16,30 +16,34 @@ interface BadgeDisplayProps {
 const BadgeDisplay = ({ badges, showDescription = false, limit }: BadgeDisplayProps) => {
   const displayBadges = limit ? badges.slice(0, limit) : badges;
 
-  const getBadgeIcon = (badgeType: string) => {
-    switch (badgeType) {
-      case 'first_post':
-        return <Star className="h-3 w-3" />;
-      case 'active_poster':
-        return <Users className="h-3 w-3" />;
-      case 'popular_creator':
+  const getBadgeIcon = (iconName: string | null) => {
+    switch (iconName) {
+      case 'camera':
+        return <Camera className="h-3 w-3" />;
+      case 'heart':
         return <Heart className="h-3 w-3" />;
-      case 'viral_creator':
-        return <Award className="h-3 w-3" />;
+      case 'users':
+        return <Users className="h-3 w-3" />;
+      case 'trending-up':
+        return <TrendingUp className="h-3 w-3" />;
+      case 'star':
+        return <Star className="h-3 w-3" />;
       default:
         return <Award className="h-3 w-3" />;
     }
   };
 
-  const getBadgeVariant = (badgeType: string) => {
-    switch (badgeType) {
-      case 'first_post':
+  const getBadgeVariant = (iconName: string | null) => {
+    switch (iconName) {
+      case 'camera':
         return 'secondary' as const;
-      case 'active_poster':
-        return 'default' as const;
-      case 'popular_creator':
+      case 'heart':
         return 'destructive' as const;
-      case 'viral_creator':
+      case 'users':
+        return 'default' as const;
+      case 'trending-up':
+        return 'default' as const;
+      case 'star':
         return 'default' as const;
       default:
         return 'outline' as const;
@@ -60,11 +64,11 @@ const BadgeDisplay = ({ badges, showDescription = false, limit }: BadgeDisplayPr
         {displayBadges.map((badge, index) => (
           <Badge
             key={index}
-            variant={getBadgeVariant(badge.badge_type)}
+            variant={getBadgeVariant(badge.icon)}
             className="flex items-center gap-1"
           >
-            {getBadgeIcon(badge.badge_type)}
-            {badge.badge_name}
+            {getBadgeIcon(badge.icon)}
+            {badge.name}
           </Badge>
         ))}
         {limit && badges.length > limit && (
@@ -77,7 +81,7 @@ const BadgeDisplay = ({ badges, showDescription = false, limit }: BadgeDisplayPr
         <div className="space-y-1 text-xs text-gray-600">
           {displayBadges.map((badge, index) => (
             <div key={index}>
-              <strong>{badge.badge_name}:</strong> {badge.badge_description}
+              <strong>{badge.name}:</strong> {badge.description}
             </div>
           ))}
         </div>

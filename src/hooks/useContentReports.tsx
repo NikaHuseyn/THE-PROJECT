@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ReportData {
-  postId: string;
-  reportType: 'spam' | 'inappropriate' | 'harassment' | 'fake' | 'other';
-  reportReason?: string;
+  postId?: string;
+  userId?: string;
+  reason: string;
+  description?: string;
 }
 
 export const useContentReports = () => {
@@ -23,9 +24,10 @@ export const useContentReports = () => {
         .from('content_reports')
         .insert({
           reporter_id: user.id,
-          post_id: reportData.postId,
-          report_type: reportData.reportType,
-          report_reason: reportData.reportReason,
+          reported_post_id: reportData.postId || null,
+          reported_user_id: reportData.userId || null,
+          reason: reportData.reason,
+          description: reportData.description,
         });
 
       if (error) throw error;

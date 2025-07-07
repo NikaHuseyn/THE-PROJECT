@@ -4,11 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface Badge {
   id: string;
-  badge_type: string;
-  badge_name: string;
-  badge_description: string | null;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  criteria: any;
   earned_at: string | null;
-  metadata: any;
 }
 
 export const useBadges = (userId?: string) => {
@@ -26,13 +26,32 @@ export const useBadges = (userId?: string) => {
 
       const { data, error } = await supabase
         .from('user_badges')
-        .select('*')
+        .select(`
+          id,
+          earned_at,
+          badges (
+            id,
+            name,
+            description,
+            icon,
+            criteria
+          )
+        `)
         .eq('user_id', targetUserId)
         .order('earned_at', { ascending: false });
 
       if (error) throw error;
 
-      setBadges(data || []);
+      const formattedBadges = data?.map(item => ({
+        id: item.badges.id,
+        name: item.badges.name,
+        description: item.badges.description,
+        icon: item.badges.icon,
+        criteria: item.badges.criteria,
+        earned_at: item.earned_at
+      })) || [];
+
+      setBadges(formattedBadges);
     } catch (err) {
       console.error('Error fetching badges:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch badges');
