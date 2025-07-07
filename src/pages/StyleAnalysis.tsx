@@ -6,7 +6,7 @@ import AIRecommendations from '@/components/AIRecommendations';
 import DailyRecommendationSettings from '@/components/DailyRecommendationSettings';
 import MultiDayCalendarOverview from '@/components/MultiDayCalendarOverview';
 import OutfitTimelineView from '@/components/OutfitTimelineView';
-import DailyOutfitSnapshot from '@/components/DailyOutfitSnapshot';
+import UnifiedDailyPlan from '@/components/UnifiedDailyPlan';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const StyleAnalysis = () => {
@@ -27,8 +27,8 @@ const StyleAnalysis = () => {
           </p>
         </div>
 
-        {/* Daily Outfit Snapshot at the top */}
-        <DailyOutfitSnapshot />
+        {/* Unified Daily Plan at the top */}
+        <UnifiedDailyPlan />
 
         <Tabs defaultValue="recommendations" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
