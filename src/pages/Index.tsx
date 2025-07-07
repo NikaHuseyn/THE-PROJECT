@@ -108,8 +108,11 @@ const Index = () => {
             occasion: event,
             eventDetails: {
               name: event,
-              dressCode: 'smart casual',
-              type: 'event'
+              dressCode: event.toLowerCase().includes('cocktail') ? 'cocktail' : 
+                        event.toLowerCase().includes('formal') ? 'formal' : 
+                        event.toLowerCase().includes('business') ? 'business' : 'smart casual',
+              type: 'event',
+              location: event.toLowerCase().includes('london') ? 'London' : 'Unknown'
             }
           },
           headers: {
@@ -119,8 +122,11 @@ const Index = () => {
 
         if (error) throw error;
 
-        // Store AI recommendation separately
-        setAiRecommendation(data.recommendation);
+        // Store AI recommendation separately with ai_insights
+        setAiRecommendation({
+          ...data.recommendation,
+          ai_insights: data.ai_insights
+        });
         
         // Also get regular shopping recommendations for variety
         const recommendations = await generateOutfitRecommendations(event);

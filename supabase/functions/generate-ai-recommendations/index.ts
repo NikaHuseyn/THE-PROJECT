@@ -62,8 +62,8 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(15);
 
-    // Enhanced AI prompt with more context
-    const prompt = `You are an expert fashion stylist with deep knowledge of current trends, color theory, body types, and occasion-appropriate dressing. Create a highly personalized outfit recommendation.
+// Enhanced AI prompt with more context
+    const prompt = `You are an expert fashion stylist and costume consultant with deep knowledge of fashion trends, literary characters, theatrical costume design, and themed party styling. Create a highly personalized outfit recommendation.
 
 USER STYLE PROFILE:
 - Body Type: ${styleProfile?.body_type || 'Not specified'}
@@ -99,40 +99,61 @@ ${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weathe
 
 STYLING BRIEF:
 ${recommendationType === 'event_outfit' ? 
-  'Create an outfit specifically tailored for this event, considering the dress code, location, and social context.' :
+  'Create an outfit specifically tailored for this event. If this is a themed party, suggest appropriate character inspirations and costume elements that work with the theme while considering the dress code, weather, and user preferences.' :
   'Create a versatile daily outfit that reflects the user\'s personal style while being practical for their lifestyle.'
 }
 
+SPECIAL INSTRUCTIONS FOR THEMED EVENTS:
+If the occasion mentions a theme (like "literature and drama", "1920s", "Hollywood", etc.), you should:
+1. Suggest 2-3 specific character inspirations that fit the theme
+2. Explain how to achieve the look using both existing wardrobe items and shopping suggestions
+3. Provide specific costume piece recommendations and where to find them (online stores, costume shops, etc.)
+4. Consider the weather and dress code when adapting the character look
+5. Offer both elaborate and subtle interpretations of the theme
+
 Please provide a detailed outfit recommendation in the following JSON format:
 {
+  "character_suggestions": [
+    {
+      "name": "Character Name",
+      "source": "Book/Play/Movie",
+      "description": "Brief description of character and their style",
+      "difficulty": "Easy/Medium/Hard",
+      "why_perfect": "Why this character fits the theme and user"
+    }
+  ],
   "recommended_items": {
     "top": { 
       "name": "specific item name", 
       "confidence": 0.9, 
       "reasoning": "detailed explanation of why this works for the user's body type, style preferences, and occasion",
       "styling_tips": "how to wear this piece effectively",
-      "alternatives": ["alternative option 1", "alternative option 2"]
+      "alternatives": ["alternative option 1", "alternative option 2"],
+      "character_connection": "how this relates to the suggested character if themed"
     },
     "bottom": { 
       "name": "specific item name", 
       "confidence": 0.85, 
       "reasoning": "detailed explanation",
       "styling_tips": "how to style this piece",
-      "alternatives": ["alternative option 1", "alternative option 2"]
+      "alternatives": ["alternative option 1", "alternative option 2"],
+      "character_connection": "how this relates to the suggested character if themed"
     },
     "shoes": { 
       "name": "specific item name", 
       "confidence": 0.8, 
       "reasoning": "detailed explanation",
       "styling_tips": "how to choose and style shoes",
-      "alternatives": ["alternative option 1", "alternative option 2"]
+      "alternatives": ["alternative option 1", "alternative option 2"],
+      "character_connection": "how this relates to the suggested character if themed"
     },
     "accessories": [
       { 
         "name": "specific accessory name", 
         "confidence": 0.7, 
         "reasoning": "why this accessory complements the outfit",
-        "styling_tips": "how to incorporate this accessory"
+        "styling_tips": "how to incorporate this accessory",
+        "character_connection": "how this relates to the suggested character if themed"
       }
     ],
     "outerwear": { 
@@ -140,7 +161,8 @@ Please provide a detailed outfit recommendation in the following JSON format:
       "confidence": 0.75, 
       "reasoning": "weather and style considerations",
       "styling_tips": "layering advice",
-      "alternatives": ["alternative option 1", "alternative option 2"]
+      "alternatives": ["alternative option 1", "alternative option 2"],
+      "character_connection": "how this relates to the suggested character if themed"
     }
   },
   "overall_confidence": 0.87,
@@ -164,6 +186,13 @@ Please provide a detailed outfit recommendation in the following JSON format:
   "shopping_suggestions": {
     "priority_items": ["item 1 to buy first", "item 2 to buy second"],
     "brands_to_consider": ["brand 1", "brand 2", "brand 3"],
+    "costume_shops": ["specific UK costume rental shops", "online costume retailers"],
+    "where_to_find": {
+      "high_street": "Specific UK stores like Zara, H&M, ASOS for costume pieces",
+      "vintage_shops": "Vintage stores for authentic period pieces",
+      "online": "Specific websites for costume elements",
+      "diy_tips": "How to modify existing pieces for the theme"
+    },
     "price_ranges": {
       "budget": "Under $50 options",
       "mid_range": "$50-150 options", 
