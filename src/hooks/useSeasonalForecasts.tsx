@@ -39,7 +39,13 @@ export const useSeasonalForecasts = () => {
 
       if (fetchError) throw fetchError;
 
-      setForecasts(data || []);
+      // Transform the data to match our interface
+      const transformedData: SeasonalForecast[] = (data || []).map(item => ({
+        ...item,
+        color_palette: item.color_palette as ColorPalette[] | null
+      }));
+
+      setForecasts(transformedData);
     } catch (err) {
       console.error('Error fetching seasonal forecasts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch forecasts');
