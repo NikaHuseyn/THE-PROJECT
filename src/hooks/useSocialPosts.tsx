@@ -147,7 +147,11 @@ export const useSocialPosts = () => {
   const toggleLike = async (postId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        // Redirect to auth if user tries to like without being signed in
+        window.location.href = '/auth';
+        return;
+      }
 
       const post = posts.find(p => p.id === postId);
       if (!post) return;

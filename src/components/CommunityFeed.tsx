@@ -66,6 +66,12 @@ const CommunityFeed = () => {
   };
 
   const handleCreatePost = async (postData: { caption: string; tags?: string[]; image_urls: string[] }): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      // Redirect to auth if user tries to post without being signed in
+      window.location.href = '/auth';
+      return;
+    }
     await createPost(postData);
     setShowPostForm(false);
   };
@@ -91,7 +97,17 @@ const CommunityFeed = () => {
             <p className="text-gray-600">Get inspired by the community and share your style</p>
           </div>
           <Button
-            onClick={() => setShowPostForm(!showPostForm)}
+            onClick={() => {
+              const checkAuth = async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                  window.location.href = '/auth';
+                  return;
+                }
+                setShowPostForm(!showPostForm);
+              };
+              checkAuth();
+            }}
             className="bg-gradient-to-r from-pink-500 to-rose-600"
           >
             <Camera className="h-4 w-4 mr-2" />

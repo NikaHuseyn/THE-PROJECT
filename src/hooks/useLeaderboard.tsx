@@ -20,15 +20,12 @@ export const useLeaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Get social profiles with posts count > 0
+      const { data: profiles, error } = await supabase
         .from('social_profiles')
-        .select(`
-          user_id,
-          display_name,
-          avatar_url,
-          posts_count,
-          user_badges!inner(id)
-        `)
+        .select('user_id, display_name, avatar_url, posts_count')
+        .gt('posts_count', 0)
         .order('posts_count', { ascending: false })
         .limit(20);
 
@@ -36,18 +33,23 @@ export const useLeaderboard = () => {
 
       // Calculate scores and get total likes for each user
       const leaderboardWithScores = await Promise.all(
-        (data || []).map(async (profile) => {
+        (profiles || []).map(async (profile) => {
           // Get total likes for this user's posts
           const { data: postsData } = await supabase
             .from('posts')
             .select('likes_count')
             .eq('user_id', profile.user_id);
 
+          // Get badge count for this user
+          const { count: badgeCount } = await supabase
+            .from('user_badges')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', profile.user_id);
+
           const totalLikes = postsData?.reduce((sum, post) => sum + (post.likes_count || 0), 0) || 0;
-          const badgeCount = profile.user_badges?.length || 0;
           
           // Calculate score: posts * 2 + likes + badges * 5
-          const score = (profile.posts_count || 0) * 2 + totalLikes + badgeCount * 5;
+          const score = (profile.posts_count || 0) * 2 + totalLikes + (badgeCount || 0) * 5;
 
           return {
             user_id: profile.user_id,
@@ -55,7 +57,7 @@ export const useLeaderboard = () => {
             avatar_url: profile.avatar_url,
             posts_count: profile.posts_count || 0,
             total_likes: totalLikes,
-            badge_count: badgeCount,
+            badge_count: badgeCount || 0,
             score
           };
         })
