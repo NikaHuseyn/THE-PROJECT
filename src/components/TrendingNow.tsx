@@ -1,89 +1,28 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, ShoppingCart, Heart, Star } from 'lucide-react';
+import { TrendingUp, ShoppingCart, Heart, Star, Loader2 } from 'lucide-react';
+import { useFashionTrends } from '@/hooks/useFashionTrends';
 
 const TrendingNow = () => {
-  const trendingItems = [
-    {
-      id: 1,
-      name: "Classic Silk Blouse",
-      brand: "Everlane",
-      price: 118,
-      originalPrice: 145,
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 234,
-      outfitCompatibility: ["Business", "Casual", "Date Night"],
-      trending: true,
-      colors: ["White", "Navy", "Blush"]
-    },
-    {
-      id: 2,
-      name: "High-Waisted Trousers",
-      brand: "& Other Stories",
-      price: 89,
-      originalPrice: 120,
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-      rating: 4.6,
-      reviews: 156,
-      outfitCompatibility: ["Business", "Smart Casual", "Evening"],
-      trending: true,
-      colors: ["Black", "Camel", "Navy"]
-    },
-    {
-      id: 3,
-      name: "Minimalist Blazer",
-      brand: "COS",
-      price: 225,
-      originalPrice: 280,
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 89,
-      outfitCompatibility: ["Business", "Smart Casual", "Date Night"],
-      trending: true,
-      colors: ["Black", "Beige", "Charcoal"]
-    },
-    {
-      id: 4,
-      name: "Midi Wrap Dress",
-      brand: "Ganni",
-      price: 195,
-      originalPrice: 245,
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-      rating: 4.7,
-      reviews: 178,
-      outfitCompatibility: ["Casual", "Date Night", "Brunch"],
-      trending: true,
-      colors: ["Floral", "Solid Black", "Navy"]
-    },
-    {
-      id: 5,
-      name: "Statement Earrings",
-      brand: "Mejuri",
-      price: 78,
-      originalPrice: 95,
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 267,
-      outfitCompatibility: ["Business", "Date Night", "Evening"],
-      trending: true,
-      colors: ["Gold", "Silver", "Rose Gold"]
-    },
-    {
-      id: 6,
-      name: "Versatile Ankle Boots",
-      brand: "Veja",
-      price: 165,
-      originalPrice: 200,
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
-      rating: 4.6,
-      reviews: 143,
-      outfitCompatibility: ["Casual", "Smart Casual", "Weekend"],
-      trending: true,
-      colors: ["Black", "Brown", "White"]
-    }
-  ];
+  const { trends, isLoading, error } = useFashionTrends();
+
+  // Transform fashion trends data to match component format
+  const trendingItems = trends.slice(0, 6).map((trend) => ({
+    id: trend.id,
+    name: trend.name,
+    brand: trend.source || "Partner Brand",
+    price: Math.floor(Math.random() * 200) + 50, // Mock pricing for now
+    originalPrice: Math.floor(Math.random() * 250) + 80,
+    image: trend.image_url || "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=400&fit=crop",
+    rating: Math.round((trend.trend_score / 100) * 5 * 10) / 10, // Convert trend_score to rating
+    reviews: Math.floor(Math.random() * 500) + 50,
+    outfitCompatibility: trend.occasions?.slice(0, 3) || ["Casual", "Smart Casual"],
+    trending: true,
+    colors: trend.colors?.slice(0, 3) || ["Black", "White", "Navy"],
+    trendScore: trend.trend_score,
+    category: trend.category
+  }));
 
   return (
     <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-2xl p-8 mb-8">
@@ -105,7 +44,28 @@ const TrendingNow = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+          <span className="ml-3 text-lg text-gray-600">Loading trending items...</span>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-4">Failed to load trending items</p>
+          <Button 
+            variant="outline"
+            onClick={() => window.location.reload()}
+            className="border-amber-300 text-amber-700 hover:bg-amber-50"
+          >
+            Try Again
+          </Button>
+        </div>
+      ) : trendingItems.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600">No trending items available at the moment</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {trendingItems.map((item) => (
           <div 
             key={item.id}
@@ -221,24 +181,27 @@ const TrendingNow = () => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
-      <div className="mt-8 text-center">
-        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-amber-200">
-          <h4 className="text-lg font-semibold text-gray-800 mb-2">Partner Brand Spotlight</h4>
-          <p className="text-gray-600 text-sm mb-4">
-            Discover exclusive pieces from our curated selection of sustainable and ethical fashion brands
-          </p>
-          <div className="flex justify-center space-x-6 text-sm text-gray-600">
-            <span className="font-medium">Everlane</span>
-            <span className="font-medium">& Other Stories</span>
-            <span className="font-medium">COS</span>
-            <span className="font-medium">Ganni</span>
-            <span className="font-medium">Mejuri</span>
-            <span className="font-medium">Veja</span>
+      {!isLoading && !error && trendingItems.length > 0 && (
+        <div className="mt-8 text-center">
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-amber-200">
+            <h4 className="text-lg font-semibold text-gray-800 mb-2">Partner Brand Spotlight</h4>
+            <p className="text-gray-600 text-sm mb-4">
+              Discover exclusive pieces from our curated selection of sustainable and ethical fashion brands
+            </p>
+            <div className="flex justify-center space-x-6 text-sm text-gray-600">
+              <span className="font-medium">Everlane</span>
+              <span className="font-medium">& Other Stories</span>
+              <span className="font-medium">COS</span>
+              <span className="font-medium">Ganni</span>
+              <span className="font-medium">Mejuri</span>
+              <span className="font-medium">Veja</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
