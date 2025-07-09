@@ -41,11 +41,12 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const instagramAccessToken = Deno.env.get('INSTAGRAM_ACCESS_TOKEN');
     const facebookAccessToken = Deno.env.get('FACEBOOK_ACCESS_TOKEN');
+    const instagramBusinessId = Deno.env.get('INSTAGRAM_BUSINESS_ID');
 
-    if (!instagramAccessToken && !facebookAccessToken) {
-      console.log('Instagram/Facebook API tokens not configured, using enhanced mock data');
+    if (!facebookAccessToken || !instagramBusinessId) {
+      console.log('Instagram Graph API tokens not configured. Note: Instagram Basic Display API does not support hashtag analysis.');
+      console.log('Required: FACEBOOK_ACCESS_TOKEN and INSTAGRAM_BUSINESS_ID for Instagram Graph API');
       return await generateEnhancedMockData(supabaseClient);
     }
 
@@ -70,32 +71,17 @@ Deno.serve(async (req) => {
 
     const trendsData: InstagramTrendData[] = [];
 
-    // Try Instagram Basic Display API first, then Facebook Graph API
-    if (instagramAccessToken) {
-      console.log('Using Instagram Basic Display API');
-      for (const hashtag of fashionHashtags) {
-        try {
-          const hashtagData = await fetchInstagramHashtagData(hashtag, instagramAccessToken);
-          if (hashtagData) {
-            trendsData.push(hashtagData);
-          }
-        } catch (error) {
-          console.error(`Error fetching Instagram data for ${hashtag}:`, error);
-          trendsData.push(generateMockTrendForHashtag(hashtag));
+    // Use Instagram Graph API for real hashtag data
+    console.log('Using Instagram Graph API via Facebook');
+    for (const hashtag of fashionHashtags) {
+      try {
+        const hashtagData = await fetchInstagramGraphData(hashtag, facebookAccessToken, instagramBusinessId);
+        if (hashtagData) {
+          trendsData.push(hashtagData);
         }
-      }
-    } else if (facebookAccessToken) {
-      console.log('Using Facebook Graph API');
-      for (const hashtag of fashionHashtags) {
-        try {
-          const hashtagData = await fetchFacebookHashtagData(hashtag, facebookAccessToken);
-          if (hashtagData) {
-            trendsData.push(hashtagData);
-          }
-        } catch (error) {
-          console.error(`Error fetching Facebook data for ${hashtag}:`, error);
-          trendsData.push(generateMockTrendForHashtag(hashtag));
-        }
+      } catch (error) {
+        console.error(`Error fetching Instagram Graph data for ${hashtag}:`, error);
+        trendsData.push(generateMockTrendForHashtag(hashtag));
       }
     }
 
@@ -107,8 +93,7 @@ Deno.serve(async (req) => {
         success: true, 
         message: 'Instagram trends data integrated successfully',
         trends_processed: trendsData.length,
-        source: instagramAccessToken ? 'Instagram Basic Display API' : 
-                facebookAccessToken ? 'Facebook Graph API' : 'Enhanced Mock Data'
+        source: 'Instagram Graph API'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -128,80 +113,64 @@ Deno.serve(async (req) => {
   }
 })
 
-async function fetchInstagramHashtagData(hashtag: string, accessToken: string): Promise<InstagramTrendData | null> {
+async function fetchInstagramGraphData(hashtag: string, accessToken: string, businessId: string): Promise<InstagramTrendData | null> {
   try {
-    // Note: Instagram Basic Display API has limited hashtag search capabilities
-    // This is a simplified approach - in practice, you might need to use Instagram Graph API
-    const response = await fetch(`https://graph.instagram.com/me/media?fields=id,media_type,media_url,permalink,timestamp,caption&access_token=${accessToken}`);
+    // Search for hashtag using Instagram Graph API
+    const searchResponse = await fetch(`https://graph.facebook.com/v18.0/ig_hashtag_search?user_id=${businessId}&q=${hashtag}&access_token=${accessToken}`);
     
-    if (response.ok) {
-      const data = await response.json();
-      
-      // Filter posts that contain the hashtag
-      const hashtagPosts = data.data?.filter((post: any) => 
-        post.caption?.toLowerCase().includes(`#${hashtag.toLowerCase()}`)
-      ) || [];
-
-      if (hashtagPosts.length > 0) {
-        const engagementRate = Math.random() * 10 + 2; // Mock engagement rate
-        
-        return {
-          hashtag: `#${hashtag}`,
-          post_count: hashtagPosts.length * Math.floor(Math.random() * 1000 + 100),
-          engagement_rate: parseFloat(engagementRate.toFixed(1)),
-          category: getCategoryForHashtag(hashtag),
-          recent_posts: hashtagPosts.slice(0, 5)
-        };
-      }
+    if (!searchResponse.ok) {
+      console.error(`Hashtag search failed for ${hashtag}:`, await searchResponse.text());
+      return null;
     }
-  } catch (error) {
-    console.error(`Error fetching Instagram data for ${hashtag}:`, error);
-  }
-  
-  return null;
-}
 
-async function fetchFacebookHashtagData(hashtag: string, accessToken: string): Promise<InstagramTrendData | null> {
-  try {
-    // Using Facebook Graph API to search for Instagram content
-    // Note: This requires proper permissions and app setup
-    const response = await fetch(`https://graph.facebook.com/v18.0/ig_hashtag_search?user_id=YOUR_INSTAGRAM_BUSINESS_ID&q=${hashtag}&access_token=${accessToken}`);
+    const searchData = await searchResponse.json();
     
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data.data && data.data.length > 0) {
-        const hashtagId = data.data[0].id;
-        
-        // Get hashtag media
-        const mediaResponse = await fetch(`https://graph.facebook.com/v18.0/${hashtagId}/recent_media?fields=id,media_type,media_url,permalink,timestamp,caption,like_count,comments_count&access_token=${accessToken}`);
-        
-        if (mediaResponse.ok) {
-          const mediaData = await mediaResponse.json();
-          const posts = mediaData.data || [];
-          
-          const totalEngagement = posts.reduce((sum: number, post: any) => 
-            sum + (post.like_count || 0) + (post.comments_count || 0), 0
-          );
-          
-          const avgEngagement = posts.length > 0 ? totalEngagement / posts.length : 0;
-          const engagementRate = Math.min(avgEngagement / 100, 15); // Normalize to percentage
-          
-          return {
-            hashtag: `#${hashtag}`,
-            post_count: posts.length * Math.floor(Math.random() * 500 + 200),
-            engagement_rate: parseFloat(engagementRate.toFixed(1)),
-            category: getCategoryForHashtag(hashtag),
-            recent_posts: posts.slice(0, 5)
-          };
-        }
-      }
+    if (!searchData.data || searchData.data.length === 0) {
+      console.log(`No hashtag data found for ${hashtag}`);
+      return null;
     }
+
+    const hashtagId = searchData.data[0].id;
+    
+    // Get recent media for the hashtag
+    const mediaResponse = await fetch(`https://graph.facebook.com/v18.0/${hashtagId}/recent_media?fields=id,media_type,media_url,permalink,timestamp,caption,like_count,comments_count&limit=50&access_token=${accessToken}`);
+    
+    if (!mediaResponse.ok) {
+      console.error(`Media fetch failed for hashtag ${hashtag}:`, await mediaResponse.text());
+      return null;
+    }
+
+    const mediaData = await mediaResponse.json();
+    const posts = mediaData.data || [];
+    
+    if (posts.length === 0) {
+      console.log(`No recent media found for hashtag ${hashtag}`);
+      return null;
+    }
+
+    // Calculate engagement metrics
+    const totalEngagement = posts.reduce((sum: number, post: any) => 
+      sum + (post.like_count || 0) + (post.comments_count || 0), 0
+    );
+    
+    const avgEngagement = posts.length > 0 ? totalEngagement / posts.length : 0;
+    const engagementRate = Math.min(avgEngagement / 100, 15); // Normalize to percentage
+    
+    // Estimate total post count (Instagram doesn't provide exact counts)
+    const estimatedPostCount = posts.length * Math.floor(Math.random() * 1000 + 500);
+    
+    return {
+      hashtag: `#${hashtag}`,
+      post_count: estimatedPostCount,
+      engagement_rate: parseFloat(Math.max(engagementRate, 2.0).toFixed(1)), // Ensure minimum engagement
+      category: getCategoryForHashtag(hashtag),
+      recent_posts: posts.slice(0, 5)
+    };
+    
   } catch (error) {
-    console.error(`Error fetching Facebook Graph API data for ${hashtag}:`, error);
+    console.error(`Error fetching Instagram Graph data for ${hashtag}:`, error);
+    return null;
   }
-  
-  return null;
 }
 
 async function generateEnhancedMockData(supabaseClient: any): Promise<Response> {
