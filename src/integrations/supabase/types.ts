@@ -19,39 +19,57 @@ export type Database = {
           confidence_score: number | null
           created_at: string
           expires_at: string | null
+          feedback_timestamp: string | null
           id: string
+          improvement_suggestions: string | null
           is_accepted: boolean | null
           occasion: string | null
           reasoning: string | null
           recommendation_type: string | null
           recommended_items: Json | null
+          user_feedback: string | null
           user_id: string
+          user_rating: number | null
+          was_worn: boolean | null
+          wear_context: string | null
           weather_context: Json | null
         }
         Insert: {
           confidence_score?: number | null
           created_at?: string
           expires_at?: string | null
+          feedback_timestamp?: string | null
           id?: string
+          improvement_suggestions?: string | null
           is_accepted?: boolean | null
           occasion?: string | null
           reasoning?: string | null
           recommendation_type?: string | null
           recommended_items?: Json | null
+          user_feedback?: string | null
           user_id: string
+          user_rating?: number | null
+          was_worn?: boolean | null
+          wear_context?: string | null
           weather_context?: Json | null
         }
         Update: {
           confidence_score?: number | null
           created_at?: string
           expires_at?: string | null
+          feedback_timestamp?: string | null
           id?: string
+          improvement_suggestions?: string | null
           is_accepted?: boolean | null
           occasion?: string | null
           reasoning?: string | null
           recommendation_type?: string | null
           recommended_items?: Json | null
+          user_feedback?: string | null
           user_id?: string
+          user_rating?: number | null
+          was_worn?: boolean | null
+          wear_context?: string | null
           weather_context?: Json | null
         }
         Relationships: []
@@ -455,6 +473,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recommendation_feedback: {
+        Row: {
+          alternative_preferences: string | null
+          comfort_rating: number | null
+          created_at: string
+          disliked_aspects: string[] | null
+          feedback_type: string
+          id: string
+          improvement_suggestions: string | null
+          liked_aspects: string[] | null
+          occasion_appropriateness: number | null
+          rating: number
+          recommendation_id: string
+          style_satisfaction: number | null
+          updated_at: string
+          user_id: string
+          would_wear_again: boolean | null
+        }
+        Insert: {
+          alternative_preferences?: string | null
+          comfort_rating?: number | null
+          created_at?: string
+          disliked_aspects?: string[] | null
+          feedback_type: string
+          id?: string
+          improvement_suggestions?: string | null
+          liked_aspects?: string[] | null
+          occasion_appropriateness?: number | null
+          rating: number
+          recommendation_id: string
+          style_satisfaction?: number | null
+          updated_at?: string
+          user_id: string
+          would_wear_again?: boolean | null
+        }
+        Update: {
+          alternative_preferences?: string | null
+          comfort_rating?: number | null
+          created_at?: string
+          disliked_aspects?: string[] | null
+          feedback_type?: string
+          id?: string
+          improvement_suggestions?: string | null
+          liked_aspects?: string[] | null
+          occasion_appropriateness?: number | null
+          rating?: number
+          recommendation_id?: string
+          style_satisfaction?: number | null
+          updated_at?: string
+          user_id?: string
+          would_wear_again?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendation_feedback_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seasonal_forecasts: {
         Row: {
@@ -899,6 +979,45 @@ export type Database = {
           refresh_token?: string | null
           scope?: string[] | null
           token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preference_insights: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          id: string
+          insight_data: Json
+          insight_type: string
+          last_confirmed: string | null
+          source_recommendations: string[] | null
+          times_confirmed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          insight_data: Json
+          insight_type: string
+          last_confirmed?: string | null
+          source_recommendations?: string[] | null
+          times_confirmed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          insight_data?: Json
+          insight_type?: string
+          last_confirmed?: string | null
+          source_recommendations?: string[] | null
+          times_confirmed?: number | null
           updated_at?: string
           user_id?: string
         }
