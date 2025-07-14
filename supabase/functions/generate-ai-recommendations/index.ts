@@ -47,6 +47,9 @@ serve(async (req) => {
     } = await req.json();
 
     // Fetch user's style profile and wardrobe items if authenticated
+    let userInsights = null;
+    let recentFeedback = null;
+    
     if (user) {
       const { data: userStyleProfile } = await supabase
         .from('user_style_profiles')
@@ -61,6 +64,33 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .limit(20);
       wardrobeItems = userWardrobeItems;
+
+      // Fetch user preference insights from feedback
+      const { data: insights } = await supabase
+        .from('user_preference_insights')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('confidence_score', { ascending: false })
+        .limit(10);
+      userInsights = insights;
+
+      // Fetch recent feedback to understand what worked/didn't work
+      const { data: feedback } = await supabase
+        .from('recommendation_feedback')
+        .select(`
+          rating,
+          liked_aspects,
+          disliked_aspects,
+          improvement_suggestions,
+          ai_recommendations (
+            recommended_items,
+            occasion
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      recentFeedback = feedback;
     }
 
     // Fetch recent shopping items for inspiration
@@ -87,6 +117,17 @@ USER STYLE PROFILE:
 - Height: ${styleProfile?.height_cm ? styleProfile.height_cm + 'cm' : 'Not specified'}
 - Size Preferences: Top ${styleProfile?.standard_size_top || 'N/A'}, Bottom ${styleProfile?.standard_size_bottom || 'N/A'}, Shoes ${styleProfile?.standard_size_shoes || 'N/A'}
 
+LEARNED PREFERENCES FROM FEEDBACK:
+${userInsights?.length > 0 ? userInsights.map(insight => 
+  `- ${insight.insight_type}: ${JSON.stringify(insight.insight_data)} (confidence: ${Math.round(insight.confidence_score * 100)}%)`
+).join('\n') : '- No learned preferences yet'}
+
+RECENT FEEDBACK ANALYSIS:
+${recentFeedback?.length > 0 ? recentFeedback.map(fb => {
+  const ratingText = fb.rating >= 4 ? 'POSITIVE' : fb.rating === 3 ? 'NEUTRAL' : 'NEGATIVE';
+  return `- ${ratingText} (${fb.rating}/5): Liked: ${fb.liked_aspects?.join(', ') || 'none'}, Disliked: ${fb.disliked_aspects?.join(', ') || 'none'}${fb.improvement_suggestions ? `, Suggestions: ${fb.improvement_suggestions}` : ''}`;
+}).join('\n') : '- No previous feedback available'}
+
 WARDROBE CONTEXT:
 ${wardrobeItems?.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'}, ${item.brand || 'brand not specified'})`).join('\n') || 'No wardrobe items available'}
 
@@ -111,6 +152,12 @@ ${recommendationType === 'event_outfit' ?
   'Create an outfit specifically tailored for this event. If this is a themed party, suggest appropriate character inspirations and costume elements that work with the theme while considering the dress code, weather, and user preferences.' :
   'Create a versatile daily outfit that reflects the user\'s personal style while being practical for their lifestyle.'
 }
+
+CRITICAL: Use the learned preferences and recent feedback to improve this recommendation. Pay special attention to:
+1. Aspects the user consistently likes/dislikes from previous feedback
+2. Learned preferences with high confidence scores
+3. Improvement suggestions from past recommendations
+4. Color, style, and fit preferences that have been reinforced through positive feedback
 
 SPECIAL INSTRUCTIONS FOR THEMED EVENTS:
 If the occasion mentions a theme (like "literature and drama", "1920s", "Hollywood", etc.), you should:

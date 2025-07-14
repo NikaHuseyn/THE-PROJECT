@@ -2,9 +2,11 @@
 import React from 'react';
 import { Shirt, Footprints, Watch, Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import RecommendationFeedback from '@/components/RecommendationFeedback';
 
 interface OutfitRecommendationProps {
   recommendation: {
+    id?: string;
     top: string;
     bottom: string;
     shoes: string;
@@ -12,9 +14,10 @@ interface OutfitRecommendationProps {
     colors: string[];
     notes: string;
   };
+  showFeedback?: boolean;
 }
 
-const OutfitRecommendation = ({ recommendation }: OutfitRecommendationProps) => {
+const OutfitRecommendation = ({ recommendation, showFeedback = true }: OutfitRecommendationProps) => {
   return (
     <div className="mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-100">
       <div className="flex items-center mb-4">
@@ -84,6 +87,15 @@ const OutfitRecommendation = ({ recommendation }: OutfitRecommendationProps) => 
         <div className="mt-4 p-4 bg-white/50 rounded-lg border border-white/50">
           <h5 className="font-medium text-gray-800 mb-2">Styling Notes</h5>
           <p className="text-sm text-gray-600 leading-relaxed">{recommendation.notes}</p>
+        </div>
+      )}
+      
+      {showFeedback && recommendation.id && (
+        <div className="mt-6">
+          <RecommendationFeedback 
+            recommendationId={recommendation.id} 
+            isCompact={true}
+          />
         </div>
       )}
     </div>
