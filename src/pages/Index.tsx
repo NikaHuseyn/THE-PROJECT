@@ -11,6 +11,9 @@ import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
 import StyleInspiration from '@/components/StyleInspiration';
 import TrendingNow from '@/components/TrendingNow';
 import CalendarRecommendationsSection from '@/components/CalendarRecommendationsSection';
+import OnboardingFlow from '@/components/OnboardingFlow';
+import { LoadingState } from '@/components/ui/loading';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { generateOutfitRecommendations } from '@/services/shoppingService';
 import type { OutfitRecommendation } from '@/services/shoppingService';
 import { Loader2 } from 'lucide-react';
@@ -18,27 +21,31 @@ import { Loader2 } from 'lucide-react';
 const Index = () => {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [currentEvent, setCurrentEvent] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [ukBrandOutfits, setUkBrandOutfits] = useState<OutfitRecommendation[]>([]);
   const [aiRecommendation, setAiRecommendation] = useState<any>(null);
   const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
+  
+  // Onboarding state
+  const { shouldShowOnboarding, isLoading, user, completeOnboarding } = useOnboarding();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    };
-    
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setIsAuthenticated(!!session);
-      }
+  // Show onboarding loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-surface via-surface-variant to-surface flex items-center justify-center">
+        <LoadingState
+          variant="fashion"
+          title="Loading StyleAI"
+          description="Preparing your personalized fashion experience..."
+          icon="sparkles"
+        />
+      </div>
     );
+  }
 
-    return () => subscription.unsubscribe();
-  }, []);
+  // Show onboarding flow for authenticated users who haven't completed it
+  if (user && shouldShowOnboarding) {
+    return <OnboardingFlow onComplete={completeOnboarding} />;
+  }
 
   const sampleOutfits = [
     {
@@ -164,7 +171,7 @@ const Index = () => {
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                   Get perfectly curated outfits for any occasion from top UK brands. Buy or rent stunning pieces that arrive exactly when you need them.
                 </p>
-                {!isAuthenticated && (
+                {!user && (
                   <p className="text-sm text-gray-500 mt-4">
                     Sign in to access your personal wardrobe and get personalized recommendations!
                   </p>
@@ -175,7 +182,7 @@ const Index = () => {
               <WeatherDisplay />
               
               {/* Calendar Integration Section - shown after weather for authenticated users */}
-              {isAuthenticated && <CalendarRecommendationsSection />}
+              {user && <CalendarRecommendationsSection />}
               
               <StyleInspiration />
               <TrendingNow />
