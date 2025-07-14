@@ -6,35 +6,52 @@
 
 @layer base {
   :root {
+    /* Background & Surfaces */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --surface: 0 0% 98%;
+    --surface-variant: 210 40% 97%;
 
+    /* Cards & Containers */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
+    /* Overlays */
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
+    /* Brand Colors - Fashion-focused palette */
+    --primary: 330 81% 60%;  /* Rich rose */
+    --primary-foreground: 0 0% 100%;
+    --primary-muted: 330 30% 95%;
+    
+    /* Secondary - Elegant complement */
+    --secondary: 210 25% 90%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
+    /* Muted tones */
+    --muted: 210 25% 95%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Fashion gold */
+    --accent: 45 90% 70%;
+    --accent-foreground: 45 90% 20%;
 
+    /* Status colors */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
+    /* Borders & Inputs */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 330 81% 60%;
 
-    --radius: 0.5rem;
+    /* Radius system */
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -92,12 +109,115 @@
   }
 }
 
+/* Fashion-focused gradients */
+:root {
+  --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(330 60% 45%));
+  --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(210 15% 85%));
+  --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(45 80% 60%));
+  --gradient-surface: linear-gradient(135deg, hsl(var(--surface)), hsl(var(--surface-variant)));
+  --gradient-elegant: linear-gradient(145deg, hsl(330 30% 98%), hsl(330 20% 96%));
+  --gradient-warm: linear-gradient(135deg, hsl(20 100% 97%), hsl(45 100% 96%));
+  
+  /* Shadows */
+  --shadow-elegant: 0 10px 25px -5px hsl(var(--primary) / 0.1), 0 4px 10px -2px hsl(var(--primary) / 0.05);
+  --shadow-warm: 0 8px 25px -5px hsl(45 50% 80% / 0.3);
+  --shadow-glow: 0 0 20px hsl(var(--primary) / 0.15);
+}
+
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth scroll for better UX */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Enhanced card styles */
+  .card-elegant {
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100/50 backdrop-blur-sm;
+    background: var(--gradient-elegant);
+  }
+
+  .card-warm {
+    @apply rounded-2xl border border-orange-100/50;
+    background: var(--gradient-warm);
+    box-shadow: var(--shadow-warm);
+  }
+
+  /* Interactive elements */
+  .interactive-scale {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .interactive-scale:hover {
+    @apply scale-[1.02] shadow-lg;
+  }
+
+  /* Loading animations */
+  .pulse-gentle {
+    animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-gentle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Shimmer effect for loading states */
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  /* Fashion-focused button styles */
+  .btn-fashion {
+    @apply relative overflow-hidden rounded-full px-6 py-3 font-medium transition-all duration-300;
+    background: var(--gradient-primary);
+    color: white;
+  }
+
+  .btn-fashion::before {
+    @apply absolute inset-0 rounded-full opacity-0 transition-opacity duration-300;
+    content: '';
+    background: linear-gradient(135deg, hsl(330 90% 65%), hsl(330 70% 50%));
+  }
+
+  .btn-fashion:hover::before {
+    @apply opacity-100;
+  }
+
+  .btn-fashion > * {
+    @apply relative z-10;
   }
 }

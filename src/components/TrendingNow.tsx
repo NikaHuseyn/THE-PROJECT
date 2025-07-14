@@ -3,6 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, ShoppingCart, Heart, Star, Loader2 } from 'lucide-react';
 import { useFashionTrends } from '@/hooks/useFashionTrends';
+import { LoadingState, LoadingGrid } from '@/components/ui/loading';
+import { NoTrendsEmptyState } from '@/components/ui/empty-state';
 
 const TrendingNow = () => {
   const { trends, isLoading, error } = useFashionTrends();
@@ -25,75 +27,66 @@ const TrendingNow = () => {
   }));
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-2xl p-8 mb-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="card-warm p-8 mb-8 animate-fade-in">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-2 flex items-center">
-            <TrendingUp className="h-6 w-6 mr-2 text-amber-600" />
+          <h3 className="text-3xl font-bold gradient-text mb-3 flex items-center">
+            <TrendingUp className="h-7 w-7 mr-3 text-primary" />
             Trending Now
           </h3>
-          <p className="text-gray-600">
-            Popular pieces from our partner brands that work with multiple outfits
+          <p className="text-muted-foreground leading-relaxed">
+            Discover the latest fashion trends curated by our AI from top brands worldwide
           </p>
         </div>
         <Button 
           variant="outline" 
-          className="border-amber-300 text-amber-700 hover:bg-amber-50"
+          className="btn-fashion border-primary/20 text-primary hover:bg-primary/5"
         >
           View All Trends
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
-          <span className="ml-3 text-lg text-gray-600">Loading trending items...</span>
-        </div>
+        <LoadingState
+          variant="fashion"
+          title="Discovering Latest Trends"
+          description="Our AI is analyzing the latest fashion data to bring you the most current styles..."
+          icon="sparkles"
+        />
       ) : error ? (
-        <div className="text-center py-12">
-          <p className="text-red-600 mb-4">Failed to load trending items</p>
-          <Button 
-            variant="outline"
-            onClick={() => window.location.reload()}
-            className="border-amber-300 text-amber-700 hover:bg-amber-50"
-          >
-            Try Again
-          </Button>
-        </div>
+        <NoTrendsEmptyState onRefresh={() => window.location.reload()} />
       ) : trendingItems.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">No trending items available at the moment</p>
-        </div>
+        <NoTrendsEmptyState />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {trendingItems.map((item) => (
           <div 
             key={item.id}
-            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group border border-amber-100"
+            className="card-elegant interactive-scale overflow-hidden group animate-fade-in-up"
+            style={{ animationDelay: `${trendingItems.indexOf(item) * 100}ms` }}
           >
-            <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-              {/* Placeholder for product image */}
+            <div className="relative h-48 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-orange-300 rounded-full mx-auto mb-3 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-full mx-auto mb-3 flex items-center justify-center animate-float">
                     <span className="text-xl font-bold text-white">{item.name[0]}</span>
                   </div>
-                  <p className="text-xs">{item.name}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{item.name}</p>
                 </div>
               </div>
               
-              <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
+              <div className="absolute top-3 left-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-medium flex items-center animate-pulse-glow">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 Trending
               </div>
               
               <div className="absolute top-3 right-3">
-                <button className="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors">
-                  <Heart className="h-4 w-4 text-gray-600 hover:text-rose-500" />
+                <button className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-200">
+                  <Heart className="h-4 w-4 text-muted-foreground hover:text-primary" />
                 </button>
               </div>
 
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-gray-700">
+              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-foreground">
                 {item.brand}
               </div>
             </div>

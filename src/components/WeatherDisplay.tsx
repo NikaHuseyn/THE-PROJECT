@@ -95,10 +95,13 @@ const WeatherDisplay = () => {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-r from-sky-50 to-blue-50 rounded-lg p-4 mb-6 border border-sky-100">
+      <div className="card-elegant p-6 mb-6 animate-fade-in">
         <div className="flex items-center justify-center py-4">
-          <RefreshCw className="animate-spin h-6 w-6 text-sky-600 mr-2" />
-          <span className="text-sm text-sky-700">Getting weather data...</span>
+          <div className="relative">
+            <RefreshCw className="animate-spin h-6 w-6 text-primary mr-3" />
+            <div className="absolute inset-0 rounded-full animate-ping bg-primary/20" />
+          </div>
+          <span className="text-sm text-muted-foreground font-medium">Getting weather data...</span>
         </div>
       </div>
     );
@@ -106,12 +109,24 @@ const WeatherDisplay = () => {
 
   if (!weather || error) {
     return (
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 mb-6 border border-gray-200">
-        <div className="text-center">
-          <p className="text-gray-600 text-sm mb-3">
-            {error || 'Unable to get weather information'}
-          </p>
-          <Button onClick={getLocation} variant="outline" size="sm">
+      <div className="card-elegant p-6 mb-6 text-center animate-fade-in">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="p-4 bg-destructive/10 rounded-full">
+            <MapPin className="h-8 w-8 text-destructive" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="font-medium text-foreground">Weather Unavailable</h3>
+            <p className="text-muted-foreground text-sm">
+              {error || 'Unable to get weather information'}
+            </p>
+          </div>
+          <Button 
+            onClick={getLocation} 
+            variant="outline" 
+            size="sm"
+            className="border-primary/20 text-primary hover:bg-primary/5"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
         </div>
@@ -120,73 +135,83 @@ const WeatherDisplay = () => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-sky-100 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <div className="p-2 bg-sky-100 rounded-md">
+    <div className="card-warm p-6 mb-6 animate-fade-in interactive-scale">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40">
             {getWeatherIcon(weather.condition)}
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+            <h3 className="text-lg font-bold text-foreground flex items-center">
               Live Weather
-              <MapPin className="h-3 w-3 ml-1 text-sky-600" />
+              <MapPin className="h-4 w-4 ml-2 text-primary" />
             </h3>
-            <p className="text-xs text-gray-600">{weather.location}</p>
+            <p className="text-xs text-muted-foreground font-medium">{weather.location}</p>
           </div>
         </div>
-        <Button onClick={getLocation} variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 text-xs">
-          <RefreshCw className="h-3 w-3 mr-1" />
+        <Button 
+          onClick={getLocation} 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary hover:bg-primary/10 hover:text-primary font-medium"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Weather Details */}
-        <div className="space-y-2">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1">
-              <Thermometer className="h-4 w-4 text-sky-600" />
-              <span className={`text-xl font-bold ${getTemperatureColor(weather.temperature)}`}>
-                {weather.temperature}°F
-              </span>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-accent/10 rounded-lg">
+                <Thermometer className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <span className={`text-2xl font-bold ${getTemperatureColor(weather.temperature)}`}>
+                  {weather.temperature}°F
+                </span>
+                <p className="text-sm text-muted-foreground capitalize">{weather.description}</p>
+              </div>
             </div>
-            <span className="text-gray-600 text-sm capitalize">{weather.description}</span>
           </div>
 
-          <div className="text-xs text-gray-600 mb-2">
+          <div className="text-sm text-muted-foreground bg-white/40 backdrop-blur-sm rounded-lg p-3">
             Feels like {weather.feelsLike}°F
           </div>
 
-          <div className="flex items-center space-x-4 text-xs text-gray-600">
-            <div className="flex items-center space-x-1">
-              <Droplets className="h-3 w-3" />
-              <span>{weather.humidity}%</span>
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 bg-white/40 backdrop-blur-sm rounded-lg p-2">
+              <Droplets className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">{weather.humidity}%</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Wind className="h-3 w-3" />
-              <span>{weather.windSpeed} mph</span>
+            <div className="flex items-center space-x-2 bg-white/40 backdrop-blur-sm rounded-lg p-2">
+              <Wind className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">{weather.windSpeed} mph</span>
             </div>
           </div>
         </div>
 
         {/* AI-Powered Clothing Recommendations */}
-        <div>
-          <h4 className="font-semibold text-gray-800 mb-2 text-sm flex items-center">
-            🤖 AI Recommendations
+        <div className="space-y-3">
+          <h4 className="font-semibold text-foreground text-sm flex items-center">
+            <span className="mr-2">🤖</span>
+            AI Style Recommendations
           </h4>
-          <div className="flex flex-wrap gap-1">
+          <div className="space-y-2">
             {weather.clothingRecommendations.slice(0, 4).map((item, index) => (
-              <span 
+              <div 
                 key={index}
-                className="text-xs bg-gradient-to-r from-sky-100 to-indigo-100 text-sky-700 px-2 py-1 rounded-full border border-sky-200"
+                className="text-sm bg-white/60 backdrop-blur-sm text-foreground px-3 py-2 rounded-lg border border-white/40 font-medium hover:bg-white/80 transition-colors"
               >
                 {item}
-              </span>
+              </div>
             ))}
           </div>
           {weather.clothingRecommendations.length > 4 && (
-            <p className="text-xs text-gray-500 mt-1">
-              +{weather.clothingRecommendations.length - 4} more suggestions
+            <p className="text-xs text-muted-foreground italic">
+              +{weather.clothingRecommendations.length - 4} more personalized suggestions
             </p>
           )}
         </div>
