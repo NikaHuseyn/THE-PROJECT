@@ -25,6 +25,7 @@ serve(async (req) => {
     let user = null;
     let styleProfile = null;
     let wardrobeItems = null;
+    let userEmail = null;
 
     if (authHeader) {
       try {
@@ -33,18 +34,70 @@ serve(async (req) => {
         );
         if (!userError && authUser) {
           user = authUser;
+          userEmail = authUser.email;
         }
       } catch (authError) {
         console.log('Auth failed, proceeding as anonymous user:', authError);
       }
     }
 
+    // If no authenticated user, require guest email for rate limiting
     const { 
       recommendationType = 'daily_outfit', 
       weatherData, 
       occasion, 
-      eventDetails 
+      eventDetails,
+      guestEmail
     } = await req.json();
+
+    // Determine email for rate limiting
+    const rateLimitEmail = userEmail || guestEmail;
+    if (!rateLimitEmail) {
+      return new Response(JSON.stringify({ 
+        error: 'Email required for AI recommendations. Please log in or provide a guest email.' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check rate limiting
+    console.log('Checking rate limit for email:', rateLimitEmail);
+    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_ai_rate_limit', {
+      user_email: rateLimitEmail,
+      target_user_id: user?.id || null
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to check rate limit. Please try again.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Rate limit result:', rateLimitResult);
+    
+    if (!rateLimitResult.allowed) {
+      return new Response(JSON.stringify({ 
+        error: 'Rate limit exceeded',
+        details: {
+          message: `You've reached your daily limit of ${rateLimitResult.rate_limit} AI recommendations.`,
+          current_usage: rateLimitResult.current_usage,
+          rate_limit: rateLimitResult.rate_limit,
+          reset_time: rateLimitResult.reset_time,
+          subscription_tier: rateLimitResult.subscription_tier,
+          upgrade_message: rateLimitResult.subscription_tier === 'free' ? 
+            'Upgrade to Premium for 50 daily recommendations or Pro for 100 daily recommendations!' : 
+            'Your daily limit will reset in 24 hours.'
+        }
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Fetch user's style profile and wardrobe items if authenticated
     let userInsights = null;
@@ -372,6 +425,12 @@ Focus on creating a cohesive, stylish outfit that authentically represents the u
         color_analysis: recommendationData.color_analysis,
         fit_guidance: recommendationData.fit_guidance,
         shopping_suggestions: recommendationData.shopping_suggestions
+      },
+      rate_limit_info: {
+        remaining_requests: rateLimitResult.remaining_requests,
+        rate_limit: rateLimitResult.rate_limit,
+        subscription_tier: rateLimitResult.subscription_tier,
+        reset_time: rateLimitResult.reset_time
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

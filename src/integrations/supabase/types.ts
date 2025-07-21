@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_limits: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_request_at: string
+          requests_count: number
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_request_at?: string
+          requests_count?: number
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_request_at?: string
+          requests_count?: number
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+          window_start?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -422,6 +458,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          email: string
+          id: string
+          metadata: Json | null
+          payment_type: string
+          product_type: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          payment_type: string
+          product_type: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          payment_type?: string
+          product_type?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       posts: {
         Row: {
@@ -1307,6 +1394,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_ai_rate_limit: {
+        Args: { user_email: string; target_user_id?: string }
+        Returns: Json
+      }
       cleanup_expired_recommendations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1318,6 +1409,10 @@ export type Database = {
       export_user_data: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      upgrade_user_subscription: {
+        Args: { user_email: string; new_tier: string; target_user_id?: string }
+        Returns: boolean
       }
     }
     Enums: {

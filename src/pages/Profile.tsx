@@ -1,187 +1,161 @@
-
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Header from '@/components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { User, Settings, Heart, ShoppingBag, Calendar, BarChart3 } from 'lucide-react';
+import { User, Settings, Shield, Crown } from 'lucide-react';
+import LoadingState from '@/components/LoadingState';
 import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
-import SizePreferencesForm from '@/components/profile/SizePreferencesForm';
 import StylePreferencesForm from '@/components/profile/StylePreferencesForm';
-import PrivacySettingsForm from '@/components/profile/PrivacySettingsForm';
-import UserWishlist from '@/components/profile/UserWishlist';
+import SizePreferencesForm from '@/components/profile/SizePreferencesForm';
+import ColorAnalysisSection from '@/components/profile/ColorAnalysisSection';
 import OutfitHistory from '@/components/profile/OutfitHistory';
+import UserWishlist from '@/components/profile/UserWishlist';
 import PurchaseHistory from '@/components/profile/PurchaseHistory';
-import StyleProfile from '@/components/StyleProfile';
-import AuthGuard from '@/components/AuthGuard';
-import { useToast } from '@/hooks/use-toast';
+import PrivacySettingsForm from '@/components/profile/PrivacySettingsForm';
+import SubscriptionTier from '@/components/SubscriptionTier';
 
 const Profile = () => {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('personal');
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [usageData, setUsageData] = useState<any>(null);
+  const [analysisImage, setAnalysisImage] = useState<File | null>(null);
 
-  const { data: profile, isLoading, refetch } = useQuery({
-    queryKey: ['userProfile'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+  useEffect(() => {
+    loadProfile();
+  }, []);
 
-      const { data, error } = await supabase
+  const loadProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      // Fetch user profile
+      const { data: profileData, error: profileError } = await supabase
         .from('user_style_profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
+      } else {
+        setProfile(profileData);
       }
 
-      return data;
-    },
-  });
+      // Fetch usage data for rate limiting display
+      if (user.email) {
+        const { data: usageLimitData, error: usageError } = await supabase.rpc('check_ai_rate_limit', {
+          user_email: user.email,
+          target_user_id: user.id
+        });
 
-  const handleProfileUpdate = () => {
-    refetch();
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
+        if (!usageError && usageLimitData) {
+          setUsageData(usageLimitData);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (isLoading) {
+  const handleAnalysisImageChange = (file: File) => {
+    setAnalysisImage(file);
+  };
+
+  const handleProfileUpdate = () => {
+    loadProfile();
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-surface via-surface-variant to-surface p-4">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header skeleton */}
-          <div className="card-elegant animate-pulse p-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-muted rounded-full shimmer"></div>
-              <div className="space-y-2 flex-1">
-                <div className="h-6 bg-muted rounded w-1/3 shimmer"></div>
-                <div className="h-4 bg-muted rounded w-1/2 shimmer"></div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Tabs skeleton */}
-          <div className="card-elegant animate-pulse p-6">
-            <div className="flex space-x-4 mb-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-8 w-20 bg-muted rounded shimmer"></div>
-              ))}
-            </div>
-            <div className="space-y-4">
-              <div className="h-6 bg-muted rounded w-1/4 shimmer"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="h-32 bg-muted rounded shimmer"></div>
-                <div className="h-32 bg-muted rounded shimmer"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50">
+        <Header />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <LoadingState message="Loading your profile..." />
+        </main>
       </div>
     );
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-50 p-4">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Profile Header */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-r from-rose-400 to-pink-400 rounded-full flex items-center justify-center">
-                    {profile?.profile_photo_url ? (
-                      <img 
-                        src={profile.profile_photo_url} 
-                        alt="Profile" 
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                    ) : (
-                      <User className="h-8 w-8 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      {profile?.display_name || 'Your Profile'}
-                    </h1>
-                    <p className="text-gray-600">Manage your style preferences and settings</p>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* Profile Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-7">
-              <TabsTrigger value="personal" className="flex items-center space-x-2">
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">Personal</span>
-              </TabsTrigger>
-              <TabsTrigger value="sizes" className="flex items-center space-x-2">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Sizes</span>
-              </TabsTrigger>
-              <TabsTrigger value="style" className="flex items-center space-x-2">
-                <Heart className="h-4 w-4" />
-                <span className="hidden sm:inline">Style</span>
-              </TabsTrigger>
-              <TabsTrigger value="wishlist" className="flex items-center space-x-2">
-                <ShoppingBag className="h-4 w-4" />
-                <span className="hidden sm:inline">Wishlist</span>
-              </TabsTrigger>
-              <TabsTrigger value="history" className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">History</span>
-              </TabsTrigger>
-              <TabsTrigger value="purchases" className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Purchases</span>
-              </TabsTrigger>
-              <TabsTrigger value="privacy" className="flex items-center space-x-2">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Privacy</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="personal">
-              <PersonalInfoForm profile={profile} onUpdate={handleProfileUpdate} />
-            </TabsContent>
-
-            <TabsContent value="sizes">
-              <SizePreferencesForm profile={profile} onUpdate={handleProfileUpdate} />
-            </TabsContent>
-
-            <TabsContent value="style">
-              <div className="space-y-6">
-                <StyleProfile />
-                <StylePreferencesForm profile={profile} onUpdate={handleProfileUpdate} />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="wishlist">
-              <UserWishlist />
-            </TabsContent>
-
-            <TabsContent value="history">
-              <OutfitHistory />
-            </TabsContent>
-
-            <TabsContent value="purchases">
-              <PurchaseHistory />
-            </TabsContent>
-
-            <TabsContent value="privacy">
-              <PrivacySettingsForm profile={profile} onUpdate={handleProfileUpdate} />
-            </TabsContent>
-          </Tabs>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50">
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Profile Settings</h1>
+          <p className="text-gray-600">
+            Manage your personal information, style preferences, and subscription
+          </p>
         </div>
-      </div>
-    </AuthGuard>
+
+        <Tabs defaultValue="personal" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
+            <TabsTrigger value="personal" className="flex items-center space-x-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Personal</span>
+            </TabsTrigger>
+            <TabsTrigger value="style" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Style</span>
+            </TabsTrigger>
+            <TabsTrigger value="sizes" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Sizes</span>
+            </TabsTrigger>
+            <TabsTrigger value="colors" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Colors</span>
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="flex items-center space-x-2">
+              <Crown className="h-4 w-4" />
+              <span className="hidden sm:inline">Subscription</span>
+            </TabsTrigger>
+            <TabsTrigger value="privacy" className="flex items-center space-x-2">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Privacy</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personal">
+            <PersonalInfoForm profile={profile} onUpdate={handleProfileUpdate} />
+          </TabsContent>
+
+          <TabsContent value="style">
+            <StylePreferencesForm profile={profile} onUpdate={handleProfileUpdate} />
+          </TabsContent>
+
+          <TabsContent value="sizes">
+            <SizePreferencesForm profile={profile} onUpdate={handleProfileUpdate} />
+          </TabsContent>
+
+          <TabsContent value="colors">
+            <ColorAnalysisSection 
+              profile={profile} 
+              analysisImage={analysisImage}
+              onAnalysisImageChange={handleAnalysisImageChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="subscription">
+            <SubscriptionTier 
+              currentTier={usageData?.subscription_tier}
+              usageData={usageData ? {
+                current_usage: usageData.current_usage,
+                rate_limit: usageData.rate_limit,
+                reset_time: usageData.reset_time
+              } : undefined}
+            />
+          </TabsContent>
+
+          <TabsContent value="privacy">
+            <PrivacySettingsForm profile={profile} onUpdate={handleProfileUpdate} />
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
   );
 };
 
