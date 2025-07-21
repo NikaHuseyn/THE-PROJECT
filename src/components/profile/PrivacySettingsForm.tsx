@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useGDPRCompliance } from '@/hooks/useGDPRCompliance';
+import { Download, Trash2 } from 'lucide-react';
 
 interface PrivacySettingsFormProps {
   profile: any;
@@ -16,6 +19,8 @@ interface PrivacySettingsFormProps {
 
 const PrivacySettingsForm = ({ profile, onUpdate }: PrivacySettingsFormProps) => {
   const { toast } = useToast();
+  const { exportUserData, deleteAllUserData, loading: gdprLoading } = useGDPRCompliance();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm({
     defaultValues: {
@@ -248,19 +253,67 @@ const PrivacySettingsForm = ({ profile, onUpdate }: PrivacySettingsFormProps) =>
                   <div>
                     <Label className="text-sm font-medium">Data Export</Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Request a copy of all your personal data stored in our system.
-                      {watchedValues.data_export_requested && ' (Export request pending)'}
+                      Download a complete copy of all your personal data in JSON format.
                     </p>
                   </div>
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={handleDataExport}
-                    disabled={watchedValues.data_export_requested}
+                    onClick={exportUserData}
+                    disabled={gdprLoading}
                     className="w-full"
                   >
-                    {watchedValues.data_export_requested ? 'Export Requested' : 'Request Data Export'}
+                    <Download className="h-4 w-4 mr-2" />
+                    {gdprLoading ? 'Preparing Export...' : 'Download My Data'}
                   </Button>
+                </div>
+
+                <div className="p-4 border border-red-200 rounded-lg space-y-3">
+                  <div>
+                    <Label className="text-sm font-medium text-red-700">Delete Account</Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                  </div>
+                  <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        className="w-full"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete My Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your account and remove all your data from our servers, including:
+                          <br />• Your profile and style preferences
+                          <br />• All wardrobe items and outfit combinations
+                          <br />• AI recommendations and feedback
+                          <br />• Social posts, comments, and likes
+                          <br />• Purchase history and wishlist items
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            const success = await deleteAllUserData();
+                            if (success) {
+                              setShowDeleteConfirm(false);
+                            }
+                          }}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Yes, delete everything
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>

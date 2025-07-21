@@ -1311,6 +1311,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      delete_user_data: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
+      export_user_data: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
