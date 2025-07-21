@@ -51,14 +51,32 @@ const Profile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-50 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-gray-200 rounded-lg"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
+      <div className="min-h-screen bg-gradient-to-br from-surface via-surface-variant to-surface p-4">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header skeleton */}
+          <div className="card-elegant animate-pulse p-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-muted rounded-full shimmer"></div>
+              <div className="space-y-2 flex-1">
+                <div className="h-6 bg-muted rounded w-1/3 shimmer"></div>
+                <div className="h-4 bg-muted rounded w-1/2 shimmer"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tabs skeleton */}
+          <div className="card-elegant animate-pulse p-6">
+            <div className="flex space-x-4 mb-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-8 w-20 bg-muted rounded shimmer"></div>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <div className="h-6 bg-muted rounded w-1/4 shimmer"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="h-32 bg-muted rounded shimmer"></div>
+                <div className="h-32 bg-muted rounded shimmer"></div>
+              </div>
             </div>
           </div>
         </div>

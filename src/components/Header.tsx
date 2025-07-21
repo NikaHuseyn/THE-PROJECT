@@ -46,16 +46,16 @@ const Header = () => {
 
   if (loading) {
     return (
-      <header className="bg-white/90 backdrop-blur-sm border-b border-rose-100 sticky top-0 z-50">
+      <header className="bg-surface/90 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold gradient-text">
                 StyleAI
               </h1>
             </div>
             <div className="animate-pulse">
-              <div className="h-8 w-20 bg-gray-200 rounded"></div>
+              <div className="h-8 w-20 bg-muted rounded shimmer"></div>
             </div>
           </div>
         </div>

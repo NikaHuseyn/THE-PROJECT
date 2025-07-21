@@ -44,10 +44,10 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-surface via-surface-variant to-surface flex items-center justify-center">
+        <div className="card-elegant p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Authenticating...</p>
         </div>
       </div>
     );

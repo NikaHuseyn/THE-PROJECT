@@ -155,8 +155,12 @@ const WardrobeManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+      <div className="text-center py-12">
+        <div className="card-elegant p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium gradient-text mb-2">Loading your wardrobe...</h3>
+          <p className="text-muted-foreground">Organizing your clothing items and generating recommendations</p>
+        </div>
       </div>
     );
   }

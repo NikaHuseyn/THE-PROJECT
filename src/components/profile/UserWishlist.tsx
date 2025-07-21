@@ -99,9 +99,16 @@ const UserWishlist = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>
+              <div key={i} className="card-elegant animate-pulse">
+                <div className="h-48 bg-muted rounded-t-lg shimmer"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-muted rounded shimmer"></div>
+                  <div className="h-3 bg-muted rounded w-3/4 shimmer"></div>
+                  <div className="h-6 bg-muted rounded w-1/2 shimmer"></div>
+                </div>
+              </div>
             ))}
           </div>
         </CardContent>

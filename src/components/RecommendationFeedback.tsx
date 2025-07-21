@@ -158,7 +158,7 @@ const RecommendationFeedback = ({
                 size="sm"
                 className="w-full"
               >
-                Submit Rating
+                {isSubmitting ? 'Submitting...' : 'Submit Rating'}
               </Button>
             )}
           </div>
