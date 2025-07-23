@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
+import { EnhancedImageUpload } from '@/components/EnhancedImageUpload';
 
 interface PersonalInfoFormProps {
   profile: any;
@@ -180,46 +181,22 @@ const PersonalInfoForm = ({ profile, onUpdate }: PersonalInfoFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="profile_photo">Profile Photo</Label>
-              <div className="space-y-3">
-                {previewUrl && (
-                  <div className="relative inline-block">
-                    <img
-                      src={previewUrl}
-                      alt="Profile preview"
-                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeProfilePhoto}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="profile_photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('profile_photo')?.click()}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {previewUrl ? 'Change Photo' : 'Upload Photo'}
-                  </Button>
-                  <span className="text-sm text-gray-500">
-                    Optional (max 5MB)
-                  </span>
-                </div>
-              </div>
+              <Label>Profile Photo</Label>
+              <EnhancedImageUpload
+                onFinalImage={async (blob) => {
+                  const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' });
+                  setProfilePhotoFile(file);
+                  const url = URL.createObjectURL(blob);
+                  setPreviewUrl(url);
+                  toast({
+                    title: "Success",
+                    description: "Profile photo ready!",
+                  });
+                }}
+                maxSize={5 * 1024 * 1024} // 5MB
+                acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
+                showEditor={true}
+              />
             </div>
 
             <div className="space-y-2">
