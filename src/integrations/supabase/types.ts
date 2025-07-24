@@ -1528,6 +1528,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_old_audit_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       delete_user_data: {
         Args: { target_user_id: string }
         Returns: Json
