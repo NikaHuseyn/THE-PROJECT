@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from '@/components/ErrorBoundary';
 import QueryProvider from '@/components/QueryProvider';
+import SecurityProvider from '@/components/SecurityProvider';
+import AuthGuard from '@/components/AuthGuard';
 import LoadingState from '@/components/LoadingState';
 
 // Lazy load pages for better performance
@@ -26,14 +28,14 @@ const AppRoutes = () => (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/wardrobe" element={<Wardrobe />} />
-      <Route path="/style-analysis" element={<StyleAnalysis />} />
+      <Route path="/wardrobe" element={<AuthGuard><Wardrobe /></AuthGuard>} />
+      <Route path="/style-analysis" element={<AuthGuard><StyleAnalysis /></AuthGuard>} />
       <Route path="/fashion-trends" element={<FashionTrends />} />
       <Route path="/community" element={<Community />} />
-      <Route path="/profile" element={<Profile />} />
+      <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
       <Route path="/admin" element={<Admin />} />
-      <Route path="/payment-success" element={<PaymentSuccess />} />
-      <Route path="/payment-canceled" element={<PaymentCanceled />} />
+      <Route path="/payment-success" element={<AuthGuard><PaymentSuccess /></AuthGuard>} />
+      <Route path="/payment-canceled" element={<AuthGuard><PaymentCanceled /></AuthGuard>} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -43,17 +45,19 @@ const AppRoutes = () => (
 const App = () => {
   return (
     <ErrorBoundary>
-      <QueryProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <ErrorBoundary>
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </ErrorBoundary>
-        </TooltipProvider>
-      </QueryProvider>
+      <SecurityProvider>
+        <QueryProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <ErrorBoundary>
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </ErrorBoundary>
+          </TooltipProvider>
+        </QueryProvider>
+      </SecurityProvider>
     </ErrorBoundary>
   );
 };

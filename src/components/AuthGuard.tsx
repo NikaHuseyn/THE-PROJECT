@@ -15,12 +15,47 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener with improved security logging
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Log security events for audit trail
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Log successful authentication
+          setTimeout(async () => {
+            try {
+              await supabase.rpc('log_security_event', {
+                event_type_param: 'user_login',
+                event_details_param: {
+                  user_id: session.user.id,
+                  login_method: session.user.app_metadata?.provider || 'email',
+                  timestamp: new Date().toISOString()
+                }
+              });
+            } catch (error) {
+              console.error('Failed to log security event:', error);
+            }
+          }, 0);
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          // Log sign out event
+          setTimeout(async () => {
+            try {
+              await supabase.rpc('log_security_event', {
+                event_type_param: 'user_logout',
+                event_details_param: {
+                  timestamp: new Date().toISOString()
+                }
+              });
+            } catch (error) {
+              console.error('Failed to log security event:', error);
+            }
+          }, 0);
+        }
         
         if (!session) {
           navigate('/auth');

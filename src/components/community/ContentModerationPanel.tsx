@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Eye, Check, X } from 'lucide-react';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { AlertTriangle, Eye, Check, X, Shield } from 'lucide-react';
 
 interface ContentReport {
   id: string;
@@ -45,6 +46,7 @@ const ContentModerationPanel = () => {
   const [flaggedPosts, setFlaggedPosts] = useState<FlaggedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { isModerator, hasRole, loading: adminLoading } = useAdminAccess();
 
   useEffect(() => {
     fetchModerationData();
@@ -186,11 +188,30 @@ const ContentModerationPanel = () => {
     }
   };
 
-  if (loading) {
+  if (adminLoading || loading) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center">Loading moderation panel...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if user has moderator or admin access
+  if (!hasRole('moderator') && !hasRole('admin')) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center space-y-4">
+            <Shield className="h-12 w-12 text-muted-foreground mx-auto" />
+            <div>
+              <h3 className="text-lg font-semibold">Access Restricted</h3>
+              <p className="text-muted-foreground">
+                You need moderator or admin privileges to access the content moderation panel.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
