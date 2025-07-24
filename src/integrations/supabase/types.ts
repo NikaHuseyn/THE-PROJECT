@@ -561,6 +561,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_request_at: string | null
+          operation_type: string
+          requests_count: number | null
+          updated_at: string | null
+          user_id: string | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_request_at?: string | null
+          operation_type: string
+          requests_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_request_at?: string | null
+          operation_type?: string
+          requests_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       recommendation_feedback: {
         Row: {
           alternative_preferences: string | null
@@ -889,6 +922,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_admin_roles: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_description: string | null
@@ -968,6 +1037,9 @@ export type Database = {
         Row: {
           access_token: string | null
           created_at: string
+          encrypted_access_token: string | null
+          encrypted_refresh_token: string | null
+          encryption_key_id: string | null
           id: string
           is_active: boolean | null
           provider: string
@@ -979,6 +1051,9 @@ export type Database = {
         Insert: {
           access_token?: string | null
           created_at?: string
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
+          encryption_key_id?: string | null
           id?: string
           is_active?: boolean | null
           provider?: string
@@ -990,6 +1065,9 @@ export type Database = {
         Update: {
           access_token?: string | null
           created_at?: string
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
+          encryption_key_id?: string | null
           id?: string
           is_active?: boolean | null
           provider?: string
@@ -1033,6 +1111,9 @@ export type Database = {
         Row: {
           access_token: string | null
           created_at: string
+          encrypted_access_token: string | null
+          encrypted_refresh_token: string | null
+          encryption_key_id: string | null
           id: string
           is_active: boolean | null
           provider: string
@@ -1046,6 +1127,9 @@ export type Database = {
         Insert: {
           access_token?: string | null
           created_at?: string
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
+          encryption_key_id?: string | null
           id?: string
           is_active?: boolean | null
           provider: string
@@ -1059,6 +1143,9 @@ export type Database = {
         Update: {
           access_token?: string | null
           created_at?: string
+          encrypted_access_token?: string | null
+          encrypted_refresh_token?: string | null
+          encryption_key_id?: string | null
           id?: string
           is_active?: boolean | null
           provider?: string
@@ -1398,6 +1485,15 @@ export type Database = {
         Args: { user_email: string; target_user_id?: string }
         Returns: Json
       }
+      check_rate_limit: {
+        Args: {
+          target_user_id: string
+          operation: string
+          max_requests?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       cleanup_expired_recommendations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1410,13 +1506,28 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      is_admin: {
+        Args: {
+          target_user_id?: string
+          required_role?: Database["public"]["Enums"]["admin_role"]
+        }
+        Returns: boolean
+      }
+      sanitize_text: {
+        Args: { input_text: string; max_length?: number }
+        Returns: string
+      }
       upgrade_user_subscription: {
         Args: { user_email: string; new_tier: string; target_user_id?: string }
         Returns: boolean
       }
+      validate_email: {
+        Args: { email_input: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      admin_role: "super_admin" | "admin" | "moderator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1543,6 +1654,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      admin_role: ["super_admin", "admin", "moderator"],
+    },
   },
 } as const
