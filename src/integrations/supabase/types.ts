@@ -698,6 +698,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shopping_items: {
         Row: {
           affiliate_url: string | null
@@ -1511,6 +1541,18 @@ export type Database = {
           target_user_id?: string
           required_role?: Database["public"]["Enums"]["admin_role"]
         }
+        Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          event_type_param: string
+          event_details_param?: Json
+          target_user_id?: string
+        }
+        Returns: undefined
+      }
+      revoke_all_user_sessions: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
       sanitize_text: {
