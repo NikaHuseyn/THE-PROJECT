@@ -62,7 +62,24 @@ const WeatherDisplay = () => {
       },
       (error) => {
         console.error('Error getting location:', error);
-        setError('Unable to get your location. Please enable location services.');
+        let errorMessage = 'Unable to get your location. ';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += 'Please allow location access in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage += 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMessage += 'Please enable location services and try again.';
+            break;
+        }
+        
+        setError(errorMessage);
         setLoading(false);
       },
       { timeout: 10000, enableHighAccuracy: true }
