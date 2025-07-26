@@ -1065,7 +1065,6 @@ export type Database = {
       }
       user_calendar_connections: {
         Row: {
-          access_token: string | null
           created_at: string
           encrypted_access_token: string | null
           encrypted_refresh_token: string | null
@@ -1074,12 +1073,10 @@ export type Database = {
           is_active: boolean | null
           provider: string
           provider_account_id: string
-          refresh_token: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          access_token?: string | null
           created_at?: string
           encrypted_access_token?: string | null
           encrypted_refresh_token?: string | null
@@ -1088,12 +1085,10 @@ export type Database = {
           is_active?: boolean | null
           provider?: string
           provider_account_id: string
-          refresh_token?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          access_token?: string | null
           created_at?: string
           encrypted_access_token?: string | null
           encrypted_refresh_token?: string | null
@@ -1102,7 +1097,6 @@ export type Database = {
           is_active?: boolean | null
           provider?: string
           provider_account_id?: string
-          refresh_token?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1139,7 +1133,6 @@ export type Database = {
       }
       user_oauth_connections: {
         Row: {
-          access_token: string | null
           created_at: string
           encrypted_access_token: string | null
           encrypted_refresh_token: string | null
@@ -1148,14 +1141,12 @@ export type Database = {
           is_active: boolean | null
           provider: string
           provider_user_id: string
-          refresh_token: string | null
           scope: string[] | null
           token_expires_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          access_token?: string | null
           created_at?: string
           encrypted_access_token?: string | null
           encrypted_refresh_token?: string | null
@@ -1164,14 +1155,12 @@ export type Database = {
           is_active?: boolean | null
           provider: string
           provider_user_id: string
-          refresh_token?: string | null
           scope?: string[] | null
           token_expires_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          access_token?: string | null
           created_at?: string
           encrypted_access_token?: string | null
           encrypted_refresh_token?: string | null
@@ -1180,7 +1169,6 @@ export type Database = {
           is_active?: boolean | null
           provider?: string
           provider_user_id?: string
-          refresh_token?: string | null
           scope?: string[] | null
           token_expires_at?: string | null
           updated_at?: string

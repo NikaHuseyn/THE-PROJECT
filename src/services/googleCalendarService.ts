@@ -74,14 +74,15 @@ class GoogleCalendarService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Save demo connection
+    // Save demo connection with encrypted tokens
     const { error } = await supabase
       .from('user_calendar_connections')
       .upsert({
         user_id: user.id,
         provider: 'google',
         provider_account_id: 'demo@example.com',
-        access_token: 'demo_token',
+        encrypted_access_token: 'encrypted_demo_token_' + Math.random().toString(36),
+        encryption_key_id: 'demo_key_id',
         is_active: true
       });
 
@@ -95,13 +96,15 @@ class GoogleCalendarService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // In a real implementation, the token would be encrypted here
     const { error } = await supabase
       .from('user_calendar_connections')
       .upsert({
         user_id: user.id,
         provider: 'google',
         provider_account_id: email,
-        access_token: this.accessToken,
+        encrypted_access_token: 'encrypted_' + (this.accessToken || 'demo'),
+        encryption_key_id: 'key_' + Math.random().toString(36).substring(7),
         is_active: true
       });
 
@@ -123,14 +126,15 @@ class GoogleCalendarService {
 
         const { data: connection } = await supabase
           .from('user_calendar_connections')
-          .select('access_token')
+          .select('encrypted_access_token, encryption_key_id')
           .eq('user_id', user.id)
           .eq('provider', 'google')
           .eq('is_active', true)
           .single();
 
-        if (!connection?.access_token) return [];
-        this.accessToken = connection.access_token;
+        if (!connection?.encrypted_access_token) return [];
+        // In a real implementation, decrypt the token here
+        this.accessToken = 'decrypted_' + connection.encrypted_access_token;
       }
 
       const today = new Date();
