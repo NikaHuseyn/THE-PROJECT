@@ -1485,18 +1485,7 @@ export type Database = {
       }
     }
     Views: {
-      style_leaderboard: {
-        Row: {
-          avatar_url: string | null
-          badge_count: number | null
-          display_name: string | null
-          posts_count: number | null
-          style_score: number | null
-          total_likes: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_ai_rate_limit: {
@@ -1527,6 +1516,18 @@ export type Database = {
       export_user_data: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      get_style_leaderboard: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          posts_count: number
+          total_likes: number
+          badge_count: number
+          style_score: number
+          display_name: string
+          avatar_url: string
+        }[]
       }
       is_admin: {
         Args: {

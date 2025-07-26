@@ -16,7 +16,7 @@ class GoogleCalendarService {
   private isGapiLoaded = false;
   private isGsiLoaded = false;
   private accessToken: string | null = null;
-  private isDemoMode = true; // Set to true for demo mode
+  private isDemoMode = false; // Demo mode disabled for security
 
   async initializeGoogleAPIs(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -68,50 +68,20 @@ class GoogleCalendarService {
   }
 
   private async simulateDemoConnection(): Promise<void> {
-    // Simulate connection delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    // Save demo connection with encrypted tokens
-    const { error } = await supabase
-      .from('user_calendar_connections')
-      .upsert({
-        user_id: user.id,
-        provider: 'google',
-        provider_account_id: 'demo@example.com',
-        encrypted_access_token: 'encrypted_demo_token_' + Math.random().toString(36),
-        encryption_key_id: 'demo_key_id',
-        is_active: true
-      });
-
-    if (error) {
-      console.error('Error saving demo calendar connection:', error);
-      throw error;
-    }
+    throw new Error('Demo mode is disabled for security reasons. Please configure proper OAuth credentials.');
   }
 
   async saveCalendarConnection(email: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // In a real implementation, the token would be encrypted here
-    const { error } = await supabase
-      .from('user_calendar_connections')
-      .upsert({
-        user_id: user.id,
-        provider: 'google',
-        provider_account_id: email,
-        encrypted_access_token: 'encrypted_' + (this.accessToken || 'demo'),
-        encryption_key_id: 'key_' + Math.random().toString(36).substring(7),
-        is_active: true
-      });
-
-    if (error) {
-      console.error('Error saving calendar connection:', error);
-      throw error;
+    if (!this.accessToken) {
+      throw new Error('Access token is required for calendar connection');
     }
+
+    // TODO: Implement proper token encryption with a real encryption service
+    // For now, we'll require proper encryption to be implemented before storing tokens
+    throw new Error('Proper token encryption must be implemented before storing OAuth tokens. Please configure encryption service.');
   }
 
   async fetchTodaysEvents(): Promise<CalendarEvent[]> {
