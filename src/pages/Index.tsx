@@ -28,18 +28,11 @@ const Index = () => {
   // Onboarding state
   const { shouldShowOnboarding, isLoading, user, completeOnboarding } = useOnboarding();
 
-  // Show onboarding loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-surface via-surface-variant to-surface flex items-center justify-center">
-        <LoadingState
-          variant="fashion"
-          title="Loading StyleAI"
-          description="Preparing your personalized fashion experience..."
-          icon="sparkles"
-        />
-      </div>
-    );
+  // Only show loading for very brief initial auth check
+  if (isLoading && !user) {
+    // For unauthenticated users, show main content immediately
+    // For authenticated users, show brief loading only
+    return null;
   }
 
   // Show onboarding flow for authenticated users who haven't completed it
