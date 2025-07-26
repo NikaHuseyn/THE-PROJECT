@@ -10,6 +10,7 @@ import WeatherDisplay from '@/components/WeatherDisplay';
 import DailyOutfitAssistant from '@/components/DailyOutfitAssistant';
 import StyleInspiration from '@/components/StyleInspiration';
 import TrendingNow from '@/components/TrendingNow';
+import StyleAdviceChat from '@/components/StyleAdviceChat';
 import CalendarRecommendationsSection from '@/components/CalendarRecommendationsSection';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import { LoadingState } from '@/components/ui/loading';
@@ -173,6 +174,11 @@ const Index = () => {
               
               <EventInput onEventSubmit={handleEventSubmit} />
               <WeatherDisplay />
+              
+              {/* Style Advice Chat - Open-ended AI styling assistant */}
+              <div className="my-12">
+                <StyleAdviceChat />
+              </div>
               
               {/* Calendar Integration Section - shown after weather for authenticated users */}
               {user && <CalendarRecommendationsSection />}
