@@ -9,6 +9,7 @@ import QueryProvider from '@/components/QueryProvider';
 import SecurityProvider from '@/components/SecurityProvider';
 import AuthGuard from '@/components/AuthGuard';
 import LoadingState from '@/components/LoadingState';
+import NetworkStatusIndicator from '@/components/NetworkStatusIndicator';
 
 // Lazy load pages for better performance
 const Index = React.lazy(() => import("./pages/Index"));
@@ -48,6 +49,7 @@ const App = () => {
       <SecurityProvider>
         <QueryProvider>
           <TooltipProvider>
+            <NetworkStatusIndicator />
             <Toaster />
             <Sonner />
             <ErrorBoundary>

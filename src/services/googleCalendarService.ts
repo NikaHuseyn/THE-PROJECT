@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { EncryptionService } from '@/utils/encryption';
 
 export interface CalendarEvent {
   id: string;
@@ -79,9 +80,38 @@ class GoogleCalendarService {
       throw new Error('Access token is required for calendar connection');
     }
 
-    // TODO: Implement proper token encryption with a real encryption service
-    // For now, we'll require proper encryption to be implemented before storing tokens
-    throw new Error('Proper token encryption must be implemented before storing OAuth tokens. Please configure encryption service.');
+    try {
+      // Encrypt the access token before storage
+      const encryptedData = await EncryptionService.createSecureTokenStorage(this.accessToken);
+      
+      // Validate that encryption was successful
+      if (!EncryptionService.validateEncryptedToken(encryptedData)) {
+        throw new Error('Token encryption validation failed');
+      }
+
+      // Store the encrypted token
+      const { error } = await supabase
+        .from('user_oauth_connections')
+        .upsert({
+          user_id: user.id,
+          provider: 'google',
+          provider_user_id: email,
+          encrypted_access_token: encryptedData.encrypted_token,
+          encryption_key_id: encryptedData.encryption_key_id,
+          scope: ['https://www.googleapis.com/auth/calendar.readonly'],
+          is_active: true,
+          token_expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw new Error(`Failed to save calendar connection: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Error saving calendar connection:', error);
+      throw error;
+    }
   }
 
   async fetchTodaysEvents(): Promise<CalendarEvent[]> {
@@ -95,9 +125,9 @@ class GoogleCalendarService {
         if (!user) return [];
 
         const { data: connection } = await supabase
-          .from('user_calendar_connections')
+          .from('user_oauth_connections')
           .select('encrypted_access_token, encryption_key_id')
-          .eq('user_id', user.id)
+          .eq('provider_user_id', user.email)
           .eq('provider', 'google')
           .eq('is_active', true)
           .single();

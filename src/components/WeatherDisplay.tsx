@@ -32,8 +32,7 @@ const WeatherDisplay = () => {
 
       return data;
     } catch (error) {
-      console.error('Error fetching weather:', error);
-      // Fallback to demo weather data when API keys are missing
+      // Silent fallback for weather data - don't log errors for missing API keys
       return {
         temperature: 72,
         condition: 'partly cloudy',

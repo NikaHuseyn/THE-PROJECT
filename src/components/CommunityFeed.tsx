@@ -11,9 +11,11 @@ import ErrorState from './community/ErrorState';
 import CommunityStats from './community/CommunityStats';
 import Leaderboard from './community/Leaderboard';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const CommunityFeed = () => {
   const { posts, loading, error, createPost, toggleLike } = useSocialPosts();
+  const { toast } = useToast();
   const [showPostForm, setShowPostForm] = useState(false);
   const [stats, setStats] = useState({
     totalPosts: 0,
@@ -52,7 +54,13 @@ const CommunityFeed = () => {
         activeUsers: activeUsersCount || 0
       });
     } catch (err) {
-      console.error('Error fetching community stats:', err);
+      // Silently handle stats loading errors
+      setStats({
+        totalPosts: 0,
+        totalLikes: 0,
+        totalComments: 0,
+        activeUsers: 0
+      });
     }
   };
 
@@ -60,9 +68,49 @@ const CommunityFeed = () => {
     fetchCommunityStats();
   }, [posts]);
 
-  const handleShare = (postId: string) => {
-    console.log('Sharing post:', postId);
-    // TODO: Implement sharing functionality
+  const handleShare = async (postId: string) => {
+    try {
+      // Find the post data
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      // Create share URL
+      const shareUrl = `${window.location.origin}/community?post=${postId}`;
+      const shareText = `Check out this stylish outfit post!${post.caption ? ' ' + post.caption : ''}`;
+
+      // Try to use native Web Share API if available
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Style Community Post',
+          text: shareText,
+          url: shareUrl,
+        });
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+        toast({
+          title: "Link Copied!",
+          description: "Share link has been copied to your clipboard.",
+        });
+      }
+    } catch (error) {
+      // Silent fallback if sharing fails
+      try {
+        const post = posts.find(p => p.id === postId);
+        const shareUrl = `${window.location.origin}/community?post=${postId}`;
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link Copied!",
+          description: "Share link has been copied to your clipboard.",
+        });
+      } catch {
+        toast({
+          title: "Share Failed",
+          description: "Unable to share this post. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const handleCreatePost = async (postData: { caption: string; tags?: string[]; image_urls: string[] }): Promise<void> => {

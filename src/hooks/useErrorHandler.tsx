@@ -74,6 +74,7 @@ export const useAsyncOperation = () => {
       onSuccess?: (result: any) => void;
       onError?: (error: Error) => void;
       errorMessage?: string;
+      fallbackData?: any;
     }
   ) => {
     try {
@@ -95,7 +96,8 @@ export const useAsyncOperation = () => {
         options.onError(error);
       }
       
-      return null;
+      // Return fallback data if provided
+      return options?.fallbackData || null;
     } finally {
       setLoading(false);
     }
@@ -106,6 +108,79 @@ export const useAsyncOperation = () => {
     loading,
     error,
     isError,
+    clearError
+  };
+};
+
+// Enhanced hook for API calls with automatic retries
+export const useApiCall = () => {
+  const [loading, setLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const { error, isError, handleError, clearError } = useErrorHandler();
+
+  const call = useCallback(async (
+    apiCall: () => Promise<any>,
+    options?: {
+      maxRetries?: number;
+      retryDelay?: number;
+      onSuccess?: (result: any) => void;
+      onError?: (error: Error, attempt: number) => void;
+      errorMessage?: string;
+      fallbackData?: any;
+    }
+  ) => {
+    const { 
+      maxRetries = 2, 
+      retryDelay = 1000, 
+      onSuccess, 
+      onError, 
+      errorMessage = 'API call failed',
+      fallbackData 
+    } = options || {};
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        setLoading(true);
+        setRetryCount(attempt);
+        
+        if (attempt > 0) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        }
+
+        const result = await apiCall();
+        clearError();
+        setRetryCount(0);
+        
+        if (onSuccess) {
+          onSuccess(result);
+        }
+        
+        return result;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        if (onError) {
+          onError(lastError, attempt + 1);
+        }
+        
+        if (attempt === maxRetries) {
+          handleError(lastError, `${errorMessage} (after ${maxRetries + 1} attempts)`);
+          return fallbackData || null;
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [handleError, clearError]);
+
+  return {
+    call,
+    loading,
+    error,
+    isError,
+    retryCount,
     clearError
   };
 };
