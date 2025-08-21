@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLocation, type LocationCoords } from './useLocation';
 
 interface WeatherData {
   temperature: number;
@@ -13,40 +14,12 @@ interface WeatherData {
   feelsLike: number;
 }
 
-interface LocationCoords {
-  latitude: number;
-  longitude: number;
-}
-
 export const useWeatherData = (autoFetch = true) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [location, setLocation] = useState<LocationCoords | null>(null);
-
-  const getCurrentPosition = (): Promise<GeolocationPosition> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser'));
-        return;
-      }
-
-      const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000 // 5 minutes cache
-      };
-
-      navigator.geolocation.getCurrentPosition(
-        resolve,
-        (error) => {
-          console.error('Geolocation error:', error);
-          reject(error);
-        },
-        options
-      );
-    });
-  };
+  
+  const locationHook = useLocation({ showToasts: false });
 
   const fetchWeatherData = async (coords?: LocationCoords) => {
     setIsLoading(true);
@@ -56,12 +29,10 @@ export const useWeatherData = (autoFetch = true) => {
       let targetCoords = coords;
       
       if (!targetCoords) {
-        const position = await getCurrentPosition();
-        targetCoords = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        };
-        setLocation(targetCoords);
+        targetCoords = await locationHook.getLocation();
+        if (!targetCoords) {
+          throw new Error('Unable to get location');
+        }
       }
 
       console.log('Fetching weather for:', targetCoords);
@@ -91,8 +62,8 @@ export const useWeatherData = (autoFetch = true) => {
   };
 
   const refreshWeather = () => {
-    if (location) {
-      return fetchWeatherData(location);
+    if (locationHook.coordinates) {
+      return fetchWeatherData(locationHook.coordinates);
     } else {
       return fetchWeatherData();
     }
@@ -110,12 +81,12 @@ export const useWeatherData = (autoFetch = true) => {
 
   return {
     weather,
-    isLoading,
-    error,
-    location,
+    isLoading: isLoading || locationHook.isLoading,
+    error: error || locationHook.error,
+    location: locationHook.coordinates,
     fetchWeatherData,
     refreshWeather,
     getWeatherForLocation,
-    getCurrentPosition
+    locationHook
   };
 };

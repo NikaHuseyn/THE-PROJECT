@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLocation } from '@/hooks/useLocation';
 import Header from '@/components/Header';
 import EventInput from '@/components/EventInput';
 import OutfitCard from '@/components/OutfitCard';
@@ -26,8 +27,9 @@ const Index = () => {
   const [aiRecommendation, setAiRecommendation] = useState<any>(null);
   const [isLoadingOutfits, setIsLoadingOutfits] = useState(false);
   
-  // Onboarding state
+  // Hooks
   const { shouldShowOnboarding, isLoading, user, completeOnboarding } = useOnboarding();
+  const { getLocation } = useLocation({ showToasts: false });
 
   // Only show loading for very brief initial auth check
   if (isLoading && !user) {
@@ -84,19 +86,16 @@ const Index = () => {
       
       // Get current weather data for better recommendations
       let weatherData = null;
-      if ('geolocation' in navigator) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-          });
-          
+      try {
+        const coordinates = await getLocation();
+        if (coordinates) {
           const { data } = await supabase.functions.invoke('weather-recommendations', {
-            body: { lat: position.coords.latitude, lon: position.coords.longitude }
+            body: { lat: coordinates.latitude, lon: coordinates.longitude }
           });
           weatherData = data;
-        } catch (weatherError) {
-          console.log('Could not get weather data:', weatherError);
         }
+      } catch (weatherError) {
+        console.log('Could not get weather data:', weatherError);
       }
 
       // Generate AI-powered recommendations (works for both authenticated and anonymous users)

@@ -1,108 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { MapPin, Thermometer, Cloud, Sun, CloudRain, Wind, Droplets, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-
-interface WeatherData {
-  temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
-  location: string;
-  clothingRecommendations: string[];
-  description: string;
-  feelsLike: number;
-}
+import { useWeatherData } from '@/hooks/useWeatherData';
 
 const WeatherDisplay = () => {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchWeatherData = async (lat: number, lon: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('weather-recommendations', {
-        body: { lat, lon }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch weather data');
-      }
-
-      return data;
-    } catch (error) {
-      // Silent fallback for weather data - don't log errors for missing API keys
-      return {
-        temperature: 72,
-        condition: 'partly cloudy',
-        humidity: 65,
-        windSpeed: 8,
-        location: 'Your Location',
-        clothingRecommendations: [
-          'Light jacket or cardigan',
-          'Comfortable jeans or trousers',
-          'Closed-toe shoes',
-          'Light scarf (optional)'
-        ],
-        description: 'partly cloudy',
-        feelsLike: 75
-      };
-    }
-  };
-
-  const getLocation = () => {
-    setLoading(true);
-    setError(null);
-
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by this browser');
-      setLoading(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const weatherData = await fetchWeatherData(latitude, longitude);
-          setWeather(weatherData);
-        } catch (error) {
-          console.error('Error getting weather data:', error);
-          setError('Failed to fetch weather data. Please try again.');
-        } finally {
-          setLoading(false);
-        }
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        let errorMessage = 'Unable to get your location. ';
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage += 'Please allow location access in your browser settings.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage += 'Location information is unavailable.';
-            break;
-          case error.TIMEOUT:
-            errorMessage += 'Location request timed out. Please try again.';
-            break;
-          default:
-            errorMessage += 'Please enable location services and try again.';
-            break;
-        }
-        
-        setError(errorMessage);
-        setLoading(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  };
-
-  useEffect(() => {
-    getLocation();
-  }, []);
+  const { weather, isLoading, error, refreshWeather } = useWeatherData();
 
   const getWeatherIcon = (condition: string) => {
     const conditionLower = condition.toLowerCase();
@@ -124,7 +27,7 @@ const WeatherDisplay = () => {
     return 'text-blue-700';
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="card-elegant p-6 mb-6 animate-fade-in">
         <div className="flex items-center justify-center py-4">
@@ -152,7 +55,7 @@ const WeatherDisplay = () => {
             </p>
           </div>
           <Button 
-            onClick={getLocation} 
+            onClick={refreshWeather} 
             variant="outline" 
             size="sm"
             className="border-primary/20 text-primary hover:bg-primary/5"
@@ -181,7 +84,7 @@ const WeatherDisplay = () => {
           </div>
         </div>
         <Button 
-          onClick={getLocation} 
+          onClick={refreshWeather} 
           variant="ghost" 
           size="sm" 
           className="text-primary hover:bg-primary/10 hover:text-primary font-medium"
