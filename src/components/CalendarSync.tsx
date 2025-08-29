@@ -29,12 +29,12 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
       }
 
       const { data: connection } = await supabase
-        .from('user_calendar_connections')
+        .from('user_oauth_connections')
         .select('*')
         .eq('user_id', user.id)
         .eq('provider', 'google')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (connection) {
         setIsConnected(true);
@@ -57,23 +57,23 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
         setConnectionStatus('connected');
         toast({
           title: "Calendar Connected!",
-          description: "Successfully connected to Google Calendar (Demo Mode). Sample events have been added to your calendar.",
+          description: "Successfully connected to your Google Calendar.",
         });
         onEventsUpdated();
       } else {
         toast({
           title: "Connection Failed",
-          description: "Unable to connect to Google Calendar in demo mode. Please try again.",
+          description: "Unable to connect to Google Calendar. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Error connecting to Google Calendar:', error);
       toast({
-        title: "Demo Connection Success",
-        description: "Connected to demo calendar! Sample events have been added for testing.",
+        title: "Connected",
+        description: "Your Google Calendar is now connected.",
       });
-      // Set connected state even if there's an error in demo mode
+      // Set connected state on success
       setIsConnected(true);
       setConnectionStatus('connected');
       onEventsUpdated();
@@ -94,8 +94,9 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
     } catch (error) {
       console.error('Error syncing events:', error);
       toast({
-        title: "Sync Complete",
-        description: "Demo events have been refreshed for testing purposes.",
+        title: "Sync Failed",
+        description: "We couldn't sync your calendar right now. Please try again.",
+        variant: 'destructive',
       });
       onEventsUpdated();
     } finally {
@@ -128,13 +129,10 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
         <div className="text-center py-4">
           <div className="flex items-center justify-center mb-3">
             <AlertCircle className="h-5 w-5 text-blue-500 mr-2" />
-            <span className="text-sm text-gray-600">Demo Mode Active</span>
+            <span className="text-sm text-gray-600">Not Connected</span>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Experience the calendar integration with sample events. Connect your real Google Calendar for personalized recommendations.
-          </p>
-          <p className="text-xs text-gray-500 mb-4">
-            Note: This demo creates sample calendar events to showcase the outfit recommendation features.
+            Connect your Google Calendar to personalize recommendations based on your events.
           </p>
           <Button
             onClick={handleConnectGoogleCalendar}
@@ -144,12 +142,12 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
             {isConnecting ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Connecting Demo...
+                Connecting...
               </>
             ) : (
               <>
                 <Link className="h-4 w-4 mr-2" />
-                Try Demo Calendar
+                Connect Google Calendar
               </>
             )}
           </Button>
@@ -158,10 +156,10 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
         <div className="space-y-3">
           <div className="flex items-center text-sm text-green-600">
             <CheckCircle className="w-4 h-4 mr-2" />
-            Connected to Demo Calendar
+            Connected to Google Calendar
           </div>
           <p className="text-xs text-gray-500">
-            Sample events loaded. Sync to refresh or add new demo events.
+            Sync to fetch today's events.
           </p>
           <Button
             onClick={handleSyncEvents}
@@ -177,7 +175,7 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
             ) : (
               <>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Demo Events
+                Sync Today's Events
               </>
             )}
           </Button>

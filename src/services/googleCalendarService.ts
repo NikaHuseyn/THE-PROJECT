@@ -20,10 +20,9 @@ class GoogleCalendarService {
   private isDemoMode = false; // Demo mode disabled for security
 
   async initializeGoogleAPIs(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const checkAPIs = () => {
-        if (window.gapi && window.google) {
-          this.isGapiLoaded = true;
+        if (window.google) {
           this.isGsiLoaded = true;
           resolve();
         } else {
@@ -36,31 +35,62 @@ class GoogleCalendarService {
 
   async signInToGoogle(): Promise<boolean> {
     try {
-      if (this.isDemoMode) {
-        // Simulate successful connection in demo mode
-        await this.simulateDemoConnection();
-        return true;
-      }
-
       await this.initializeGoogleAPIs();
 
+      // Fetch Client ID from Edge Function (secured via Supabase secrets)
+      const { data, error } = await supabase.functions.invoke('get-google-client-id');
+      if (error || !data?.client_id) {
+        console.error('Failed to retrieve Google Client ID from edge function:', error);
+        return false;
+      }
+      const clientId = data.client_id as string;
+
+      if (!window.google?.accounts?.oauth2) {
+        console.error('Google Identity Services not loaded');
+        return false;
+      }
+
       return new Promise((resolve) => {
-        window.gapi.load('auth2', () => {
-          window.gapi.auth2.init({
-            client_id: '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com', // Demo client ID
-            scope: 'https://www.googleapis.com/auth/calendar.readonly'
-          }).then(() => {
-            const authInstance = window.gapi.auth2.getAuthInstance();
-            return authInstance.signIn();
-          }).then(async (user: any) => {
-            this.accessToken = user.getAuthResponse().access_token;
-            await this.saveCalendarConnection(user.getBasicProfile().getEmail());
-            resolve(true);
-          }).catch((error: any) => {
-            console.error('Google sign-in failed:', error);
-            resolve(false);
-          });
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly',
+          callback: async (tokenResponse: any) => {
+            try {
+              if (!tokenResponse?.access_token) {
+                console.error('No access token received');
+                resolve(false);
+                return;
+              }
+              this.accessToken = tokenResponse.access_token;
+
+              // Retrieve user email to associate the connection
+              const userInfoRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+                headers: { Authorization: `Bearer ${this.accessToken}` },
+              });
+              if (!userInfoRes.ok) {
+                console.error('Failed to fetch user info');
+                resolve(false);
+                return;
+              }
+              const userInfo = await userInfoRes.json();
+              const email = userInfo?.email;
+              if (!email) {
+                console.error('User email not available from Google userinfo');
+                resolve(false);
+                return;
+              }
+
+              await this.saveCalendarConnection(email);
+              resolve(true);
+            } catch (err) {
+              console.error('Sign-in flow error:', err);
+              resolve(false);
+            }
+          },
         });
+
+        // Request access token (prompts consent on first run)
+        tokenClient.requestAccessToken({ prompt: 'consent' });
       });
     } catch (error) {
       console.error('Google API initialization failed:', error);
