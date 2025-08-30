@@ -49,11 +49,22 @@ const OutfitCard = ({ outfit }: OutfitCardProps) => {
         </div>
         
         <div className="flex gap-2">
-          <Button className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white">
+          <Button 
+            className="flex-1 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white"
+            onClick={() => {
+              window.open(`https://www.google.com/search?q=${encodeURIComponent(outfit.title + ' ' + outfit.brand + ' buy online')}`, '_blank');
+            }}
+          >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Buy
           </Button>
-          <Button variant="outline" className="flex-1 border-rose-300 text-rose-600 hover:bg-rose-50">
+          <Button 
+            variant="outline" 
+            className="flex-1 border-rose-300 text-rose-600 hover:bg-rose-50"
+            onClick={() => {
+              alert(`🎯 Rent ${outfit.title}\n\n📦 3-day rental for $${outfit.rentalPrice}\n📅 Perfect for: ${outfit.category} events\n🚚 Free delivery & pickup\n\nContact us to book this item!`);
+            }}
+          >
             <Calendar className="h-4 w-4 mr-2" />
             Rent
           </Button>

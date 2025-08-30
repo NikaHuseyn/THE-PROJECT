@@ -19,7 +19,7 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
 
   const handleRentOutfit = () => {
     console.log('Renting outfit:', outfit);
-    // This would integrate with rental service
+    alert(`🎯 Rent Complete Outfit\n\n📦 3-day rental for £${outfit.totalRentalPrice}\n📅 Perfect for: ${outfit.dressCode} events\n\nIncludes:\n${outfit.items.map(item => `• ${item.title} (${item.brand})`).join('\n')}\n\n🚚 Free delivery & pickup\n📞 Contact us to book this complete look!`);
   };
 
   return (

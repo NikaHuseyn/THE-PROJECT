@@ -23,13 +23,27 @@ const AccessoriesSection = () => {
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {accessories.map((accessory, index) => (
-          <div key={index} className="text-center group cursor-pointer">
+          <div 
+            key={index} 
+            className="text-center group cursor-pointer"
+            onClick={() => {
+              alert(`👀 ${accessory.name}\n\nPrice: $${accessory.price}\nType: ${accessory.type}\n\nThis ${accessory.type} would be perfect to complete your look! Click 'Add' to add it to your cart.`);
+            }}
+          >
             <div className="h-24 w-24 bg-gradient-to-br from-rose-100 to-pink-200 rounded-full mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
               <span className="text-lg font-bold text-rose-600">{accessory.name[0]}</span>
             </div>
             <h4 className="font-medium text-gray-800 text-sm mb-1">{accessory.name}</h4>
             <p className="text-rose-600 font-semibold text-sm">${accessory.price}</p>
-            <Button size="sm" variant="outline" className="mt-2 text-xs border-rose-200 text-rose-600 hover:bg-rose-50">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="mt-2 text-xs border-rose-200 text-rose-600 hover:bg-rose-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                alert(`🛍️ Added to Cart!\n\n${accessory.name}\n$${accessory.price}\n\nType: ${accessory.type}\n\nYour cart is looking stylish! ✨`);
+              }}
+            >
               Add
             </Button>
           </div>

@@ -41,6 +41,7 @@ const TrendingNow = () => {
         <Button 
           variant="outline" 
           className="btn-fashion border-primary/20 text-primary hover:bg-primary/5"
+          onClick={() => window.location.href = '/fashion-trends'}
         >
           View All Trends
         </Button>
@@ -81,8 +82,18 @@ const TrendingNow = () => {
               </div>
               
               <div className="absolute top-3 right-3">
-                <button className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-200">
-                  <Heart className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                <button 
+                  className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const heart = e.currentTarget.querySelector('svg');
+                    if (heart) {
+                      heart.classList.toggle('text-red-500');
+                      heart.classList.toggle('fill-red-500');
+                    }
+                  }}
+                >
+                  <Heart className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
                 </button>
               </div>
 
@@ -155,14 +166,20 @@ const TrendingNow = () => {
                 <Button 
                   size="sm" 
                   className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs"
+                  onClick={() => {
+                    window.open(`https://www.google.com/search?q=${encodeURIComponent(item.name + ' ' + item.brand + ' fashion buy online')}`, '_blank');
+                  }}
                 >
                   <ShoppingCart className="h-3 w-3 mr-1" />
-                  Add to Cart
+                  Shop Now
                 </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
                   className="border-amber-300 text-amber-700 hover:bg-amber-50 text-xs"
+                  onClick={() => {
+                    alert(`${item.name}\n\nStyle: ${item.category}\nBrand: ${item.brand}\nTrend Score: ${item.trendScore}%\n\nThis trending piece works great with: ${item.outfitCompatibility.join(', ')}`);
+                  }}
                 >
                   Quick View
                 </Button>
