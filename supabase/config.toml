@@ -2,3 +2,6 @@ project_id = "xwyfejferjthikfazpyd"
 
 [functions.get-google-client-id]
 verify_jwt = false
+
+[functions.categorize-wardrobe-item]
+verify_jwt = false
