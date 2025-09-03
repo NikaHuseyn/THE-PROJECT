@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -107,6 +107,48 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           window_start?: string
+        }
+        Relationships: []
+      }
+      capsule_wardrobes: {
+        Row: {
+          color_scheme: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          max_items: number | null
+          name: string
+          occasion: string | null
+          season: string | null
+          updated_at: string
+          user_id: string
+          wardrobe_item_ids: string[]
+        }
+        Insert: {
+          color_scheme?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_items?: number | null
+          name: string
+          occasion?: string | null
+          season?: string | null
+          updated_at?: string
+          user_id: string
+          wardrobe_item_ids?: string[]
+        }
+        Update: {
+          color_scheme?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_items?: number | null
+          name?: string
+          occasion?: string | null
+          season?: string | null
+          updated_at?: string
+          user_id?: string
+          wardrobe_item_ids?: string[]
         }
         Relationships: []
       }
@@ -1489,14 +1531,14 @@ export type Database = {
     }
     Functions: {
       check_ai_rate_limit: {
-        Args: { user_email: string; target_user_id?: string }
+        Args: { target_user_id?: string; user_email: string }
         Returns: Json
       }
       check_rate_limit: {
         Args: {
-          target_user_id: string
-          operation: string
           max_requests?: number
+          operation: string
+          target_user_id: string
           window_minutes?: number
         }
         Returns: boolean
@@ -1520,26 +1562,26 @@ export type Database = {
       get_style_leaderboard: {
         Args: Record<PropertyKey, never>
         Returns: {
-          user_id: string
-          posts_count: number
-          total_likes: number
-          badge_count: number
-          style_score: number
-          display_name: string
           avatar_url: string
+          badge_count: number
+          display_name: string
+          posts_count: number
+          style_score: number
+          total_likes: number
+          user_id: string
         }[]
       }
       is_admin: {
         Args: {
-          target_user_id?: string
           required_role?: Database["public"]["Enums"]["admin_role"]
+          target_user_id?: string
         }
         Returns: boolean
       }
       log_security_event: {
         Args: {
-          event_type_param: string
           event_details_param?: Json
+          event_type_param: string
           target_user_id?: string
         }
         Returns: undefined
@@ -1553,7 +1595,7 @@ export type Database = {
         Returns: string
       }
       upgrade_user_subscription: {
-        Args: { user_email: string; new_tier: string; target_user_id?: string }
+        Args: { new_tier: string; target_user_id?: string; user_email: string }
         Returns: boolean
       }
       validate_email: {
