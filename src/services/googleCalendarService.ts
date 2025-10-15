@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { EncryptionService } from '@/utils/encryption';
+// Encryption removed: tokens must not be handled or encrypted client-side for security
+
 
 export interface CalendarEvent {
   id: string;
@@ -111,23 +112,13 @@ class GoogleCalendarService {
     }
 
     try {
-      // Encrypt the access token before storage
-      const encryptedData = await EncryptionService.createSecureTokenStorage(this.accessToken);
-      
-      // Validate that encryption was successful
-      if (!EncryptionService.validateEncryptedToken(encryptedData)) {
-        throw new Error('Token encryption validation failed');
-      }
-
-      // Store the encrypted token
+      // Do NOT store tokens client-side. Persist only connection metadata; token remains in-memory for this session.
       const { error } = await supabase
         .from('user_oauth_connections')
         .upsert({
           user_id: user.id,
           provider: 'google',
           provider_user_id: email,
-          encrypted_access_token: encryptedData.encrypted_token,
-          encryption_key_id: encryptedData.encryption_key_id,
           scope: ['https://www.googleapis.com/auth/calendar.readonly'],
           is_active: true,
           token_expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
@@ -151,20 +142,9 @@ class GoogleCalendarService {
       }
 
       if (!this.accessToken) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
-
-        const { data: connection } = await supabase
-          .from('user_oauth_connections')
-          .select('encrypted_access_token, encryption_key_id')
-          .eq('provider_user_id', user.email)
-          .eq('provider', 'google')
-          .eq('is_active', true)
-          .single();
-
-        if (!connection?.encrypted_access_token) return [];
-        // In a real implementation, decrypt the token here
-        this.accessToken = 'decrypted_' + connection.encrypted_access_token;
+        // Token is not stored client-side for security; require re-authentication for each session
+        console.warn('Google access token not available; please connect your calendar again for this session.');
+        return [];
       }
 
       const today = new Date();
