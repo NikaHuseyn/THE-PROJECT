@@ -29,9 +29,15 @@ export const useWeatherData = (autoFetch = true) => {
       let targetCoords = coords;
       
       if (!targetCoords) {
-        targetCoords = await locationHook.getLocation();
+        try {
+          targetCoords = await locationHook.getLocation();
+        } catch (err) {
+          console.log('Location unavailable, using default London coordinates');
+        }
+        
+        // Use default London coordinates if location is unavailable
         if (!targetCoords) {
-          throw new Error('Unable to get location');
+          targetCoords = { latitude: 51.5074, longitude: -0.1278 };
         }
       }
 
