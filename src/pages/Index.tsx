@@ -84,7 +84,7 @@ const Index = () => {
     try {
       console.log('Generating AI-powered recommendations for:', event);
       
-      // Get current weather data for better recommendations
+      // Get current weather data for better recommendations (optional, graceful fallback)
       let weatherData = null;
       try {
         const coordinates = await getLocation();
@@ -95,7 +95,14 @@ const Index = () => {
           weatherData = data;
         }
       } catch (weatherError) {
-        console.log('Could not get weather data:', weatherError);
+        console.log('Using default weather data for London');
+        // Use default London weather when location unavailable
+        weatherData = {
+          temperature: 55,
+          condition: 'Partly Cloudy',
+          location: 'London, UK',
+          humidity: 65
+        };
       }
 
       // Generate AI-powered recommendations (works for both authenticated and anonymous users)
@@ -117,7 +124,9 @@ const Index = () => {
                       event.toLowerCase().includes('business') ? 'business' : 'smart casual',
             type: 'event',
             location: event.toLowerCase().includes('london') ? 'London' : 'Unknown'
-          }
+          },
+          // Provide guest email for anonymous users
+          guestEmail: session?.user?.email || `guest-${Date.now()}@temp.com`
         },
         headers
       });
