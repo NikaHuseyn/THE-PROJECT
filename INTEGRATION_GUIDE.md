@@ -14,7 +14,7 @@ Your app currently uses mock data. To handle ANY user query with real products a
 - **Coverage**: Major UK retailers (ASOS, Next, Zara, H&M, etc.)
 - **Features**: Real-time product data, images, prices, availability
 - **Cost**: Free tier available
-- **Setup**: https://docs.klarna.com/shopping-api/
+- **Setup**: https://docs.klarna.com/
 
 ```typescript
 // Example integration in edge function
