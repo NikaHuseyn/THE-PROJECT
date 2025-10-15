@@ -123,6 +123,84 @@ const fetchUKBrandItems = async (query: string, category: string): Promise<Shopp
       retailerUrl: 'https://www.marksandspencer.com/c/women/clothing/knitwear',
       sizes: ['XS', 'S', 'M', 'L', 'XL'],
       colors: ['Camel', 'Grey', 'Navy', 'Cream']
+    },
+    {
+      id: '7',
+      title: 'Elegant Vintage Witch Costume',
+      description: 'Feminine black velvet dress with lace details, perfect for Halloween parties',
+      price: 85,
+      rentalPrice: 28,
+      image: 'https://images.unsplash.com/photo-1509557965875-b88c97052f0e?w=400',
+      brand: 'ASOS',
+      category: 'Costumes',
+      retailerUrl: 'https://www.asos.com/halloween',
+      sizes: ['6', '8', '10', '12', '14', '16'],
+      colors: ['Black', 'Purple']
+    },
+    {
+      id: '8',
+      title: 'Fairy Princess Costume',
+      description: 'Delicate tulle dress with floral embellishments, ethereal and feminine',
+      price: 95,
+      rentalPrice: 32,
+      image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=400',
+      brand: 'H&M',
+      category: 'Costumes',
+      retailerUrl: 'https://www2.hm.com/en_gb/halloween',
+      sizes: ['XS', 'S', 'M', 'L'],
+      colors: ['Pastel Pink', 'Lavender', 'White']
+    },
+    {
+      id: '9',
+      title: 'Classic Vampire Costume',
+      description: 'Sophisticated burgundy velvet gown with Victorian styling',
+      price: 110,
+      rentalPrice: 38,
+      image: 'https://images.unsplash.com/photo-1542779283-429940ce8336?w=400',
+      brand: 'Next',
+      category: 'Costumes',
+      retailerUrl: 'https://www.next.co.uk/halloween',
+      sizes: ['8', '10', '12', '14', '16'],
+      colors: ['Burgundy', 'Black']
+    },
+    {
+      id: '10',
+      title: 'Mystical Fortune Teller Outfit',
+      description: 'Flowing bohemian dress with coin details and shawl, modest and feminine',
+      price: 75,
+      rentalPrice: 25,
+      image: 'https://images.unsplash.com/photo-1604147495798-57beb5d6af73?w=400',
+      brand: 'Zara',
+      category: 'Costumes',
+      retailerUrl: 'https://www.zara.com/uk/halloween',
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Deep Purple', 'Teal', 'Gold']
+    },
+    {
+      id: '11',
+      title: 'Garden Fairy Costume',
+      description: 'Romantic floral dress with butterfly wings, sweet and feminine',
+      price: 68,
+      rentalPrice: 22,
+      image: 'https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=400',
+      brand: 'Topshop',
+      category: 'Costumes',
+      retailerUrl: 'https://www.topshop.com/halloween',
+      sizes: ['6', '8', '10', '12', '14'],
+      colors: ['Pink', 'Green', 'White']
+    },
+    {
+      id: '12',
+      title: 'Elegant Black Cat Costume',
+      description: 'Chic black midi dress with cat ear headband, sophisticated and playful',
+      price: 58,
+      rentalPrice: 20,
+      image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400',
+      brand: 'COS',
+      category: 'Costumes',
+      retailerUrl: 'https://www.cosstores.com/en_gbp/halloween',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'],
+      colors: ['Black']
     }
   ];
 
@@ -143,39 +221,22 @@ const generateOutfitRecommendations = async (eventDescription: string): Promise<
   // Fetch relevant items from UK brands
   const items = await fetchUKBrandItems(eventAnalysis.style, eventAnalysis.category);
   
-  // Create outfit combinations
-  const outfits: OutfitRecommendation[] = [
-    {
-      id: '1',
-      title: `Professional ${eventAnalysis.dressCode} Outfit`,
-      description: `Perfect for ${eventDescription.toLowerCase()}`,
-      items: items.slice(0, 3),
-      totalPrice: items.slice(0, 3).reduce((sum, item) => sum + item.price, 0),
-      totalRentalPrice: items.slice(0, 3).reduce((sum, item) => sum + (item.rentalPrice || 0), 0),
-      occasion: eventDescription,
-      dressCode: eventAnalysis.dressCode
-    },
-    {
-      id: '2',
-      title: `Elegant ${eventAnalysis.dressCode} Look`,
-      description: `Sophisticated styling for ${eventDescription.toLowerCase()}`,
-      items: [items[1], items[3], items[4]].filter(Boolean),
-      totalPrice: [items[1], items[3], items[4]].filter(Boolean).reduce((sum, item) => sum + item.price, 0),
-      totalRentalPrice: [items[1], items[3], items[4]].filter(Boolean).reduce((sum, item) => sum + (item.rentalPrice || 0), 0),
-      occasion: eventDescription,
-      dressCode: eventAnalysis.dressCode
-    },
-    {
-      id: '3',
-      title: `Smart Casual Option`,
-      description: `Versatile pieces that work perfectly for ${eventDescription.toLowerCase()}`,
-      items: [items[2], items[5], items[4]].filter(Boolean),
-      totalPrice: [items[2], items[5], items[4]].filter(Boolean).reduce((sum, item) => sum + item.price, 0),
-      totalRentalPrice: [items[2], items[5], items[4]].filter(Boolean).reduce((sum, item) => sum + (item.rentalPrice || 0), 0),
-      occasion: eventDescription,
-      dressCode: 'Smart Casual'
-    }
-  ];
+  // Return empty array if no items found
+  if (items.length === 0) {
+    return [];
+  }
+
+  // Create outfit combinations (for costumes, show individual items as separate options)
+  const outfits: OutfitRecommendation[] = items.slice(0, 3).map((item, index) => ({
+    id: `${index + 1}`,
+    title: item.title,
+    description: item.description,
+    items: [item],
+    totalPrice: item.price,
+    totalRentalPrice: item.rentalPrice || 0,
+    occasion: eventDescription,
+    dressCode: eventAnalysis.dressCode
+  }));
 
   return outfits;
 };
@@ -183,7 +244,9 @@ const generateOutfitRecommendations = async (eventDescription: string): Promise<
 const analyzeEvent = (eventDescription: string) => {
   const description = eventDescription.toLowerCase();
   
-  if (description.includes('interview') || description.includes('business') || description.includes('meeting')) {
+  if (description.includes('halloween') || description.includes('costume') || description.includes('fancy dress')) {
+    return { dressCode: 'Costume', style: 'costume', category: 'Costumes' };
+  } else if (description.includes('interview') || description.includes('business') || description.includes('meeting')) {
     return { dressCode: 'Business Formal', style: 'professional', category: 'business' };
   } else if (description.includes('wedding') || description.includes('cocktail') || description.includes('formal')) {
     return { dressCode: 'Cocktail', style: 'elegant', category: 'formal' };
