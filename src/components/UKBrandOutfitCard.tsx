@@ -13,13 +13,13 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
     // In a real implementation, this would add all items to cart
     console.log('Adding outfit to cart:', outfit);
     outfit.items.forEach(item => {
-      window.open(item.retailer.productUrl, '_blank');
+      window.open(item.link, '_blank');
     });
   };
 
   const handleRentOutfit = () => {
     console.log('Renting outfit:', outfit);
-    alert(`🎯 Rent Complete Outfit\n\n📦 ${outfit.items[0]?.rental?.duration || '4-day'} rental for £${outfit.totalRentalPrice}\n📅 Perfect for: ${outfit.dressCode} events\n\nIncludes:\n${outfit.items.map(item => `• ${item.name} (${item.brand.name})`).join('\n')}\n\n🚚 Free delivery & pickup\n📞 Contact us to book this complete look!`);
+    alert(`🎯 Rent Complete Outfit\n\n📦 ${outfit.items[0]?.rental?.duration || '4-day'} rental for £${outfit.totalRentalPrice}\n📅 Perfect for: ${outfit.dressCode} events\n\nIncludes:\n${outfit.items.map(item => `• ${item.name} (${item.brand})`).join('\n')}\n\n🚚 Free delivery & pickup\n📞 Contact us to book this complete look!`);
   };
 
   return (
@@ -49,9 +49,9 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
             <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
               <div className="flex-1">
                 <p className="font-medium text-sm text-gray-800">{item.name}</p>
-                <p className="text-xs text-gray-600">{item.brand.name}</p>
+                <p className="text-xs text-gray-600">{item.brand}</p>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500">£{item.price.current}</span>
+                  <span className="text-xs text-gray-500">£{item.price}</span>
                   {item.rental && (
                     <span className="text-xs text-green-600">or rent £{item.rental.price}</span>
                   )}
@@ -60,7 +60,7 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.open(item.retailer.productUrl, '_blank')}
+                onClick={() => window.open(item.link, '_blank')}
                 className="text-xs"
               >
                 <ExternalLink className="h-3 w-3 mr-1" />

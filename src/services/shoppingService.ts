@@ -1,12 +1,21 @@
 // API-compatible structure matching ShopStyle, Zalando, and other fashion APIs
+// Common fields for all products (affiliate feeds or integrated stores)
 interface ShoppingItem {
+  // ===== COMMON REQUIRED FIELDS =====
   id: string;
   name: string;
-  brand: {
+  brand: string; // Common field: brand name as string
+  price: number; // Common field: current price as number
+  image_url: string; // Common field: main product image
+  link: string; // Common field: product page URL
+  size: string; // Common field: available sizes as comma-separated string
+  
+  // ===== DETAILED STRUCTURE (for extended data) =====
+  brandDetails?: {
     name: string;
     id?: string;
   };
-  price: {
+  priceDetails?: {
     current: number;
     currency: string;
     original?: number;
@@ -16,28 +25,28 @@ interface ShoppingItem {
     price: number;
     duration: string;
   };
-  images: {
+  images?: {
     small: string;
     medium: string;
     large: string;
     additional?: string[];
   };
-  categories: string[];
-  colors: Array<{
+  categories?: string[];
+  colors?: Array<{
     name: string;
     hex?: string;
   }>;
-  sizes: Array<{
+  sizes?: Array<{
     value: string;
     inStock: boolean;
   }>;
-  retailer: {
+  retailer?: {
     name: string;
     productUrl: string;
     affiliateUrl?: string;
   };
-  description: string;
-  inStock: boolean;
+  description?: string;
+  inStock?: boolean;
   ageGroups?: string[];
   gender?: string;
   condition?: string;
@@ -109,13 +118,21 @@ const fetchFashionItems = async (
   
   const mockItems: ShoppingItem[] = [
     {
+      // Common fields
       id: 'mock_001',
       name: 'Professional Tailored Blazer',
-      brand: {
+      brand: 'Reiss',
+      price: 189,
+      image_url: '/placeholder-blazer.jpg',
+      link: 'https://www.reiss.com/p/womens-blazer',
+      size: '8, 10, 12, 14, 16',
+      
+      // Detailed fields
+      brandDetails: {
         name: 'Reiss',
         id: 'reiss_uk'
       },
-      price: {
+      priceDetails: {
         current: 189,
         currency: 'GBP',
         original: 229,
@@ -154,13 +171,21 @@ const fetchFashionItems = async (
       ageGroups: ['Adult']
     },
     {
+      // Common fields
       id: 'mock_002',
       name: 'Midi Shirt Dress',
-      brand: {
+      brand: 'COS',
+      price: 89,
+      image_url: '/placeholder-dress.jpg',
+      link: 'https://www.cosstores.com/en_gbp/women/dresses',
+      size: 'XS, S, M, L, XL',
+      
+      // Detailed fields
+      brandDetails: {
         name: 'COS',
         id: 'cos_uk'
       },
-      price: {
+      priceDetails: {
         current: 89,
         currency: 'GBP'
       },
@@ -201,8 +226,8 @@ const fetchFashionItems = async (
   // Filter items based on query, category, weather, and price range
   let filteredItems = mockItems.filter(item => 
     item.name.toLowerCase().includes(query.toLowerCase()) ||
-    item.description.toLowerCase().includes(query.toLowerCase()) ||
-    item.categories.some(cat => cat.toLowerCase().includes(category.toLowerCase()))
+    item.description?.toLowerCase().includes(query.toLowerCase()) ||
+    item.categories?.some(cat => cat.toLowerCase().includes(category.toLowerCase()))
   );
 
   // Weather-based filtering (for production, this would be done via API parameters)
@@ -210,14 +235,14 @@ const fetchFashionItems = async (
     if (weatherContext.temperature < 10) {
       // Prefer warm items for cold weather
       filteredItems = filteredItems.filter(item =>
-        item.categories.some(cat => 
+        item.categories?.some(cat => 
           ['Outerwear', 'Knitwear', 'Boots'].some(warm => cat.includes(warm))
         )
       );
     } else if (weatherContext.temperature > 25) {
       // Prefer light items for warm weather
       filteredItems = filteredItems.filter(item =>
-        !item.categories.some(cat => ['Outerwear', 'Heavy'].some(heavy => cat.includes(heavy)))
+        !item.categories?.some(cat => ['Outerwear', 'Heavy'].some(heavy => cat.includes(heavy)))
       );
     }
   }
@@ -225,7 +250,7 @@ const fetchFashionItems = async (
   // Price range filtering
   if (priceRange) {
     filteredItems = filteredItems.filter(item =>
-      item.price.current >= priceRange.min && item.price.current <= priceRange.max
+      item.price >= priceRange.min && item.price <= priceRange.max
     );
   }
 
@@ -269,9 +294,9 @@ const generateOutfitRecommendations = async (
   const outfits: OutfitRecommendation[] = items.slice(0, 3).map((item, index) => ({
     id: `outfit_${Date.now()}_${index}`,
     title: item.name,
-    description: item.description,
+    description: item.description || '',
     items: [item],
-    totalPrice: item.price.current,
+    totalPrice: item.price,
     totalRentalPrice: item.rental?.price || 0,
     occasion: eventDescription,
     dressCode: eventAnalysis.dressCode,
@@ -335,7 +360,7 @@ const generateStylingTips = (eventAnalysis: any, weatherContext?: WeatherContext
 const extractColorPalette = (items: ShoppingItem[]): string[] => {
   const colors = new Set<string>();
   items.forEach(item => {
-    item.colors.forEach(color => colors.add(color.name));
+    item.colors?.forEach(color => colors.add(color.name));
   });
   return Array.from(colors).slice(0, 5);
 };
@@ -349,15 +374,15 @@ const calculateConfidenceScore = (
   let score = 70; // Base score
   
   // Category match bonus
-  if (item.categories.includes(eventAnalysis.category)) {
+  if (item.categories?.includes(eventAnalysis.category)) {
     score += 15;
   }
   
   // Weather appropriateness bonus
   if (weatherContext) {
-    if (weatherContext.temperature < 10 && item.categories.some(cat => ['Outerwear', 'Knitwear'].includes(cat))) {
+    if (weatherContext.temperature < 10 && item.categories?.some(cat => ['Outerwear', 'Knitwear'].includes(cat))) {
       score += 10;
-    } else if (weatherContext.temperature > 25 && !item.categories.includes('Outerwear')) {
+    } else if (weatherContext.temperature > 25 && !item.categories?.includes('Outerwear')) {
       score += 10;
     }
   }
