@@ -13,13 +13,13 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
     // In a real implementation, this would add all items to cart
     console.log('Adding outfit to cart:', outfit);
     outfit.items.forEach(item => {
-      window.open(item.retailerUrl, '_blank');
+      window.open(item.retailer.productUrl, '_blank');
     });
   };
 
   const handleRentOutfit = () => {
     console.log('Renting outfit:', outfit);
-    alert(`🎯 Rent Complete Outfit\n\n📦 3-day rental for £${outfit.totalRentalPrice}\n📅 Perfect for: ${outfit.dressCode} events\n\nIncludes:\n${outfit.items.map(item => `• ${item.title} (${item.brand})`).join('\n')}\n\n🚚 Free delivery & pickup\n📞 Contact us to book this complete look!`);
+    alert(`🎯 Rent Complete Outfit\n\n📦 ${outfit.items[0]?.rental?.duration || '4-day'} rental for £${outfit.totalRentalPrice}\n📅 Perfect for: ${outfit.dressCode} events\n\nIncludes:\n${outfit.items.map(item => `• ${item.name} (${item.brand.name})`).join('\n')}\n\n🚚 Free delivery & pickup\n📞 Contact us to book this complete look!`);
   };
 
   return (
@@ -35,27 +35,32 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
             <span className="text-xs text-gray-500">
               {outfit.items.length} pieces
             </span>
+            {outfit.confidence_score && (
+              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                {outfit.confidence_score}% match
+              </span>
+            )}
           </div>
         </div>
 
         <div className="space-y-3 mb-4">
           <h4 className="font-medium text-gray-700 text-sm">Outfit includes:</h4>
-          {outfit.items.map((item, index) => (
+          {outfit.items.map((item) => (
             <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
               <div className="flex-1">
-                <p className="font-medium text-sm text-gray-800">{item.title}</p>
-                <p className="text-xs text-gray-600">{item.brand}</p>
+                <p className="font-medium text-sm text-gray-800">{item.name}</p>
+                <p className="text-xs text-gray-600">{item.brand.name}</p>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500">£{item.price}</span>
-                  {item.rentalPrice && (
-                    <span className="text-xs text-green-600">or rent £{item.rentalPrice}</span>
+                  <span className="text-xs text-gray-500">£{item.price.current}</span>
+                  {item.rental && (
+                    <span className="text-xs text-green-600">or rent £{item.rental.price}</span>
                   )}
                 </div>
               </div>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.open(item.retailerUrl, '_blank')}
+                onClick={() => window.open(item.retailer.productUrl, '_blank')}
                 className="text-xs"
               >
                 <ExternalLink className="h-3 w-3 mr-1" />
@@ -64,6 +69,17 @@ const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
             </div>
           ))}
         </div>
+
+        {outfit.styling_tips && outfit.styling_tips.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <h4 className="font-medium text-sm text-blue-900 mb-2">💡 Styling Tips</h4>
+            <ul className="text-xs text-blue-700 space-y-1">
+              {outfit.styling_tips.slice(0, 2).map((tip, index) => (
+                <li key={index}>• {tip}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         
         <div className="border-t pt-4">
           <div className="flex items-center justify-between mb-4">
