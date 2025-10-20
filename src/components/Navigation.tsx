@@ -14,7 +14,7 @@ const Navigation = ({ user }: NavigationProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   const navigationItems = [
-    { path: '/', label: 'Home', icon: Home },
+    { path: '/app', label: 'Home', icon: Home },
     { path: '/wardrobe', label: 'Wardrobe', icon: Shirt, requiresAuth: true },
     { path: '/style-analysis', label: 'Style Analysis', icon: BarChart3 },
     { path: '/fashion-trends', label: 'Fashion Trends', icon: TrendingUp },
