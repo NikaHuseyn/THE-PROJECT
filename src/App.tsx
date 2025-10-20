@@ -12,6 +12,7 @@ import LoadingState from '@/components/LoadingState';
 import NetworkStatusIndicator from '@/components/NetworkStatusIndicator';
 
 // Lazy load pages for better performance
+const ComingSoon = React.lazy(() => import("./pages/ComingSoon"));
 const Index = React.lazy(() => import("./pages/Index"));
 const Auth = React.lazy(() => import("./pages/Auth"));
 const Wardrobe = React.lazy(() => import("./pages/Wardrobe"));
@@ -27,7 +28,8 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AppRoutes = () => (
   <Suspense fallback={<LoadingState message="Loading page..." />}>
     <Routes>
-      <Route path="/" element={<Index />} />
+      <Route path="/" element={<ComingSoon />} />
+      <Route path="/app" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/wardrobe" element={<AuthGuard><Wardrobe /></AuthGuard>} />
       <Route path="/style-analysis" element={<AuthGuard><StyleAnalysis /></AuthGuard>} />
