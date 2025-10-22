@@ -36,7 +36,7 @@ const StyleInspiration = () => {
       id: 4,
       title: "Casual Comfort",
       description: "Relaxed yet put-together",
-      image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop",
+      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=300&fit=crop",
       category: "Casual",
       colors: ["#065F46", "#047857", "#059669"]
     },
