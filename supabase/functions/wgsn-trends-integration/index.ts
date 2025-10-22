@@ -424,6 +424,7 @@ async function processWGSNTrends(wgsnTrends: WGSNTrendData[], supabaseClient: an
     occasions: getOccasionsForCategory(trend.category),
     colors: ['WGSN Forecasted'],
     description: trend.description,
+    image_url: getImageUrlForCategory(trend.category),
     source: 'WGSN',
     external_id: `wgsn_${trend.trend_id}`
   }));
@@ -494,6 +495,21 @@ function getCurrentSeason(): string {
   if (month >= 5 && month <= 7) return 'Summer';
   if (month >= 8 && month <= 10) return 'Fall';
   return 'Winter';
+}
+
+function getImageUrlForCategory(category: string): string {
+  const imageMap: Record<string, string> = {
+    'womenswear': 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800',
+    'menswear': 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=800',
+    'accessories': 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?w=800',
+    'footwear': 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=800',
+    'beauty': 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=800',
+    'lifestyle': 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800',
+    'color-trends': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800',
+    'fabric-trends': 'https://images.unsplash.com/photo-1558769132-cb1aea27c2af?w=800',
+    'sustainability': 'https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=800'
+  };
+  return imageMap[category] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800';
 }
 
 function getOccasionsForCategory(category: string): string[] {

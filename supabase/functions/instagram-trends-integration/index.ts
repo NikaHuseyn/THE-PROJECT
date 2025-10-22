@@ -256,6 +256,7 @@ async function processInstagramTrends(instagramTrends: InstagramTrendData[], sup
     occasions: getOccasionsForCategory(trend.category),
     colors: getColorsForTrend(trend.hashtag),
     description: `Popular on Instagram with ${trend.post_count.toLocaleString()} posts and ${trend.engagement_rate}% engagement`,
+    image_url: getImageUrlForHashtag(trend.hashtag),
     source: 'Instagram',
     external_id: `instagram_${trend.hashtag.replace('#', '').toLowerCase()}`
   }));
@@ -335,4 +336,21 @@ function getColorsForTrend(hashtag: string): string[] {
     '#fashionista': ['Bold Colors', 'Statement Shades']
   };
   return colorMap[hashtag.toLowerCase()] || ['Black', 'White', 'Neutral Tones'];
+}
+
+function getImageUrlForHashtag(hashtag: string): string {
+  const imageMap: Record<string, string> = {
+    '#ootd': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800',
+    '#sustainablefashion': 'https://images.unsplash.com/photo-1558769132-cb1aea27c2af?w=800',
+    '#cottagecore': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
+    '#streetstyle': 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=800',
+    '#darkacademia': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800',
+    '#minimalistfashion': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800',
+    '#vintagefashion': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800',
+    '#fashion': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800',
+    '#style': 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800',
+    '#fashionblogger': 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800',
+    '#instafashion': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800'
+  };
+  return imageMap[hashtag.toLowerCase()] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800';
 }

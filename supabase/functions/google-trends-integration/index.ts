@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
       occasions: getOccasionsForCategory(trend.category),
       colors: getColorsForTrend(trend.keyword),
       description: `${trend.keyword} is trending with a score of ${trend.trend_score} based on Google Trends data`,
+      image_url: getImageUrlForTrend(trend.keyword),
       source: 'Google Trends',
       external_id: `gt_${trend.keyword.toLowerCase().replace(/\s+/g, '_')}`
     }));
@@ -222,5 +223,22 @@ function getColorsForTrend(trendName: string): string[] {
     'cropped cardigan': ['Pastel Pink', 'Cream', 'Lavender', 'Mint']
   };
   return colorMap[trendName] || ['Black', 'White', 'Gray'];
+}
+
+function getImageUrlForTrend(trendName: string): string {
+  // Use Unsplash for high-quality fashion images
+  const imageMap: Record<string, string> = {
+    'oversized blazers': 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800',
+    'cottagecore aesthetic': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
+    'chunky sneakers': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800',
+    'minimalist jewelry': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800',
+    'sustainable fashion': 'https://images.unsplash.com/photo-1558769132-cb1aea27c2af?w=800',
+    'Y2K fashion': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800',
+    'dark academia style': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800',
+    'dopamine dressing': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800',
+    'wide leg jeans': 'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?w=800',
+    'cropped cardigan': 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800'
+  };
+  return imageMap[trendName] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800';
 }
 

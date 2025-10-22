@@ -152,6 +152,7 @@ async function processPinterestTrends(trendsData: PinterestTrendData[], supabase
     occasions: getOccasionsForCategory(trend.category),
     colors: getColorsForTrend(trend.term),
     description: `${trend.term} is trending on Pinterest with ${trend.growth_rate} growth and ${trend.monthly_searches?.toLocaleString()} monthly searches`,
+    image_url: getImageUrlForTrend(trend.term),
     source: 'Pinterest Business API',
     external_id: `pinterest_${trend.term.toLowerCase().replace(/\s+/g, '_')}`
   }));
@@ -301,4 +302,20 @@ function getColorsForTrend(trendName: string): string[] {
     'street style fashion': ['Black', 'White', 'Gray', 'Red', 'Urban Camo']
   };
   return colorMap[trendName.toLowerCase()] || ['Black', 'White', 'Gray'];
+}
+
+function getImageUrlForTrend(trendName: string): string {
+  const imageMap: Record<string, string> = {
+    'dark academia fashion': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800',
+    'cottagecore aesthetic': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
+    'y2k revival fashion': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800',
+    'dopamine dressing': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800',
+    'sustainable fashion': 'https://images.unsplash.com/photo-1558769132-cb1aea27c2af?w=800',
+    'minimalist wardrobe': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800',
+    'maximalist style': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800',
+    'gender neutral fashion': 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=800',
+    'vintage fashion': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800',
+    'street style fashion': 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=800'
+  };
+  return imageMap[trendName.toLowerCase()] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800';
 }
