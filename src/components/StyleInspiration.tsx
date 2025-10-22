@@ -126,6 +126,13 @@ const StyleInspiration = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
+                <button
+                  onClick={() => toggleStyleSelection(image.id)}
+                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg"
+                  aria-label="Remove from moodboard"
+                >
+                  <Plus className="h-4 w-4 rotate-45" />
+                </button>
                 <div className="absolute bottom-0 left-0 right-0 p-3 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <h4 className="font-semibold text-sm mb-1">{image.title}</h4>
                   <div className="flex items-center space-x-1">
@@ -180,6 +187,13 @@ const StyleInspiration = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-3">
+          <Button 
+            onClick={() => setShowMoodboard(false)}
+            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add More Styles
+          </Button>
           <Button 
             className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
             onClick={() => {
