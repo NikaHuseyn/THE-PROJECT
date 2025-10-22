@@ -1,5 +1,5 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import googleTrends from 'npm:google-trends-api@5.0.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,28 +44,77 @@ Deno.serve(async (req) => {
 
     const trendsData: GoogleTrendsData[] = [];
 
-    // Since Google Trends doesn't have an official API, we'll use a proxy service
-    // or implement our own trending logic. For now, I'll show the structure:
+    // Fetch real Google Trends data
     for (const keyword of fashionKeywords) {
       try {
-        // This would be replaced with actual Google Trends API call
-        // const trendData = await fetchGoogleTrends(keyword);
+        console.log(`Fetching trends for: ${keyword}`);
         
-        // For demonstration, using mock data structure that matches real API response
-        const mockTrendData: GoogleTrendsData = {
+        // Get interest over time (past 12 months)
+        const interestOverTimeRaw = await googleTrends.interestOverTime({
+          keyword: keyword,
+          startTime: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+          geo: 'US',
+        });
+        
+        const interestData = JSON.parse(interestOverTimeRaw);
+        const timelineData = interestData?.default?.timelineData || [];
+        
+        // Calculate average trend score from timeline data
+        let trendScore = 0;
+        if (timelineData.length > 0) {
+          const values = timelineData.map((item: any) => 
+            parseInt(item.value?.[0] || 0)
+          );
+          trendScore = Math.round(
+            values.reduce((a: number, b: number) => a + b, 0) / values.length
+          );
+        }
+        
+        // Get related queries
+        let relatedQueries: any[] = [];
+        try {
+          const relatedQueriesRaw = await googleTrends.relatedQueries({
+            keyword: keyword,
+            geo: 'US',
+          });
+          const relatedData = JSON.parse(relatedQueriesRaw);
+          relatedQueries = relatedData?.default?.rankedList?.[0]?.rankedKeyword || [];
+        } catch (err) {
+          console.log(`Could not fetch related queries for ${keyword}:`, err);
+        }
+
+        const trendData: GoogleTrendsData = {
           keyword,
-          trend_score: Math.floor(Math.random() * 100) + 1,
+          trend_score: trendScore,
           category: getCategoryForKeyword(keyword),
-          region: 'Global',
-          timeframe: '2024-01-01 2024-12-31',
-          interest_over_time: generateMockTimeSeriesData(),
-          related_topics: generateMockRelatedTopics(keyword),
-          related_queries: generateMockRelatedQueries(keyword)
+          region: 'US',
+          timeframe: 'past 12 months',
+          interest_over_time: timelineData.slice(0, 30).map((item: any) => ({
+            time: item.formattedTime,
+            value: parseInt(item.value?.[0] || 0)
+          })),
+          related_queries: relatedQueries.slice(0, 10).map((item: any) => ({
+            query: item.query,
+            value: item.value
+          }))
         };
 
-        trendsData.push(mockTrendData);
+        trendsData.push(trendData);
+        
+        // Add delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
       } catch (error) {
         console.error(`Error fetching trends for ${keyword}:`, error);
+        
+        // Fallback to basic data if API fails
+        trendsData.push({
+          keyword,
+          trend_score: 50,
+          category: getCategoryForKeyword(keyword),
+          region: 'US',
+          timeframe: 'past 12 months',
+        });
       }
     }
 
@@ -175,41 +224,3 @@ function getColorsForTrend(trendName: string): string[] {
   return colorMap[trendName] || ['Black', 'White', 'Gray'];
 }
 
-function generateMockTimeSeriesData() {
-  const data = [];
-  const now = new Date();
-  for (let i = 30; i >= 0; i--) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    data.push({
-      time: date.toISOString().split('T')[0],
-      value: Math.floor(Math.random() * 100) + 1
-    });
-  }
-  return data;
-}
-
-function generateMockRelatedTopics(keyword: string) {
-  const topics = [
-    `${keyword} outfit`,
-    `${keyword} style`,
-    `${keyword} trend`,
-    `${keyword} inspiration`
-  ];
-  return topics.map(topic => ({
-    topic,
-    value: Math.floor(Math.random() * 100) + 1
-  }));
-}
-
-function generateMockRelatedQueries(keyword: string) {
-  const queries = [
-    `how to wear ${keyword}`,
-    `${keyword} shopping`,
-    `${keyword} brands`,
-    `best ${keyword}`
-  ];
-  return queries.map(query => ({
-    query,
-    value: Math.floor(Math.random() * 100) + 1
-  }));
-}
