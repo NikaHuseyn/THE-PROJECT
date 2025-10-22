@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Sparkles, Mail, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -66,13 +65,6 @@ const ComingSoon = () => {
             We're crafting an extraordinary fashion experience powered by AI. 
             Be the first to know when we launch.
           </p>
-          
-          <Link 
-            to="/app" 
-            className="inline-block text-sm text-muted-foreground hover:text-primary transition-colors mt-4"
-          >
-            Already have access? Enter the app →
-          </Link>
         </div>
 
         {!isSubmitted ? (
