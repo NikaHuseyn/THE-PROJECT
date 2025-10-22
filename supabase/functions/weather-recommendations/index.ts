@@ -35,7 +35,7 @@ serve(async (req) => {
 
     // Fetch weather data from OpenWeatherMap
     const weatherResponse = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}&units=imperial`
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}&units=metric`
     );
     
     if (!weatherResponse.ok) {
@@ -60,10 +60,10 @@ serve(async (req) => {
     const prompt = `Based on the following weather conditions, provide 5-6 specific, practical clothing recommendations:
 
 Weather Details:
-- Temperature: ${weather.temperature}°F (feels like ${weather.feelsLike}°F)
+- Temperature: ${weather.temperature}°C (feels like ${weather.feelsLike}°C)
 - Condition: ${weather.condition} - ${weather.description}
 - Humidity: ${weather.humidity}%
-- Wind Speed: ${weather.windSpeed} mph
+- Wind Speed: ${weather.windSpeed} m/s
 - Location: ${weather.location}
 
 Please provide clothing recommendations that are:
@@ -103,12 +103,12 @@ Respond with a JSON array of 5-6 clothing recommendation strings, like:
       clothingRecommendations = JSON.parse(recommendationsText);
     } catch (parseError) {
       console.error('Failed to parse AI recommendations:', parseError);
-      // Fallback recommendations based on temperature
-      if (weather.temperature >= 75) {
+      // Fallback recommendations based on temperature (Celsius)
+      if (weather.temperature >= 24) {
         clothingRecommendations = ['Light fabrics', 'Sundresses', 'Breathable cotton', 'Comfortable sandals', 'Sun hat'];
-      } else if (weather.temperature >= 65) {
+      } else if (weather.temperature >= 18) {
         clothingRecommendations = ['Light layers', 'Cardigans', 'Comfortable jeans', 'Casual flats', 'Light jacket'];
-      } else if (weather.temperature >= 55) {
+      } else if (weather.temperature >= 13) {
         clothingRecommendations = ['Warm sweaters', 'Jackets', 'Closed-toe shoes', 'Long pants', 'Layered outfits'];
       } else {
         clothingRecommendations = ['Warm coats', 'Boots', 'Scarves', 'Heavy fabrics', 'Gloves'];

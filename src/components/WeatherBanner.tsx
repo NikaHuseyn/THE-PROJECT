@@ -46,7 +46,7 @@ const WeatherBanner = () => {
           </div>
           <div>
             <p className="font-medium text-gray-800">Today's Weather</p>
-            <p className="text-sm text-gray-600">{weather.temperature}°F, {weather.description}</p>
+            <p className="text-sm text-gray-600">{weather.temperature}°C, {weather.description}</p>
           </div>
         </div>
         <div className="text-right">
