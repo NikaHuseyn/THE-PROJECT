@@ -6,6 +6,7 @@ import { Sparkles, Heart, Plus, Grid3X3, Palette } from 'lucide-react';
 const StyleInspiration = () => {
   const [selectedStyles, setSelectedStyles] = useState<number[]>([]);
   const [isGeneratingMoodboard, setIsGeneratingMoodboard] = useState(false);
+  const [showMoodboard, setShowMoodboard] = useState(false);
 
   const inspirationImages = [
     {
@@ -75,14 +76,139 @@ const StyleInspiration = () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     setIsGeneratingMoodboard(false);
-    
-    // Here you would typically create and display the mood board
-    alert(`🎨 Mood board created with ${selectedStyles.length} style inspirations! Check your saved mood boards in your profile.`);
+    setShowMoodboard(true);
   };
 
   const getSelectedStyles = () => {
     return inspirationImages.filter(img => selectedStyles.includes(img.id));
   };
+
+  if (showMoodboard) {
+    const selectedImages = getSelectedStyles();
+    return (
+      <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-2xl p-8 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+              <Grid3X3 className="h-6 w-6 mr-2 text-purple-600" />
+              Your Style Moodboard
+            </h3>
+            <p className="text-gray-600">
+              A curated collection of your selected style inspirations
+            </p>
+          </div>
+          <Button 
+            onClick={() => {
+              setShowMoodboard(false);
+              setSelectedStyles([]);
+            }}
+            variant="outline"
+            className="border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            Create New
+          </Button>
+        </div>
+
+        {/* Moodboard Display */}
+        <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            {selectedImages.map((image, index) => (
+              <div 
+                key={image.id}
+                className="relative rounded-lg overflow-hidden group animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
+                  <img 
+                    src={image.image} 
+                    alt={image.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h4 className="font-semibold text-sm mb-1">{image.title}</h4>
+                  <div className="flex items-center space-x-1">
+                    {image.colors.map((color, idx) => (
+                      <div 
+                        key={idx}
+                        className="w-3 h-3 rounded-full border border-white/50"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Style Summary */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6">
+            <h4 className="font-bold text-gray-800 mb-4 flex items-center">
+              <Sparkles className="h-5 w-5 mr-2 text-purple-600" />
+              Your Style Profile
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Selected Categories:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedImages.map((image) => (
+                    <span 
+                      key={image.id}
+                      className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-700 shadow-sm"
+                    >
+                      {image.category}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Color Palette:</p>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from(new Set(selectedImages.flatMap(img => img.colors))).slice(0, 8).map((color, idx) => (
+                    <div 
+                      key={idx}
+                      className="w-8 h-8 rounded-lg border-2 border-white shadow-sm"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3">
+          <Button 
+            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.download = 'my-style-moodboard.txt';
+              link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(
+                `My Style Moodboard\n\n${selectedImages.map(img => `${img.title}\n${img.description}\nCategory: ${img.category}\n`).join('\n')}`
+              );
+              link.click();
+            }}
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Download Moodboard
+          </Button>
+          <Button 
+            variant="outline"
+            className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            onClick={() => {
+              navigator.clipboard.writeText(selectedImages.map(img => img.title).join(', '));
+              alert('Style preferences copied to clipboard!');
+            }}
+          >
+            <Heart className="h-4 w-4 mr-2" />
+            Copy Style List
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-2xl p-8 mb-8">
