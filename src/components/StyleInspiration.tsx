@@ -60,15 +60,21 @@ const StyleInspiration = () => {
   ];
 
   const toggleStyleSelection = (id: number) => {
-    setSelectedStyles(prev => 
-      prev.includes(id) 
+    setSelectedStyles(prev => {
+      const newSelection = prev.includes(id) 
         ? prev.filter(styleId => styleId !== id)
-        : [...prev, id]
-    );
+        : [...prev, id];
+      console.log('Style selection toggled:', { id, newSelection });
+      return newSelection;
+    });
   };
 
   const generateMoodboard = async () => {
-    if (selectedStyles.length === 0) return;
+    console.log('Generate moodboard clicked, selected styles:', selectedStyles);
+    if (selectedStyles.length === 0) {
+      console.log('No styles selected, returning');
+      return;
+    }
     
     setIsGeneratingMoodboard(true);
     
@@ -77,6 +83,7 @@ const StyleInspiration = () => {
     
     setIsGeneratingMoodboard(false);
     setShowMoodboard(true);
+    console.log('Moodboard should now be visible with items:', getSelectedStyles());
   };
 
   const getSelectedStyles = () => {
@@ -85,6 +92,7 @@ const StyleInspiration = () => {
 
   if (showMoodboard) {
     const selectedImages = getSelectedStyles();
+    console.log('Rendering moodboard with images:', selectedImages);
     return (
       <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-2xl p-8 mb-8">
         <div className="flex items-center justify-between mb-6">
