@@ -746,7 +746,7 @@ export type Database = {
           event_details: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string | null
         }
@@ -755,7 +755,7 @@ export type Database = {
           event_details?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -764,7 +764,7 @@ export type Database = {
           event_details?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -1564,24 +1564,12 @@ export type Database = {
         }
         Returns: boolean
       }
-      cleanup_expired_recommendations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_audit_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      delete_user_data: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
-      export_user_data: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
+      cleanup_expired_recommendations: { Args: never; Returns: undefined }
+      cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      delete_user_data: { Args: { target_user_id: string }; Returns: Json }
+      export_user_data: { Args: { target_user_id: string }; Returns: Json }
       get_style_leaderboard: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           badge_count: number
@@ -1619,10 +1607,7 @@ export type Database = {
         Args: { new_tier: string; target_user_id?: string; user_email: string }
         Returns: boolean
       }
-      validate_email: {
-        Args: { email_input: string }
-        Returns: boolean
-      }
+      validate_email: { Args: { email_input: string }; Returns: boolean }
     }
     Enums: {
       admin_role: "super_admin" | "admin" | "moderator"
