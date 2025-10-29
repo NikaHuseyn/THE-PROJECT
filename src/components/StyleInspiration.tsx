@@ -268,7 +268,7 @@ const StyleInspiration = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
         {inspirationImages.map((image) => (
           <div 
             key={image.id} 
@@ -279,7 +279,7 @@ const StyleInspiration = () => {
             }`}
             onClick={() => toggleStyleSelection(image.id)}
           >
-            <div className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
+            <div className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
               <img 
                 src={image.image} 
                 alt={image.title}
