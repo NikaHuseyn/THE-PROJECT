@@ -79,7 +79,8 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
           <DialogTitle className="text-2xl">{trend.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <TooltipProvider>
+          <div className="space-y-4">
           {/* Image */}
           {trend.image_url ? (
             <img
@@ -112,21 +113,21 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
             {trend.popularity_rank && (
               <div>
                 <p className="text-sm text-gray-500 mb-1">Popularity Rank</p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <div className="inline-block">
                       <Badge className="bg-amber-100 text-amber-800 cursor-help">
                         #{trend.popularity_rank}
                       </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        Ranking among all current trends based on search volume, engagement, and social mentions. 
-                        Lower numbers indicate higher popularity.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>
+                      Ranking among all current trends based on search volume, engagement, and social mentions. 
+                      Lower numbers indicate higher popularity.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
 
@@ -279,7 +280,8 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </TooltipProvider>
       </DialogContent>
     </Dialog>
   );
