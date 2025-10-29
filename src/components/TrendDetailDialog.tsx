@@ -135,10 +135,20 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
             {trend.growth_rate && (
               <div>
                 <p className="text-sm text-gray-500 mb-1">Growth Rate</p>
-                <div className="flex items-center text-green-600 font-medium">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  {trend.growth_rate}
-                </div>
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <div className="inline-flex items-center text-green-600 font-medium cursor-help">
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      {trend.growth_rate}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>
+                      Trend growth rate compared to the previous month. 
+                      Shows how quickly this trend is gaining or losing popularity.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
 
