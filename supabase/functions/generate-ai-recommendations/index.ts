@@ -207,29 +207,50 @@ EVENT DETAILS:
 WEATHER CONTEXT:
 ${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weatherData.condition}, Humidity: ${weatherData.humidity}%, Location: ${weatherData.location}` : 'Weather not specified'}
 
+🚫 ABSOLUTE PROHIBITION FOR HISTORICAL/THEMED EVENTS 🚫
+${(occasion?.toLowerCase().includes('1930') || occasion?.toLowerCase().includes('1920') || occasion?.toLowerCase().includes('1940') || occasion?.toLowerCase().includes('victorian') || occasion?.toLowerCase().includes('vintage') || occasion?.toLowerCase().includes('period') || eventDetails?.description?.toLowerCase().includes('1930') || eventDetails?.description?.toLowerCase().includes('1920')) ? `
+⛔ THIS IS A HISTORICAL PERIOD EVENT - MODERN ITEMS ARE STRICTLY FORBIDDEN ⛔
+
+NEVER SUGGEST ANY OF THE FOLLOWING MODERN ITEMS:
+- Jeans, denim pants, or any casual denim
+- Sneakers, trainers, athletic shoes, or modern footwear
+- T-shirts, hoodies, sweatshirts, or casual modern tops
+- Modern midi dresses that aren't period-cut
+- Contemporary shirt dresses, wrap dresses, or modern silhouettes
+- Athleisure, sportswear, or casual modern wear
+- Modern boots (unless authentic period style like Victorian lace-up boots)
+- Baseball caps, modern accessories
+- Any clothing item invented after the specified historical period
+
+ONLY SUGGEST:
+- Authentic period garments (bias-cut gowns for 1930s, drop-waist for 1920s, etc.)
+- Period-appropriate shoes (T-strap heels, Mary Janes, Oxford pumps from that era)
+- Historically accurate accessories (period hats, gloves, beaded bags, fur stoles)
+- Vintage or reproduction pieces that are true to the era
+- Items from costume shops, vintage specialists, or period fashion retailers
+
+IF YOU SUGGEST MODERN ITEMS LIKE JEANS OR SNEAKERS FOR A HISTORICAL EVENT, THE RECOMMENDATION WILL BE REJECTED.
+` : ''}
+
 STYLING BRIEF:
 ${recommendationType === 'event_outfit' ? 
-  `Create an outfit specifically tailored for this event. CRITICAL: If the occasion mentions a specific historical period or decade (like "1930s", "1920s", etc.), you MUST provide historically accurate fashion recommendations from that exact era. Do NOT suggest modern clothing or contemporary interpretations. Research and recommend authentic period pieces, silhouettes, fabrics, and styling that were actually worn during that time. ${eventDetails?.description || occasion || ''} includes historical references - ensure all recommendations match that period's authentic fashion.` :
+  `Create an outfit specifically tailored for this event. ${(occasion?.toLowerCase().includes('1930') || occasion?.toLowerCase().includes('1920') || occasion?.toLowerCase().includes('1940') || eventDetails?.description?.toLowerCase().includes('1930') || eventDetails?.description?.toLowerCase().includes('1920')) ? '⚠️ CRITICAL HISTORICAL ACCURACY REQUIRED ⚠️: This is a PERIOD EVENT. Every single item must be authentically from or accurately reproduce the specified historical era. Modern clothing is FORBIDDEN.' : ''} ${eventDetails?.description || occasion || ''}` :
   'Create a versatile daily outfit that reflects the user\'s personal style while being practical for their lifestyle.'
 }
+
+HISTORICAL ACCURACY REQUIREMENTS (when applicable):
+If the occasion mentions "1930s", "1920s", "1940s" or any historical period:
+- 1930s: bias-cut silk gowns, midi-to-floor length, Art Deco beading, T-strap heels, cloche or wide-brimmed hats, fur stoles, satin fabrics
+- 1920s: drop-waist dresses, knee-length, fringe, beading, feather headbands, Mary Jane heels
+- 1940s: structured shoulders, A-line skirts, victory rolls, utility fashion, peep-toe pumps
+- Suggest ONLY vintage shops, costume rental platforms (HURR, By Rotation with period sections), theatrical costume shops
+- Reference authentic period fashion icons and designers from that exact era
 
 CRITICAL: Use the learned preferences and recent feedback to improve this recommendation. Pay special attention to:
 1. Aspects the user consistently likes/dislikes from previous feedback
 2. Learned preferences with high confidence scores
 3. Improvement suggestions from past recommendations
 4. Color, style, and fit preferences that have been reinforced through positive feedback
-
-SPECIAL INSTRUCTIONS FOR THEMED EVENTS:
-If the occasion mentions a theme (like "literature and drama", "1920s", "1930s", "Hollywood", etc.), you MUST:
-1. BE HISTORICALLY ACCURATE: If a specific decade or era is mentioned (1920s, 1930s, 1940s, Victorian, etc.), ALL recommendations must authentically reflect that period's fashion. Do NOT suggest modern interpretations or contemporary items.
-2. Key 1930s characteristics: bias-cut gowns, midi to floor-length hemlines, dropped waistlines, Art Deco influences, fur stoles, cloche hats transitioning to wider-brimmed styles, silk and satin fabrics
-3. Key 1920s characteristics: drop-waist dresses, knee-length hemlines, fringe, beading, headbands, feather accessories
-4. Key 1940s characteristics: structured shoulders, A-line skirts, knee-length, victory rolls hairstyles, utility fashion
-5. Suggest 2-3 specific character inspirations or iconic figures from that exact era
-6. Recommend actual period-appropriate pieces, NOT modern clothing that "looks vintage"
-7. Provide specific costume shops, vintage stores, and online retailers that specialize in authentic period fashion
-8. Consider the weather and dress code while maintaining historical accuracy
-9. Offer both elaborate (full costume) and subtle (period-inspired with key authentic pieces) interpretations
 
 Please provide a detailed outfit recommendation in the following JSON format:
 {
