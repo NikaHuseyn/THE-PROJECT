@@ -2,6 +2,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Heart, Plus, Grid3X3, Palette } from 'lucide-react';
+import styleMinimalist from '@/assets/style-minimalist.jpg';
+import styleProfessional from '@/assets/style-professional.jpg';
+import styleBohemian from '@/assets/style-bohemian.jpg';
+import styleCasual from '@/assets/style-casual.jpg';
+import styleVintage from '@/assets/style-vintage.jpg';
+import styleModern from '@/assets/style-modern.jpg';
 
 const StyleInspiration = () => {
   const [selectedStyles, setSelectedStyles] = useState<number[]>([]);
@@ -13,7 +19,7 @@ const StyleInspiration = () => {
       id: 1,
       title: "Minimalist Chic",
       description: "Clean lines, neutral tones",
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=300&fit=crop",
+      image: styleMinimalist,
       category: "Minimalist",
       colors: ["#F5F5F5", "#D4D4D4", "#A3A3A3"]
     },
@@ -21,7 +27,7 @@ const StyleInspiration = () => {
       id: 2,
       title: "Business Professional",
       description: "Power dressing with sophistication",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop",
+      image: styleProfessional,
       category: "Professional",
       colors: ["#1F2937", "#374151", "#6B7280"]
     },
@@ -29,7 +35,7 @@ const StyleInspiration = () => {
       id: 3,
       title: "Bohemian Vibes",
       description: "Free-spirited and artistic",
-      image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop",
+      image: styleBohemian,
       category: "Bohemian",
       colors: ["#92400E", "#B45309", "#D97706"]
     },
@@ -37,7 +43,7 @@ const StyleInspiration = () => {
       id: 4,
       title: "Casual Comfort",
       description: "Relaxed yet put-together",
-      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=300&fit=crop",
+      image: styleCasual,
       category: "Casual",
       colors: ["#065F46", "#047857", "#059669"]
     },
@@ -45,7 +51,7 @@ const StyleInspiration = () => {
       id: 5,
       title: "Vintage Romance",
       description: "Timeless elegance with a twist",
-      image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=300&fit=crop",
+      image: styleVintage,
       category: "Vintage",
       colors: ["#BE185D", "#DB2777", "#EC4899"]
     },
@@ -53,7 +59,7 @@ const StyleInspiration = () => {
       id: 6,
       title: "Modern Edge",
       description: "Contemporary with bold statements",
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400&h=300&fit=crop",
+      image: styleModern,
       category: "Modern",
       colors: ["#1E40AF", "#3B82F6", "#60A5FA"]
     }
