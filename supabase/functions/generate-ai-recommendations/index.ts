@@ -490,80 +490,166 @@ CRITICAL FINAL INSTRUCTIONS:
 
 Remember: The goal is to create perfect, achievable outfits using what the user owns + targeted shopping/rental recommendations with real, clickable links.`;
 
-    // Call Lovable AI Gateway with Gemini model
-    const openaiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
+    // Dynamic model selection and stricter validation for historical/themed events
+    const occ = (occasion || '').toLowerCase();
+    const desc = (eventDetails?.description || '').toLowerCase();
+    const isHistorical = /(1920|1930|1940|victorian|edwardian|regency|vintage|period)/.test(`${occ} ${desc}`);
+    const model = isHistorical ? 'openai/gpt-5' : 'google/gemini-2.5-flash';
+
+    const messages = [
+      {
+        role: 'system',
+        content:
+          'You are a world-class fashion stylist and personal shopping expert with extensive knowledge of fashion history, current trends, color theory, body types, and styling techniques. You have worked with celebrities, fashion magazines, and luxury brands. Your recommendations are always practical, stylish, and perfectly tailored to each individual client. Always respond with valid JSON in the exact format requested.'
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash', // Using Lovable AI with Gemini for fashion advice
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a world-class fashion stylist and personal shopping expert with extensive knowledge of fashion history, current trends, color theory, body types, and styling techniques. You have worked with celebrities, fashion magazines, and luxury brands. Your recommendations are always practical, stylish, and perfectly tailored to each individual client. Always respond with valid JSON in the exact format requested.'
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 3000, // Increased for more detailed responses
-      }),
-    });
+      { role: 'user', content: prompt }
+    ];
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('Lovable AI error response:', errorText);
-      
-      if (openaiResponse.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again in a moment.');
+    // Build payload based on model family (GPT-5 vs Gemini)
+    const buildBody = (msgs: any[]) => {
+      const body: any = { model, messages: msgs };
+      if (model.startsWith('openai/')) {
+        // GPT-5 style params
+        body.max_completion_tokens = 3000; // do NOT set temperature for GPT-5
+      } else {
+        // Gemini params
+        body.max_tokens = 3000;
+        body.temperature = 0.7;
       }
-      if (openaiResponse.status === 402) {
-        throw new Error('AI service quota exceeded. Please contact support or add credits to your workspace.');
-      }
-      
-      throw new Error(`Lovable AI error: ${errorText}`);
-    }
+      return body;
+    };
 
-    const aiResponse = await openaiResponse.json();
-    let recommendationData;
+    const callAI = async (msgs: any[]) => {
+      const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildBody(msgs)),
+      });
+
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error('Lovable AI error response:', errorText);
+        if (resp.status === 429) throw new Error('Rate limit exceeded. Please try again in a moment.');
+        if (resp.status === 402) throw new Error('AI service quota exceeded. Please contact support or add credits to your workspace.');
+        throw new Error(`Lovable AI error: ${errorText}`);
+      }
+
+      return resp.json();
+    };
+
+    // First attempt
+    const aiResponse = await callAI(messages);
+    let recommendationData: any;
+
+    const parseAiJson = (raw: any) => {
+      const content = raw.choices?.[0]?.message?.content?.trim?.() || '';
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found in response');
+      return JSON.parse(jsonMatch[0]);
+    };
 
     try {
-      const content = aiResponse.choices[0].message.content.trim();
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        recommendationData = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found in response');
-      }
+      recommendationData = parseAiJson(aiResponse);
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      // Enhanced fallback recommendation
-      recommendationData = {
-        recommended_items: {
-          top: { 
-            name: 'Classic White Button-Down Shirt', 
-            confidence: 0.8, 
-            reasoning: 'Versatile and timeless piece that works for multiple occasions',
-            styling_tips: 'Can be worn tucked in for professional look or loose for casual style'
+      // Context-aware fallback
+      if (isHistorical) {
+        const era = occ.includes('1930') ? '1930s' : occ.includes('1920') ? '1920s' : '1940s';
+        recommendationData = {
+          recommended_items: {
+            top: {
+              name: era === '1930s' ? 'Bias-cut satin/silk evening gown (1930s style)' : era === '1920s' ? 'Drop-waist beaded dress (1920s flapper style)' : 'Structured A-line dress with padded shoulders (1940s style)',
+              confidence: 0.85,
+              reasoning: `Period-accurate ${era} silhouette avoiding any modern elements (no jeans/sneakers).`,
+              styling_tips: 'Keep accessories era-correct: gloves, beaded bag, and period hat.'
+            },
+            bottom: {
+              name: 'N/A — one-piece dress (period accurate)',
+              confidence: 0.7,
+              reasoning: 'Dress is a single garment; no separate bottom required for authenticity.',
+              styling_tips: 'Ensure appropriate length and fabric per era.'
+            },
+            shoes: {
+              name: era === '1930s' ? 'T-strap heels (Art Deco style)' : era === '1920s' ? 'Mary Jane heels' : 'Peep-toe pumps',
+              confidence: 0.85,
+              reasoning: 'Footwear consistent with the specified historical period.',
+              styling_tips: 'Choose muted period-appropriate colors.'
+            }
           },
-          bottom: { 
-            name: 'Well-Fitted Dark Jeans or Tailored Trousers', 
-            confidence: 0.85, 
-            reasoning: 'Flattering and versatile bottom that pairs well with many tops',
-            styling_tips: 'Choose high-waisted for elongating effect'
+          overall_confidence: 0.8,
+          style_reasoning: `Fallback generated for ${era} event with strict ban on modern items (jeans, sneakers, tees, hoodies).`,
+          styling_tips: ['Use authentic accessories', 'Avoid modern silhouettes and fabrics']
+        };
+      } else {
+        recommendationData = {
+          recommended_items: {
+            top: {
+              name: 'Classic White Button-Down Shirt',
+              confidence: 0.8,
+              reasoning: 'Versatile and timeless piece that works for multiple occasions',
+              styling_tips: 'Can be worn tucked in for professional look or loose for casual style'
+            },
+            bottom: {
+              name: 'Tailored Trousers (avoid denim for smarter look)',
+              confidence: 0.85,
+              reasoning: 'Flattering and versatile bottom that pairs well with many tops',
+              styling_tips: 'Choose high-waisted for elongating effect'
+            },
+            shoes: {
+              name: 'Leather Loafers or Minimal Sneakers',
+              confidence: 0.9,
+              reasoning: 'Comfortable yet stylish footwear suitable for multiple occasions',
+              styling_tips: 'Keep shoes clean and in good condition for polished appearance'
+            }
           },
-          shoes: { 
-            name: 'Clean White Sneakers or Leather Loafers', 
-            confidence: 0.9, 
-            reasoning: 'Comfortable yet stylish footwear suitable for multiple occasions',
-            styling_tips: 'Keep shoes clean and in good condition for polished appearance'
+          overall_confidence: 0.8,
+          style_reasoning: 'A classic, versatile outfit foundation tailored to modern daily wear.',
+          styling_tips: ['Ensure proper fit across all pieces', 'Add personal accessories to make the look your own']
+        };
+      }
+    }
+
+    // Simple server-side validator for historical events
+    if (isHistorical && recommendationData?.recommended_items) {
+      const banned = ['jeans', 'denim', 'sneaker', 'trainers', 'trainer', 't-shirt', 'tee', 'hoodie', 'sweatshirt', 'baseball cap', 'athleisure'];
+      const items = recommendationData.recommended_items;
+      const names: string[] = [];
+      if (items.top?.name) names.push(String(items.top.name));
+      if (items.bottom?.name) names.push(String(items.bottom.name));
+      if (items.shoes?.name) names.push(String(items.shoes.name));
+      if (Array.isArray(items.accessories)) {
+        for (const acc of items.accessories) if (acc?.name) names.push(String(acc.name));
+      }
+      if (items.outerwear?.name) names.push(String(items.outerwear.name));
+
+      const violations = names.filter((n) => banned.some((b) => n.toLowerCase().includes(b)));
+
+      if (violations.length > 0) {
+        // One retry with explicit correction
+        const correction = `\nIMPORTANT: Your previous suggestion included modern items for a historical event: ${[...new Set(violations)].join(', ')}. Regenerate strictly period-accurate. DO NOT include jeans, denim, sneakers/trainers, t-shirts, hoodies, athleisure. Respond with JSON only.`;
+        const retryResponse = await callAI([
+          messages[0],
+          { role: 'user', content: prompt + correction },
+        ]);
+        try {
+          const retried = parseAiJson(retryResponse);
+          recommendationData = retried;
+        } catch (e) {
+          console.warn('Retry parse failed, keeping validated fallback/result.');
+          // As a last resort, scrub offending items from names
+          const scrub = (s: string) => s.replace(/jeans|denim|sneaker|trainers?|t-shirt|tee|hoodie|sweatshirt|baseball cap|athleisure/gi, '');
+          if (items.top?.name) items.top.name = scrub(items.top.name);
+          if (items.bottom?.name) items.bottom.name = scrub(items.bottom.name);
+          if (items.shoes?.name) items.shoes.name = scrub(items.shoes.name);
+          if (Array.isArray(items.accessories)) {
+            for (const acc of items.accessories) if (acc?.name) acc.name = scrub(acc.name);
           }
-        },
-        overall_confidence: 0.8,
-        style_reasoning: 'A classic, versatile outfit foundation that works for most body types and occasions while allowing for personal expression through accessories.',
-        styling_tips: ['Ensure proper fit across all pieces', 'Add personal accessories to make the look your own', 'Consider the specific occasion when styling']
-      };
+          if (items.outerwear?.name) items.outerwear.name = scrub(items.outerwear.name);
+        }
+      }
     }
 
     // Save recommendation to database only if user is authenticated
