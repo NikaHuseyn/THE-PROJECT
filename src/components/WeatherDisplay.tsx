@@ -133,18 +133,8 @@ const WeatherDisplay = () => {
             <span className="mr-1.5">🤖</span>
             AI Style Recommendations
           </h4>
-          <p className="text-xs text-muted-foreground mb-2">
-            We've curated these perfect pieces just for you based on today's weather
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-            {weather.clothingRecommendations.map((item, index) => (
-              <div 
-                key={index}
-                className="text-xs bg-white/60 backdrop-blur-sm text-foreground px-2 py-1 rounded-lg border border-white/40 font-medium hover:bg-white/80 transition-colors"
-              >
-                {item}
-              </div>
-            ))}
+          <div className="text-xs bg-white/60 backdrop-blur-sm text-foreground px-3 py-2 rounded-lg border border-white/40 leading-relaxed">
+            We recommend {weather.clothingRecommendations.join(', ').toLowerCase()}. These pieces will keep you comfortable and stylish in today's weather.
           </div>
         </div>
       </div>
