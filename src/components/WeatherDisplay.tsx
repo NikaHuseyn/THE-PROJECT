@@ -128,13 +128,16 @@ const WeatherDisplay = () => {
         </div>
 
         {/* AI-Powered Clothing Recommendations */}
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2">
           <h4 className="font-semibold text-foreground text-xs flex items-center">
             <span className="mr-1.5">🤖</span>
             AI Style Recommendations
           </h4>
-          <div className="space-y-1">
-            {weather.clothingRecommendations.slice(0, 3).map((item, index) => (
+          <p className="text-xs text-muted-foreground mb-2">
+            We've curated these perfect pieces just for you based on today's weather
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+            {weather.clothingRecommendations.map((item, index) => (
               <div 
                 key={index}
                 className="text-xs bg-white/60 backdrop-blur-sm text-foreground px-2 py-1 rounded-lg border border-white/40 font-medium hover:bg-white/80 transition-colors"
