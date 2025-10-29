@@ -8,6 +8,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Calendar, TrendingUp, Eye, MapPin, ExternalLink } from 'lucide-react';
 import { useTrendProducts } from '@/hooks/useTrendProducts';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,6 +64,14 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
     }
   };
 
+  const formatSource = (source: string | null) => {
+    if (!source) return null;
+    // Simplify source names
+    return source
+      .replace('Pinterest Business API', 'Pinterest')
+      .replace(/\s+API$/i, '');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -98,9 +112,21 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
             {trend.popularity_rank && (
               <div>
                 <p className="text-sm text-gray-500 mb-1">Popularity Rank</p>
-                <Badge className="bg-amber-100 text-amber-800">
-                  #{trend.popularity_rank}
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge className="bg-amber-100 text-amber-800 cursor-help">
+                        #{trend.popularity_rank}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Ranking among all current trends based on search volume, engagement, and social mentions. 
+                        Lower numbers indicate higher popularity.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             )}
 
@@ -132,7 +158,7 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
                 <p className="text-sm text-gray-500 mb-1">Source</p>
                 <div className="flex items-center text-gray-700">
                   <MapPin className="h-4 w-4 mr-1" />
-                  {trend.source}
+                  {formatSource(trend.source)}
                 </div>
               </div>
             )}
