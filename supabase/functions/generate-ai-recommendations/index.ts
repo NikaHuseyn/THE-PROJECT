@@ -10,7 +10,7 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -469,15 +469,15 @@ CRITICAL FINAL INSTRUCTIONS:
 
 Remember: The goal is to create perfect, achievable outfits using what the user owns + targeted shopping/rental recommendations with real, clickable links.`;
 
-    // Call OpenAI API with enhanced model
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Lovable AI Gateway with Gemini model
+    const openaiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Using more powerful model for better fashion advice
+        model: 'google/gemini-2.5-flash', // Using Lovable AI with Gemini for fashion advice
         messages: [
           {
             role: 'system',
@@ -491,8 +491,17 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
     });
 
     if (!openaiResponse.ok) {
-      const error = await openaiResponse.json();
-      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+      const errorText = await openaiResponse.text();
+      console.error('Lovable AI error response:', errorText);
+      
+      if (openaiResponse.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      if (openaiResponse.status === 402) {
+        throw new Error('AI service quota exceeded. Please contact support or add credits to your workspace.');
+      }
+      
+      throw new Error(`Lovable AI error: ${errorText}`);
     }
 
     const aiResponse = await openaiResponse.json();
