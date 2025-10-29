@@ -173,10 +173,6 @@ const TrendDashboard = () => {
                     <p className="text-sm text-gray-500">{trend.category}</p>
                   </div>
                   
-                  {trend.description && (
-                    <p className="text-sm text-gray-700 line-clamp-2">{trend.description}</p>
-                  )}
-                  
                   <Button 
                     size="sm" 
                     variant="outline"
