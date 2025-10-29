@@ -7,7 +7,10 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, TrendingUp, Eye, MapPin } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Calendar, TrendingUp, Eye, MapPin, ExternalLink } from 'lucide-react';
+import { useTrendProducts } from '@/hooks/useTrendProducts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TrendDetailDialogProps {
   trend: {
@@ -29,6 +32,12 @@ interface TrendDetailDialogProps {
 }
 
 const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps) => {
+  const { products, isLoading: productsLoading } = useTrendProducts(
+    trend?.name || '',
+    trend?.category || '',
+    trend?.colors || []
+  );
+
   if (!trend) return null;
 
   const getTrendScoreColor = (score: number) => {
@@ -41,6 +50,12 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
     if (score >= 90) return 'bg-green-100';
     if (score >= 70) return 'bg-yellow-100';
     return 'bg-red-100';
+  };
+
+  const handleShopClick = (url: string | null) => {
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -161,11 +176,82 @@ const TrendDetailDialog = ({ trend, open, onOpenChange }: TrendDetailDialogProps
             </div>
           )}
 
-          {/* Action Button */}
-          <div className="flex justify-end pt-4">
-            <Button className="bg-gradient-to-r from-rose-500 to-pink-600">
-              Shop This Trend
-            </Button>
+          {/* Shopping Section */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="text-xl font-semibold mb-4">Shop This Trend</h3>
+            
+            {productsLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-0">
+                      <Skeleton className="aspect-square w-full" />
+                      <div className="p-3 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-2/3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : products.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {products.map((product) => (
+                  <Card key={product.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-0">
+                      <div className="aspect-square bg-gray-100 overflow-hidden">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Eye className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="p-3 space-y-2">
+                        <div>
+                          <p className="font-medium text-sm line-clamp-2">{product.name}</p>
+                          {product.brand && (
+                            <p className="text-xs text-gray-500">{product.brand}</p>
+                          )}
+                        </div>
+                        
+                        {product.price && (
+                          <p className="font-semibold text-sm">
+                            £{product.price.toFixed(2)}
+                          </p>
+                        )}
+                        
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleShopClick(product.affiliate_url || product.retailer_url)}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Shop Now
+                        </Button>
+                        
+                        {product.retailer_name && (
+                          <p className="text-xs text-gray-500 text-center">
+                            at {product.retailer_name}
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No products found for this trend yet.</p>
+                <p className="text-sm mt-2">Check back soon for curated items!</p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
