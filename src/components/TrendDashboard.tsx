@@ -11,7 +11,6 @@ import { useSeasonalForecasts } from '@/hooks/useSeasonalForecasts';
 
 const TrendDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [timeframe, setTimeframe] = useState('current');
   const { trackEvent } = useBehaviorAnalytics();
   const { trends, isLoading: trendsLoading, error: trendsError, fetchTrends } = useFashionTrends();
   const { forecasts, isLoading: forecastsLoading } = useSeasonalForecasts();
@@ -59,25 +58,12 @@ const TrendDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <TrendingUp className="h-6 w-6 mr-2" />
-            Trend Dashboard
-          </h2>
-          <p className="text-gray-600">Stay ahead with the latest trend analysis</p>
-        </div>
-        <div className="flex space-x-2">
-          <select
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-          >
-            <option value="current">Current Trends</option>
-            <option value="upcoming">Upcoming Trends</option>
-            <option value="seasonal">Seasonal Forecast</option>
-          </select>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+          <TrendingUp className="h-6 w-6 mr-2" />
+          Trend Dashboard
+        </h2>
+        <p className="text-gray-600">Stay ahead with the latest trend analysis</p>
       </div>
 
 
