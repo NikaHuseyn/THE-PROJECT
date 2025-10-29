@@ -202,7 +202,7 @@ ${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weathe
 
 STYLING BRIEF:
 ${recommendationType === 'event_outfit' ? 
-  'Create an outfit specifically tailored for this event. If this is a themed party, suggest appropriate character inspirations and costume elements that work with the theme while considering the dress code, weather, and user preferences.' :
+  `Create an outfit specifically tailored for this event. CRITICAL: If the occasion mentions a specific historical period or decade (like "1930s", "1920s", etc.), you MUST provide historically accurate fashion recommendations from that exact era. Do NOT suggest modern clothing or contemporary interpretations. Research and recommend authentic period pieces, silhouettes, fabrics, and styling that were actually worn during that time. ${eventDetails?.description || occasion || ''} includes historical references - ensure all recommendations match that period's authentic fashion.` :
   'Create a versatile daily outfit that reflects the user\'s personal style while being practical for their lifestyle.'
 }
 
@@ -213,12 +213,16 @@ CRITICAL: Use the learned preferences and recent feedback to improve this recomm
 4. Color, style, and fit preferences that have been reinforced through positive feedback
 
 SPECIAL INSTRUCTIONS FOR THEMED EVENTS:
-If the occasion mentions a theme (like "literature and drama", "1920s", "Hollywood", etc.), you should:
-1. Suggest 2-3 specific character inspirations that fit the theme
-2. Explain how to achieve the look using both existing wardrobe items and shopping suggestions
-3. Provide specific costume piece recommendations and where to find them (online stores, costume shops, etc.)
-4. Consider the weather and dress code when adapting the character look
-5. Offer both elaborate and subtle interpretations of the theme
+If the occasion mentions a theme (like "literature and drama", "1920s", "1930s", "Hollywood", etc.), you MUST:
+1. BE HISTORICALLY ACCURATE: If a specific decade or era is mentioned (1920s, 1930s, 1940s, Victorian, etc.), ALL recommendations must authentically reflect that period's fashion. Do NOT suggest modern interpretations or contemporary items.
+2. Key 1930s characteristics: bias-cut gowns, midi to floor-length hemlines, dropped waistlines, Art Deco influences, fur stoles, cloche hats transitioning to wider-brimmed styles, silk and satin fabrics
+3. Key 1920s characteristics: drop-waist dresses, knee-length hemlines, fringe, beading, headbands, feather accessories
+4. Key 1940s characteristics: structured shoulders, A-line skirts, knee-length, victory rolls hairstyles, utility fashion
+5. Suggest 2-3 specific character inspirations or iconic figures from that exact era
+6. Recommend actual period-appropriate pieces, NOT modern clothing that "looks vintage"
+7. Provide specific costume shops, vintage stores, and online retailers that specialize in authentic period fashion
+8. Consider the weather and dress code while maintaining historical accuracy
+9. Offer both elaborate (full costume) and subtle (period-inspired with key authentic pieces) interpretations
 
 Please provide a detailed outfit recommendation in the following JSON format:
 {
