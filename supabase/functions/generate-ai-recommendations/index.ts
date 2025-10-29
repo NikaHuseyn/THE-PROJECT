@@ -115,7 +115,7 @@ serve(async (req) => {
         .from('wardrobe_items')
         .select('*')
         .eq('user_id', user.id)
-        .limit(20);
+        .limit(50); // Increased to analyze more wardrobe items
       wardrobeItems = userWardrobeItems;
 
       // Fetch user preference insights from feedback
@@ -181,11 +181,18 @@ ${recentFeedback?.length > 0 ? recentFeedback.map(fb => {
   return `- ${ratingText} (${fb.rating}/5): Liked: ${fb.liked_aspects?.join(', ') || 'none'}, Disliked: ${fb.disliked_aspects?.join(', ') || 'none'}${fb.improvement_suggestions ? `, Suggestions: ${fb.improvement_suggestions}` : ''}`;
 }).join('\n') : '- No previous feedback available'}
 
-WARDROBE CONTEXT:
-${wardrobeItems?.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'}, ${item.brand || 'brand not specified'})`).join('\n') || 'No wardrobe items available'}
+USER'S WARDROBE ITEMS (PRIORITIZE USING THESE):
+${wardrobeItems?.length > 0 ? wardrobeItems.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'}, ${item.brand || 'brand not specified'}${item.notes ? ', notes: ' + item.notes : ''})`).join('\n') : 'No wardrobe items uploaded yet - recommend shopping items'}
 
 AVAILABLE SHOPPING ITEMS FOR INSPIRATION:
 ${shoppingItems?.map(item => `- ${item.name} by ${item.brand || 'Unknown'} (${item.category}, $${item.price}, Available in: ${item.colors?.join(', ') || 'Various colors'})`).join('\n') || 'No shopping items available'}
+
+CRITICAL WARDROBE INTEGRATION INSTRUCTIONS:
+1. ALWAYS analyze the user's wardrobe items FIRST
+2. If the user has suitable wardrobe items for any part of the outfit (top, bottom, shoes, outerwear, accessories), PRIORITIZE using those items
+3. Only suggest purchasing/renting items that the user doesn't already own or when their wardrobe lacks suitable options
+4. For each outfit piece, explicitly state whether it's "from_wardrobe" or "needs_purchase_or_rental"
+5. Create a balanced mix: use existing wardrobe items where appropriate, and suggest strategic purchases/rentals to complete the look
 
 OCCASION: ${occasion || 'Daily casual wear'}
 
@@ -235,47 +242,108 @@ Please provide a detailed outfit recommendation in the following JSON format:
       "why_perfect": "Why this character fits the theme and user"
     }
   ],
+  "wardrobe_analysis": {
+    "items_used": ["List wardrobe items that fit this outfit"],
+    "gaps_identified": ["What's missing from wardrobe for this occasion"],
+    "coverage_score": 0.6
+  },
   "recommended_items": {
     "top": { 
       "name": "specific item name", 
+      "source": "from_wardrobe" OR "needs_purchase" OR "needs_rental",
+      "wardrobe_item_id": "actual wardrobe item name if from_wardrobe, null otherwise",
       "confidence": 0.9, 
       "reasoning": "detailed explanation of why this works for the user's body type, style preferences, and occasion",
       "styling_tips": "how to wear this piece effectively",
       "alternatives": ["alternative option 1", "alternative option 2"],
-      "character_connection": "how this relates to the suggested character if themed"
+      "character_connection": "how this relates to the suggested character if themed",
+      "purchase_options": {
+        "uk_retailers": [
+          {
+            "store": "Store name (e.g., ASOS, Zara, Selfridges)",
+            "price_range": "£50-100",
+            "url": "https://direct-link-to-search-or-category",
+            "notes": "Why this retailer is good for this item"
+          }
+        ],
+        "rental_platforms": [
+          {
+            "platform": "Platform name (e.g., HURR, By Rotation, Rent the Runway)",
+            "price_range": "£20-40 rental",
+            "url": "https://direct-link",
+            "notes": "Rental duration and benefits"
+          }
+        ],
+        "vintage_options": [
+          {
+            "source": "Vintage store or online marketplace",
+            "price_range": "£30-80",
+            "url": "https://link-to-search",
+            "notes": "What to look for"
+          }
+        ]
+      }
     },
     "bottom": { 
-      "name": "specific item name", 
+      "name": "specific item name",
+      "source": "from_wardrobe" OR "needs_purchase" OR "needs_rental",
+      "wardrobe_item_id": "actual wardrobe item name if from_wardrobe, null otherwise",
       "confidence": 0.85, 
       "reasoning": "detailed explanation",
       "styling_tips": "how to style this piece",
       "alternatives": ["alternative option 1", "alternative option 2"],
-      "character_connection": "how this relates to the suggested character if themed"
+      "character_connection": "how this relates to the suggested character if themed",
+      "purchase_options": {
+        "uk_retailers": [],
+        "rental_platforms": [],
+        "vintage_options": []
+      }
     },
     "shoes": { 
-      "name": "specific item name", 
+      "name": "specific item name",
+      "source": "from_wardrobe" OR "needs_purchase" OR "needs_rental",
+      "wardrobe_item_id": "actual wardrobe item name if from_wardrobe, null otherwise",
       "confidence": 0.8, 
       "reasoning": "detailed explanation",
       "styling_tips": "how to choose and style shoes",
       "alternatives": ["alternative option 1", "alternative option 2"],
-      "character_connection": "how this relates to the suggested character if themed"
+      "character_connection": "how this relates to the suggested character if themed",
+      "purchase_options": {
+        "uk_retailers": [],
+        "rental_platforms": [],
+        "vintage_options": []
+      }
     },
     "accessories": [
       { 
-        "name": "specific accessory name", 
+        "name": "specific accessory name",
+        "source": "from_wardrobe" OR "needs_purchase" OR "needs_rental",
+        "wardrobe_item_id": "actual wardrobe item name if from_wardrobe, null otherwise",
         "confidence": 0.7, 
         "reasoning": "why this accessory complements the outfit",
         "styling_tips": "how to incorporate this accessory",
-        "character_connection": "how this relates to the suggested character if themed"
+        "character_connection": "how this relates to the suggested character if themed",
+        "purchase_options": {
+          "uk_retailers": [],
+          "rental_platforms": [],
+          "vintage_options": []
+        }
       }
     ],
     "outerwear": { 
-      "name": "specific outerwear name", 
+      "name": "specific outerwear name",
+      "source": "from_wardrobe" OR "needs_purchase" OR "needs_rental",
+      "wardrobe_item_id": "actual wardrobe item name if from_wardrobe, null otherwise",
       "confidence": 0.75, 
       "reasoning": "weather and style considerations",
       "styling_tips": "layering advice",
       "alternatives": ["alternative option 1", "alternative option 2"],
-      "character_connection": "how this relates to the suggested character if themed"
+      "character_connection": "how this relates to the suggested character if themed",
+      "purchase_options": {
+        "uk_retailers": [],
+        "rental_platforms": [],
+        "vintage_options": []
+      }
     }
   },
   "overall_confidence": 0.87,
@@ -297,24 +365,109 @@ Please provide a detailed outfit recommendation in the following JSON format:
     "investment_pieces": "Key items worth investing in for long-term wardrobe building"
   },
   "shopping_suggestions": {
-    "priority_items": ["item 1 to buy first", "item 2 to buy second"],
-    "brands_to_consider": ["brand 1", "brand 2", "brand 3"],
-    "costume_shops": ["specific UK costume rental shops", "online costume retailers"],
-    "where_to_find": {
-      "high_street": "Specific UK stores like Zara, H&M, ASOS for costume pieces",
-      "vintage_shops": "Vintage stores for authentic period pieces",
-      "online": "Specific websites for costume elements",
-      "diy_tips": "How to modify existing pieces for the theme"
+    "priority_items": ["item 1 to buy/rent first", "item 2 to buy/rent second"],
+    "total_investment_needed": "£X-Y for purchases, £A-B for rentals",
+    "wardrobe_utilization": "X% of outfit uses existing wardrobe items",
+    "recommended_approach": "Buy key pieces, rent special occasion items, use existing wardrobe for basics",
+    "uk_shopping_guide": {
+      "high_street_stores": {
+        "ASOS": {
+          "url": "https://www.asos.com",
+          "best_for": "Specific categories this retailer excels at",
+          "price_point": "Budget to mid-range"
+        },
+        "Zara": {
+          "url": "https://www.zara.com/uk",
+          "best_for": "Trend-focused pieces",
+          "price_point": "Mid-range"
+        },
+        "H&M": {
+          "url": "https://www2.hm.com/en_gb",
+          "best_for": "Affordable basics and trend pieces",
+          "price_point": "Budget"
+        },
+        "& Other Stories": {
+          "url": "https://www.stories.com/en_gbp",
+          "best_for": "Elevated everyday pieces",
+          "price_point": "Mid-range"
+        }
+      },
+      "rental_platforms": {
+        "HURR": {
+          "url": "https://www.hurrcollective.com",
+          "best_for": "Designer pieces and special occasions",
+          "rental_duration": "4-8-20 days",
+          "price_range": "£20-£150"
+        },
+        "By Rotation": {
+          "url": "https://www.byrotation.com",
+          "best_for": "Peer-to-peer rentals, trendy pieces",
+          "rental_duration": "Flexible",
+          "price_range": "£15-£100"
+        },
+        "ROTARO": {
+          "url": "https://www.rotaro.co.uk",
+          "best_for": "Premium and sustainable brands",
+          "rental_duration": "4-8 days",
+          "price_range": "£25-£120"
+        }
+      },
+      "vintage_and_period": {
+        "Beyond Retro": {
+          "url": "https://www.beyondretro.com",
+          "best_for": "Authentic vintage pieces",
+          "locations": "Multiple London locations + online"
+        },
+        "Rokit": {
+          "url": "https://www.rokit.co.uk",
+          "best_for": "Curated vintage clothing",
+          "locations": "London locations + online"
+        },
+        "Etsy UK": {
+          "url": "https://www.etsy.com/uk/c/vintage",
+          "best_for": "Specific era pieces from independent sellers",
+          "search_tip": "Search '[decade] dress UK' for period pieces"
+        }
+      },
+      "department_stores": {
+        "Selfridges": {
+          "url": "https://www.selfridges.com",
+          "best_for": "Luxury and designer pieces",
+          "price_point": "High-end"
+        },
+        "John Lewis": {
+          "url": "https://www.johnlewis.com",
+          "best_for": "Quality classics and occasionwear",
+          "price_point": "Mid to high"
+        }
+      }
     },
-    "price_ranges": {
-      "budget": "Under $50 options",
-      "mid_range": "$50-150 options", 
-      "investment": "$150+ investment pieces"
+    "costume_and_theatrical": {
+      "Angels Fancy Dress": {
+        "url": "https://www.fancydress.com",
+        "best_for": "Professional costume hire and purchase",
+        "notes": "Extensive period costume collection"
+      },
+      "Escapade": {
+        "url": "https://www.escapade.co.uk",
+        "best_for": "Themed party costumes and accessories",
+        "notes": "Good for 1920s-1950s pieces"
+      }
     }
   }
 }
 
-Focus on creating a cohesive, stylish outfit that authentically represents the user's personal style while being appropriate for the occasion and weather. Consider current fashion trends but prioritize timeless style principles and the user's individual preferences.`;
+Focus on creating a cohesive, stylish outfit that authentically represents the user's personal style while being appropriate for the occasion and weather. 
+
+CRITICAL FINAL INSTRUCTIONS:
+1. WARDROBE FIRST: Always check if the user has suitable items in their wardrobe before suggesting purchases
+2. SMART MIXING: Create outfits that combine existing wardrobe items with strategic new purchases or rentals
+3. REAL LINKS: Provide actual URLs to UK retailers, rental platforms, and vintage shops - not generic suggestions
+4. VALUE OPTIMIZATION: Help users maximize their existing wardrobe while strategically filling gaps
+5. For period/themed events: Provide specific links to costume rental shops and vintage stores with authentic pieces
+6. Price transparency: Always include price ranges for both purchase and rental options in GBP (£)
+
+Remember: The goal is to create perfect, achievable outfits using what the user owns + targeted shopping/rental recommendations with real, clickable links.`;
 
     // Call OpenAI API with enhanced model
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
