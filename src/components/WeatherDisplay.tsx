@@ -69,8 +69,8 @@ const WeatherDisplay = () => {
   }
 
   return (
-    <div className="card-warm p-4 mb-6 animate-fade-in interactive-scale">
-      <div className="flex items-center justify-between mb-4">
+    <div className="card-warm p-3 mb-6 animate-fade-in interactive-scale">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="p-2 bg-white/60 backdrop-blur-sm rounded-lg border border-white/40">
             {getWeatherIcon(weather.condition)}
@@ -94,12 +94,12 @@ const WeatherDisplay = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Weather Details */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-accent/10 rounded-lg">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
+              <div className="p-1 bg-accent/10 rounded-lg">
                 <Thermometer className="h-4 w-4 text-accent" />
               </div>
               <div>
@@ -111,16 +111,16 @@ const WeatherDisplay = () => {
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground bg-white/40 backdrop-blur-sm rounded-lg p-2">
+          <div className="text-xs text-muted-foreground bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
             Feels like {weather.feelsLike}°F
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1.5 bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1 bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
               <Droplets className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs font-medium">{weather.humidity}%</span>
             </div>
-            <div className="flex items-center space-x-1.5 bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
+            <div className="flex items-center space-x-1 bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
               <Wind className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs font-medium">{weather.windSpeed} mph</span>
             </div>
@@ -133,21 +133,16 @@ const WeatherDisplay = () => {
             <span className="mr-1.5">🤖</span>
             AI Style Recommendations
           </h4>
-          <div className="space-y-1.5">
-            {weather.clothingRecommendations.slice(0, 4).map((item, index) => (
+          <div className="space-y-1">
+            {weather.clothingRecommendations.slice(0, 3).map((item, index) => (
               <div 
                 key={index}
-                className="text-xs bg-white/60 backdrop-blur-sm text-foreground px-2.5 py-1.5 rounded-lg border border-white/40 font-medium hover:bg-white/80 transition-colors"
+                className="text-xs bg-white/60 backdrop-blur-sm text-foreground px-2 py-1 rounded-lg border border-white/40 font-medium hover:bg-white/80 transition-colors"
               >
                 {item}
               </div>
             ))}
           </div>
-          {weather.clothingRecommendations.length > 4 && (
-            <p className="text-xs text-muted-foreground italic">
-              +{weather.clothingRecommendations.length - 4} more personalized suggestions
-            </p>
-          )}
         </div>
       </div>
     </div>
