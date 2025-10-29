@@ -18,7 +18,7 @@ const FashionTrends = () => {
             Fashion Trends
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Stay ahead of the curve with AI-powered trend analysis and forecasting
+            Stay ahead of the curve with the latest trend analysis and forecasting
           </p>
         </div>
 

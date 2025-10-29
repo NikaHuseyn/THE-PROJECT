@@ -7,7 +7,7 @@ import { TrendingUp, Calendar, MapPin, Sparkles, Eye, Heart, Star } from 'lucide
 import { useBehaviorAnalytics } from '@/hooks/useBehaviorAnalytics';
 import { useFashionTrends } from '@/hooks/useFashionTrends';
 import { useSeasonalForecasts } from '@/hooks/useSeasonalForecasts';
-import TrendDataSync from './TrendDataSync';
+
 
 const TrendDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -65,7 +65,7 @@ const TrendDashboard = () => {
             <TrendingUp className="h-6 w-6 mr-2" />
             Trend Dashboard
           </h2>
-          <p className="text-gray-600">Stay ahead with AI-powered trend analysis</p>
+          <p className="text-gray-600">Stay ahead with the latest trend analysis</p>
         </div>
         <div className="flex space-x-2">
           <select
@@ -80,8 +80,6 @@ const TrendDashboard = () => {
         </div>
       </div>
 
-      {/* Trend Data Integration Panel */}
-      <TrendDataSync />
 
       {/* Seasonal Forecast Card */}
       {latestForecast && (
@@ -168,7 +166,6 @@ const TrendDashboard = () => {
       ) : trends.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-600">No trends found for the selected category.</p>
-          <p className="text-sm text-gray-500 mt-2">Try syncing with external data sources above.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -183,11 +180,6 @@ const TrendDashboard = () => {
                   <div>
                     <CardTitle className="text-lg">{trend.name}</CardTitle>
                     <p className="text-sm text-gray-600">{trend.category}</p>
-                    {trend.source && (
-                      <Badge variant="outline" className="text-xs mt-1">
-                        {trend.source}
-                      </Badge>
-                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     {trend.popularity_rank && (
@@ -279,7 +271,7 @@ const TrendDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Star className="h-5 w-5 mr-2" />
-            Personalized Trend Insights
+            Personalised Trend Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -289,9 +281,9 @@ const TrendDashboard = () => {
                 <Sparkles className="h-4 w-4 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-800 mb-1">AI Trend Recommendation</h4>
+                <h4 className="font-medium text-gray-800 mb-1">Trend Recommendation</h4>
                 <p className="text-sm text-gray-600 mb-2">
-                  Based on your style profile and wardrobe, we recommend focusing on trending styles 
+                  Based on your style profile and wardrobe, we recommend trending styles 
                   that match your preferences.
                 </p>
                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700">

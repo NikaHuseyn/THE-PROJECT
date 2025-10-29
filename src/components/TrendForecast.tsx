@@ -58,7 +58,7 @@ const TrendForecast = () => {
             <Gem className="h-6 w-6 mr-2" />
             Trend Forecast
           </h2>
-          <p className="text-gray-600">AI-powered predictions for upcoming fashion trends</p>
+          <p className="text-gray-600">Predictions for upcoming fashion trends</p>
         </div>
         <div className="flex space-x-2">
           <select
@@ -255,7 +255,7 @@ const TrendForecast = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Zap className="h-5 w-5 mr-2" />
-            AI Trend Insights
+            Trend Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -265,9 +265,9 @@ const TrendForecast = () => {
                 <Eye className="h-4 w-4 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-800 mb-1">Personalized Forecast</h4>
+                <h4 className="font-medium text-gray-800 mb-1">Personalised Forecast</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Based on your style profile and current wardrobe, we'll provide personalized trend 
+                  Based on your style profile and current wardrobe, we'll provide personalised trend 
                   recommendations that align with your preferences.
                 </p>
                 <div className="flex space-x-2">
