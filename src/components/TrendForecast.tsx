@@ -195,14 +195,7 @@ const TrendForecast = () => {
               {predictions.map((prediction) => (
                 <Card key={prediction.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg">{prediction.trend_name}</CardTitle>
-                      {prediction.risk_level && (
-                        <Badge className={getRiskColor(prediction.risk_level)}>
-                          {prediction.risk_level} risk
-                        </Badge>
-                      )}
-                    </div>
+                    <CardTitle className="text-lg">{prediction.trend_name}</CardTitle>
                     <p className="text-sm text-gray-600">{prediction.category}</p>
                   </CardHeader>
                   

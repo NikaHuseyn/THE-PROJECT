@@ -58,6 +58,21 @@ export const useFashionTrends = () => {
 
   useEffect(() => {
     fetchTrends();
+
+    // Set up real-time subscription for updates
+    const channel = supabase
+      .channel('fashion_trends_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'fashion_trends' },
+        () => {
+          fetchTrends();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {

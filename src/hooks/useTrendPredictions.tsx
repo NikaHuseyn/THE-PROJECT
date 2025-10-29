@@ -49,6 +49,21 @@ export const useTrendPredictions = () => {
 
   useEffect(() => {
     fetchPredictions();
+
+    // Set up real-time subscription for updates
+    const channel = supabase
+      .channel('trend_predictions_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'trend_predictions' },
+        () => {
+          fetchPredictions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {

@@ -58,6 +58,21 @@ export const useSeasonalForecasts = () => {
 
   useEffect(() => {
     fetchForecasts();
+
+    // Set up real-time subscription for updates
+    const channel = supabase
+      .channel('seasonal_forecasts_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'seasonal_forecasts' },
+        () => {
+          fetchForecasts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
