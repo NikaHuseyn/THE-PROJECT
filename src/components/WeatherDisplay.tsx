@@ -104,7 +104,7 @@ const WeatherDisplay = () => {
               </div>
               <div>
                 <span className={`text-xl font-bold ${getTemperatureColor(weather.temperature)}`}>
-                  {weather.temperature}°F
+                  {Math.round((weather.temperature - 32) * 5 / 9)}°C
                 </span>
                 <p className="text-xs text-muted-foreground capitalize">{weather.description}</p>
               </div>
@@ -112,7 +112,7 @@ const WeatherDisplay = () => {
           </div>
 
           <div className="text-xs text-muted-foreground bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
-            Feels like {weather.feelsLike}°F
+            Feels like {Math.round((weather.feelsLike - 32) * 5 / 9)}°C
           </div>
 
           <div className="flex items-center space-x-3">
@@ -128,7 +128,7 @@ const WeatherDisplay = () => {
         </div>
 
         {/* AI-Powered Clothing Recommendations */}
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-2">
           <h4 className="font-semibold text-foreground text-xs flex items-center">
             <span className="mr-1.5">🤖</span>
             AI Style Recommendations
