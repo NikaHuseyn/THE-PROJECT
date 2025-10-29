@@ -3,14 +3,17 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Calendar, MapPin, Sparkles, Eye, Heart, Star } from 'lucide-react';
+import { TrendingUp, Sparkles, Eye, Star } from 'lucide-react';
 import { useBehaviorAnalytics } from '@/hooks/useBehaviorAnalytics';
 import { useFashionTrends } from '@/hooks/useFashionTrends';
 import { useSeasonalForecasts } from '@/hooks/useSeasonalForecasts';
+import TrendDetailDialog from './TrendDetailDialog';
 
 
 const TrendDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedTrend, setSelectedTrend] = useState<any>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const { trackEvent } = useBehaviorAnalytics();
   const { trends, isLoading: trendsLoading, error: trendsError, fetchTrends } = useFashionTrends();
   const { forecasts, isLoading: forecastsLoading } = useSeasonalForecasts();
@@ -20,12 +23,14 @@ const TrendDashboard = () => {
   // Get the most recent seasonal forecast
   const latestForecast = forecasts[0];
 
-  const handleTrendClick = (trendId: string, trendName: string) => {
+  const handleTrendClick = (trend: any) => {
+    setSelectedTrend(trend);
+    setDetailDialogOpen(true);
     trackEvent({
       event_type: 'trend_view',
       event_data: { 
-        trend_id: trendId, 
-        trend_name: trendName,
+        trend_id: trend.id, 
+        trend_name: trend.name,
         category: selectedCategory 
       }
     });
@@ -34,18 +39,6 @@ const TrendDashboard = () => {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     fetchTrends(category);
-  };
-
-  const getTrendScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getTrendScoreBg = (score: number) => {
-    if (score >= 90) return 'bg-green-100';
-    if (score >= 70) return 'bg-yellow-100';
-    return 'bg-red-100';
   };
 
   if (trendsError) {
@@ -155,102 +148,59 @@ const TrendDashboard = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trends.map((trend, index) => (
+          {trends.map((trend) => (
             <Card 
               key={trend.id} 
               className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleTrendClick(trend.id, trend.name)}
+              onClick={() => handleTrendClick(trend)}
             >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{trend.name}</CardTitle>
-                    <p className="text-sm text-gray-600">{trend.category}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {trend.popularity_rank && (
-                      <Badge className="bg-amber-100 text-amber-800">
-                        #{trend.popularity_rank}
-                      </Badge>
-                    )}
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${getTrendScoreBg(trend.trend_score)} ${getTrendScoreColor(trend.trend_score)}`}>
-                      {Math.round(trend.trend_score)}
-                    </div>
-                  </div>
+              <CardContent className="p-0">
+                <div className="aspect-video bg-gray-100 rounded-t-lg flex items-center justify-center overflow-hidden">
+                  {trend.image_url ? (
+                    <img 
+                      src={trend.image_url} 
+                      alt={trend.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Eye className="h-12 w-12 text-gray-400" />
+                  )}
                 </div>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                    {trend.image_url ? (
-                      <img 
-                        src={trend.image_url} 
-                        alt={trend.name}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <Eye className="h-8 w-8 text-gray-400" />
-                    )}
+                
+                <div className="p-4 space-y-2">
+                  <div>
+                    <h3 className="font-semibold text-lg">{trend.name}</h3>
+                    <p className="text-sm text-gray-500">{trend.category}</p>
                   </div>
                   
                   {trend.description && (
-                    <p className="text-sm text-gray-700">{trend.description}</p>
+                    <p className="text-sm text-gray-700 line-clamp-2">{trend.description}</p>
                   )}
                   
-                  {trend.growth_rate && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Growth Rate</span>
-                      <span className="font-medium text-green-600">{trend.growth_rate}</span>
-                    </div>
-                  )}
-                  
-                  {trend.occasions.length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-2">Perfect for:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {trend.occasions.map((occasion, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {occasion}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {trend.colors.length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-2">Trending Colors:</p>
-                      <div className="flex space-x-1">
-                        {trend.colors.map((color, idx) => (
-                          <div
-                            key={idx}
-                            className="w-4 h-4 rounded-full border border-gray-300"
-                            style={{ backgroundColor: color.toLowerCase() }}
-                            title={color}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between pt-2">
-                    {trend.season && (
-                      <div className="flex items-center text-xs text-gray-500">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {trend.season}
-                      </div>
-                    )}
-                    <Button size="sm" variant="outline">
-                      Shop Trend
-                    </Button>
-                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTrendClick(trend);
+                    }}
+                  >
+                    View Details
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Trend Detail Dialog */}
+      <TrendDetailDialog
+        trend={selectedTrend}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
 
       {/* Trend Insights */}
       <Card>
