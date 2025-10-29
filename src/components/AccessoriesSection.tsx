@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 
 const AccessoriesSection = () => {
   const accessories = [
-    { name: "Pearl Earrings", price: 45, type: "jewelry" },
+    { name: "Pearl Earrings", price: 45, type: "jewellery" },
     { name: "Leather Handbag", price: 120, type: "bag" },
     { name: "Classic Heels", price: 89, type: "shoes" },
     { name: "Silk Scarf", price: 35, type: "accessory" },
-    { name: "Statement Necklace", price: 67, type: "jewelry" },
+    { name: "Statement Necklace", price: 67, type: "jewellery" },
     { name: "Designer Watch", price: 200, type: "accessory" }
   ];
 

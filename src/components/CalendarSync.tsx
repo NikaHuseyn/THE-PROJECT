@@ -132,7 +132,7 @@ const CalendarSync: React.FC<CalendarSyncProps> = ({ onEventsUpdated }) => {
             <span className="text-sm text-gray-600">Not Connected</span>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Connect your Google Calendar to personalize recommendations based on your events.
+            Connect your Google Calendar to personalise recommendations based on your events.
           </p>
           <Button
             onClick={handleConnectGoogleCalendar}

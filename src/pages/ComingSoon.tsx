@@ -117,7 +117,7 @@ const ComingSoon = () => {
 
         <div className="pt-8 space-y-2">
           <p className="text-sm text-muted-foreground">
-            AI-powered styling • Personalized recommendations • Fashion trends
+            AI-powered styling • Personalised recommendations • Fashion trends
           </p>
         </div>
       </div>

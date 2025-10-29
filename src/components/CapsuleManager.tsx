@@ -161,7 +161,7 @@ const CapsuleManager = () => {
           <CardContent className="text-center py-8">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-700 mb-2">No capsule wardrobes yet</h3>
-            <p className="text-gray-500 mb-4">Create your first capsule wardrobe to organize your favorite pieces!</p>
+            <p className="text-gray-500 mb-4">Create your first capsule wardrobe to organise your favourite pieces!</p>
             <Button
               onClick={() => setShowCreateDialog(true)}
               className="bg-gradient-to-r from-rose-500 to-pink-600"

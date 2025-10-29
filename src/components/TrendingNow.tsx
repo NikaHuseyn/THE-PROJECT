@@ -51,7 +51,7 @@ const TrendingNow = () => {
         <LoadingState
           variant="fashion"
           title="Discovering Latest Trends"
-          description="Our AI is analyzing the latest fashion data to bring you the most current styles..."
+          description="Our AI is analysing the latest fashion data to bring you the most current styles..."
           icon="sparkles"
         />
       ) : error ? (

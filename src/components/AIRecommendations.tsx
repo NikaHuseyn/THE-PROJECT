@@ -266,7 +266,7 @@ const AIRecommendations = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">AI Style Recommendations</h2>
-          <p className="text-gray-600">Powered by OpenAI for personalized style advice</p>
+          <p className="text-gray-600">Powered by OpenAI for personalised style advice</p>
         </div>
         <div className="flex gap-2">
           {autoGenerateEnabled && (
@@ -370,7 +370,7 @@ const AIRecommendations = () => {
               <CardContent className="text-center py-8">
                 <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">No AI recommendations yet</h3>
-                <p className="text-gray-500 mb-4">Let our AI stylist create personalized recommendations based on your profile!</p>
+                <p className="text-gray-500 mb-4">Let our AI stylist create personalised recommendations based on your profile!</p>
                 <Button
                   onClick={() => generateAIRecommendation()}
                   disabled={generating}

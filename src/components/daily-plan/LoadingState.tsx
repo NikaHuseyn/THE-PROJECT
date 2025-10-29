@@ -7,7 +7,7 @@ const LoadingState = () => {
     <UILoadingState
       variant="fashion"
       title="Loading your daily plan..."
-      description="Gathering your events and generating personalized outfit recommendations"
+      description="Gathering your events and generating personalised outfit recommendations"
       icon="sparkles"
     />
   );

@@ -15,7 +15,7 @@ const StyleAnalysisLoadingState = () => {
           <LoadingState
             variant="fashion"
             title="Loading your style analysis..."
-            description="Analyzing your calendar and generating personalized recommendations"
+            description="Analysing your calendar and generating personalised recommendations"
             icon="sparkles"
           />
         </div>

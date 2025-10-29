@@ -86,7 +86,7 @@ const DailyOutfitAssistant = () => {
   const handleGetAllRecommendations = () => {
     toast({
       title: "Generating Outfit Recommendations",
-      description: "We're creating personalized outfits for all your events today!",
+      description: "We're creating personalised outfits for all your events today!",
     });
     console.log('Getting recommendations for all events:', todaysEvents);
   };
@@ -128,7 +128,7 @@ const DailyOutfitAssistant = () => {
             Daily Outfit Assistant
           </h3>
           <p className="text-gray-600">
-            Get personalized outfit recommendations based on your calendar events and preferences
+            Get personalised outfit recommendations based on your calendar events and preferences
           </p>
         </div>
         <Button 
@@ -195,7 +195,7 @@ const DailyOutfitAssistant = () => {
             </div>
             <div>
               <p className="font-medium text-gray-800">Smart Recommendations Ready</p>
-              <p className="text-sm text-gray-600">{todaysEvents.length} personalized outfits curated for today's events</p>
+              <p className="text-sm text-gray-600">{todaysEvents.length} personalised outfits curated for today's events</p>
             </div>
           </div>
           <Button 

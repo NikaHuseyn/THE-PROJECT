@@ -85,7 +85,7 @@ const CalendarRecommendationsSection = () => {
         setHasCalendarConnection(true);
         toast({
           title: "Calendar Connected! ✨",
-          description: "Your calendar is now synced. We're generating personalized outfit recommendations for your day!",
+          description: "Your calendar is now synced. We're generating personalised outfit recommendations for your day!",
         });
         await loadTodaysEvents();
         await generateDailyRecommendations();
@@ -132,7 +132,7 @@ const CalendarRecommendationsSection = () => {
       await loadAIRecommendations();
       toast({
         title: "AI Recommendations Ready! 🤖✨",
-        description: "Personalized outfit suggestions for your day have been generated.",
+        description: "Personalised outfit suggestions for your day have been generated.",
       });
     } catch (error) {
       console.error('Error generating recommendations:', error);
@@ -184,7 +184,7 @@ const CalendarRecommendationsSection = () => {
             Unlock Daily Style Magic ✨
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Connect your calendar and let our AI stylist create personalized outfit recommendations 
+            Connect your calendar and let our AI stylist create personalised outfit recommendations 
             for each of your daily activities. From morning meetings to evening events, we've got your style covered!
           </p>
           
@@ -292,7 +292,7 @@ const CalendarRecommendationsSection = () => {
                   <div>
                     <p className="font-medium text-gray-800">AI Recommendations Ready ✨</p>
                     <p className="text-sm text-gray-600">
-                      {aiRecommendations.length} personalized outfit{aiRecommendations.length !== 1 ? 's' : ''} for today's events
+                      {aiRecommendations.length} personalised outfit{aiRecommendations.length !== 1 ? 's' : ''} for today's events
                     </p>
                   </div>
                 </div>
@@ -320,7 +320,7 @@ const CalendarRecommendationsSection = () => {
           <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h4 className="text-lg font-semibold text-gray-700 mb-2">No events scheduled for today</h4>
           <p className="text-gray-500 mb-4">
-            Add events to your calendar to get personalized outfit recommendations!
+            Add events to your calendar to get personalised outfit recommendations!
           </p>
           <Button 
             onClick={generateDailyRecommendations}

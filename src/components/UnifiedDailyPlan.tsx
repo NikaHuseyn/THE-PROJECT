@@ -34,7 +34,7 @@ const UnifiedDailyPlan = () => {
       if (success) {
         toast({
           title: "Calendar Connected! ✨",
-          description: "Your calendar is now synced. We're generating personalized outfit recommendations for your day!",
+          description: "Your calendar is now synced. We're generating personalised outfit recommendations for your day!",
         });
         await loadTodaysEvents();
         await generateDailyRecommendations();
@@ -78,7 +78,7 @@ const UnifiedDailyPlan = () => {
       await loadAIRecommendations();
       toast({
         title: "AI Recommendations Ready! 🤖✨",
-        description: "Personalized outfit suggestions for your day have been generated.",
+        description: "Personalised outfit suggestions for your day have been generated.",
       });
     } catch (error) {
       console.error('Error generating recommendations:', error);

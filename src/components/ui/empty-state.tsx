@@ -194,7 +194,7 @@ export const NoEventsEmptyState: React.FC<{ onConnect?: () => void }> = ({ onCon
     variant="elegant"
     icon="calendar"
     title="No Events Scheduled"
-    description="Connect your calendar to get personalized outfit recommendations for your upcoming events."
+    description="Connect your calendar to get personalised outfit recommendations for your upcoming events."
     actionLabel="Connect Calendar"
     onAction={onConnect}
   />

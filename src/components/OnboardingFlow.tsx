@@ -359,7 +359,7 @@ const CalendarStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
             <span className="font-medium">Calendar Connected!</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            You're all set to receive personalized outfit recommendations
+            You're all set to receive personalised outfit recommendations
           </p>
         </div>
       )}

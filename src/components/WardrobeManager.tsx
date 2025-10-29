@@ -276,7 +276,7 @@ const WardrobeManager = () => {
                     ) : (
                       <Sparkles className="h-3 w-3 mr-1" />
                     )}
-                    Analyze Text
+                    Analyse Text
                   </Button>
                   
                   {aiSuggestions && (
@@ -445,7 +445,7 @@ const WardrobeManager = () => {
           <CardContent className="text-center py-8">
             <Shirt className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Your wardrobe is empty</h3>
-            <p className="text-gray-500 mb-4">Start building your digital wardrobe by adding your favorite pieces!</p>
+            <p className="text-gray-500 mb-4">Start building your digital wardrobe by adding your favourite pieces!</p>
             <Button
               onClick={() => setShowAddForm(true)}
               className="bg-gradient-to-r from-rose-500 to-pink-600"

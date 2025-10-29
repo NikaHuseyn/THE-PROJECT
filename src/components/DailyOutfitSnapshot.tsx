@@ -112,7 +112,7 @@ const DailyOutfitSnapshot: React.FC<DailyOutfitSnapshotProps> = ({ userName = "t
     const event = events.find(e => e.id === eventId);
     toast({
       title: "Opening Outfit Suggestions",
-      description: `Showing personalized outfits for ${event?.name}`,
+      description: `Showing personalised outfits for ${event?.name}`,
     });
   };
 

@@ -19,7 +19,7 @@ const StyleAnalysis = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Style Analysis</h1>
           <p className="text-gray-600">
-            AI-powered style insights, personalized recommendations, and calendar integration
+            AI-powered style insights, personalised recommendations, and calendar integration
           </p>
         </div>
 

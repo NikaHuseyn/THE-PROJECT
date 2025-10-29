@@ -175,7 +175,7 @@ const Index = () => {
                 </p>
                 {!user && (
                   <p className="text-sm text-gray-500 mt-4">
-                    Sign in to access your personal wardrobe and get personalized recommendations!
+                    Sign in to access your personal wardrobe and get personalised recommendations!
                   </p>
                 )}
               </div>

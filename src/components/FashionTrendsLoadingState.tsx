@@ -22,7 +22,7 @@ const FashionTrendsLoadingState = () => {
         <LoadingState
           variant="fashion"
           title="Loading fashion trends..."
-          description="Analyzing the latest trends and fashion forecasts"
+          description="Analysing the latest trends and fashion forecasts"
           icon="sparkles"
           className="mb-8"
         />

@@ -272,7 +272,7 @@ const TrendForecast = () => {
                 </p>
                 <div className="flex space-x-2">
                   <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    Get Personalized Recommendations
+                    Get Personalised Recommendations
                   </Button>
                   <Button size="sm" variant="outline">
                     Set Trend Alerts

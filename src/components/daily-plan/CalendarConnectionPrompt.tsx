@@ -23,7 +23,7 @@ const CalendarConnectionPrompt = ({ isConnecting, onConnectCalendar }: CalendarC
           Unlock Daily Style Magic ✨
         </h3>
         <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-          Connect your calendar and let our AI stylist create personalized outfit recommendations 
+          Connect your calendar and let our AI stylist create personalised outfit recommendations 
           for each of your daily activities. From morning meetings to evening events, we've got your style covered!
         </p>
         
