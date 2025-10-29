@@ -59,14 +59,14 @@ const TrendingNow = () => {
       ) : trendingItems.length === 0 ? (
         <NoTrendsEmptyState />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {trendingItems.map((item) => (
           <div 
             key={item.id}
             className="card-elegant interactive-scale overflow-hidden group animate-fade-in-up"
             style={{ animationDelay: `${trendingItems.indexOf(item) * 100}ms` }}
           >
-            <div className="relative h-48 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
+            <div className="relative h-40 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-full mx-auto mb-3 flex items-center justify-center animate-float">
@@ -99,7 +99,7 @@ const TrendingNow = () => {
 
             </div>
 
-            <div className="p-4">
+            <div className="p-3">
               <div className="flex items-start justify-between mb-2">
                 <h4 className="font-semibold text-gray-800 text-sm leading-tight">{item.name}</h4>
                 <div className="flex items-center text-xs text-amber-600 ml-2">
