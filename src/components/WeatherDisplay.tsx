@@ -20,10 +20,10 @@ const WeatherDisplay = () => {
   };
 
   const getTemperatureColor = (temp: number) => {
-    if (temp >= 80) return 'text-red-600';
-    if (temp >= 75) return 'text-red-500';
-    if (temp >= 65) return 'text-orange-500';
-    if (temp >= 55) return 'text-blue-500';
+    if (temp >= 27) return 'text-red-600';
+    if (temp >= 24) return 'text-red-500';
+    if (temp >= 18) return 'text-orange-500';
+    if (temp >= 13) return 'text-blue-500';
     return 'text-blue-700';
   };
 
@@ -104,7 +104,7 @@ const WeatherDisplay = () => {
               </div>
               <div>
                 <span className={`text-xl font-bold ${getTemperatureColor(weather.temperature)}`}>
-                  {Math.round((weather.temperature - 32) * 5 / 9)}°C
+                  {weather.temperature}°C
                 </span>
                 <p className="text-xs text-muted-foreground capitalize">{weather.description}</p>
               </div>
@@ -112,7 +112,7 @@ const WeatherDisplay = () => {
           </div>
 
           <div className="text-xs text-muted-foreground bg-white/40 backdrop-blur-sm rounded-lg p-1.5">
-            Feels like {Math.round((weather.feelsLike - 32) * 5 / 9)}°C
+            Feels like {weather.feelsLike}°C
           </div>
 
           <div className="flex items-center space-x-3">
