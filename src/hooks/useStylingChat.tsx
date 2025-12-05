@@ -51,14 +51,22 @@ export const useStylingChat = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const headers = session ? { Authorization: `Bearer ${session.access_token}` } : {};
 
-      // Build conversation history for context
+      // Build conversation history for context - include recommendations for full context
       const conversationContext = messages.map(m => ({
         role: m.role,
         content: m.content,
+        // Include recommendation summary for assistant messages to preserve context
+        recommendationSummary: m.recommendation ? {
+          items: m.recommendation.recommended_items ? Object.keys(m.recommendation.recommended_items) : [],
+          occasion: m.recommendation.occasion,
+        } : undefined,
       }));
 
       // Determine if this is a follow-up or new request
       const isFollowUp = messages.length > 0;
+
+      // Find the original user request for context preservation
+      const originalRequest = messages.find(m => m.role === 'user')?.content || '';
 
       // Call AI recommendations with conversation context
       const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
@@ -71,6 +79,7 @@ export const useStylingChat = () => {
             type: 'event',
           },
           conversationHistory: isFollowUp ? conversationContext : [],
+          originalRequest: isFollowUp ? originalRequest : null,
           guestEmail: session?.user?.email || `guest-${Date.now()}@temp.com`
         },
         headers

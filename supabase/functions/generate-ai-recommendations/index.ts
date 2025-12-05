@@ -48,7 +48,8 @@ serve(async (req) => {
       occasion, 
       eventDetails,
       guestEmail,
-      conversationHistory = []
+      conversationHistory = [],
+      originalRequest = null
     } = await req.json();
 
     // Helper to parse AI JSON safely
@@ -623,14 +624,25 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
         `${msg.role === 'user' ? 'User' : 'Stylist'}: ${msg.content}`
       ).join('\n');
       
+      // Use original request to preserve full context (dress code, style, gender, etc.)
+      const fullOriginalContext = originalRequest || conversationContext.find((m: any) => m.role === 'user')?.content || '';
+      
       contextualPrompt = `${prompt}
 
-CONVERSATION HISTORY (for context - the user is refining their request):
+ORIGINAL REQUEST (FULL CONTEXT - preserve all details like dress code, gender, style era, etc.):
+${fullOriginalContext}
+
+CONVERSATION HISTORY:
 ${historyText}
 
-CURRENT USER MESSAGE: ${occasion}
+CURRENT USER MESSAGE (modification/clarification to the original request): ${occasion}
 
-IMPORTANT: This is a follow-up message. The user is refining or adjusting the previous recommendation. Pay close attention to what they liked or want to change. If they're asking for modifications, build on the previous suggestions where appropriate.`;
+CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
+1. Keep ALL details from the original request (dress code, event type, style era, location, etc.)
+2. Only change what the user specifically asks to modify in their current message
+3. If they say "make it female" or "change to female", KEEP the same dress code/style but change the gender of recommendations
+4. If they say "make it more casual", KEEP everything else but adjust formality
+5. Do NOT start from scratch - this is a refinement, not a new request`;
     }
 
     const messages = [
