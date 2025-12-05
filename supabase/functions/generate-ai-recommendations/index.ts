@@ -209,11 +209,12 @@ CRITICAL WARDROBE INTEGRATION INSTRUCTIONS:
 4. For each outfit piece, explicitly state whether it's "from_wardrobe" or "needs_purchase_or_rental"
 5. Create a balanced mix: use existing wardrobe items where appropriate, and suggest strategic purchases/rentals to complete the look
 
-OCCASION: ${occasion || 'Daily casual wear'}
+OCCASION: ${originalRequest || occasion || 'Daily casual wear'}
+${originalRequest ? `USER MODIFICATION REQUEST: ${occasion}` : ''}
 
 ${eventDetails ? `
 EVENT DETAILS:
-- Event: ${eventDetails.name}
+- Event: ${originalRequest || eventDetails.name}
 - Location: ${eventDetails.location || 'Not specified'}
 - Dress Code: ${eventDetails.dressCode || 'Smart Casual'}
 - Event Type: ${eventDetails.type || 'General'}
