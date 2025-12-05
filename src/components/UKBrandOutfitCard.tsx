@@ -1,16 +1,101 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Calendar, ExternalLink } from 'lucide-react';
+import { ShoppingCart, Calendar, ExternalLink, Clock } from 'lucide-react';
 import type { OutfitRecommendation } from '@/services/shoppingService';
 
 interface UKBrandOutfitCardProps {
   outfit: OutfitRecommendation;
+  occasion?: string;
 }
 
-const UKBrandOutfitCard = ({ outfit }: UKBrandOutfitCardProps) => {
+// Check if occasion is historical/themed
+const isHistoricalEvent = (occasion?: string): boolean => {
+  if (!occasion) return false;
+  const lowerOccasion = occasion.toLowerCase();
+  return /(1920|1930|1940|victorian|edwardian|regency|vintage|period|gatsby|flapper|wartime|art deco)/.test(lowerOccasion);
+};
+
+const UKBrandOutfitCard = ({ outfit, occasion }: UKBrandOutfitCardProps) => {
+  const isHistorical = isHistoricalEvent(occasion);
+
+  // For historical events, show vintage/costume sources instead
+  if (isHistorical) {
+    return (
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-lg overflow-hidden border border-amber-200">
+        <div className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="h-5 w-5 text-amber-600" />
+            <h3 className="text-lg font-semibold text-amber-900">Period Costume Sources</h3>
+          </div>
+          <p className="text-sm text-amber-700 mb-4">
+            For historical events, we recommend these specialist UK sources for authentic period pieces:
+          </p>
+          
+          <div className="space-y-3">
+            <div className="bg-white/60 rounded-lg p-3">
+              <h4 className="font-medium text-amber-900 text-sm mb-2">🎭 Costume Rental</h4>
+              <div className="space-y-2">
+                <a href="https://www.fancydress.com" target="_blank" rel="noopener noreferrer" 
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">Angels Fancy Dress</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+                <a href="https://www.escapade.co.uk" target="_blank" rel="noopener noreferrer"
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">Escapade</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+              </div>
+            </div>
+            
+            <div className="bg-white/60 rounded-lg p-3">
+              <h4 className="font-medium text-amber-900 text-sm mb-2">👗 Vintage Shops</h4>
+              <div className="space-y-2">
+                <a href="https://www.beyondretro.com" target="_blank" rel="noopener noreferrer"
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">Beyond Retro</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+                <a href="https://www.rokit.co.uk" target="_blank" rel="noopener noreferrer"
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">Rokit Vintage</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+                <a href="https://www.etsy.com/uk/c/vintage" target="_blank" rel="noopener noreferrer"
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">Etsy UK Vintage</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-white/60 rounded-lg p-3">
+              <h4 className="font-medium text-amber-900 text-sm mb-2">💎 Luxury Period Rental</h4>
+              <div className="space-y-2">
+                <a href="https://www.hurrcollective.com" target="_blank" rel="noopener noreferrer"
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">HURR Collective</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+                <a href="https://www.byrotation.com" target="_blank" rel="noopener noreferrer"
+                   className="flex items-center justify-between text-sm hover:bg-amber-100 p-2 rounded transition-colors">
+                  <span className="text-gray-700">By Rotation</span>
+                  <ExternalLink className="h-3 w-3 text-amber-600" />
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-xs text-amber-600 mt-4 italic">
+            Search for your specific era (e.g., "1930s dress") on these platforms for authentic pieces.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const handleBuyOutfit = () => {
-    // In a real implementation, this would add all items to cart
     console.log('Adding outfit to cart:', outfit);
     outfit.items.forEach(item => {
       window.open(item.link, '_blank');
