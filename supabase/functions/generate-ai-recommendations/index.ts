@@ -47,8 +47,22 @@ serve(async (req) => {
       weatherData, 
       occasion, 
       eventDetails,
-      guestEmail
+      guestEmail,
+      conversationHistory = []
     } = await req.json();
+
+    // Helper to parse AI JSON safely
+    const parseAiJson = (response: any) => {
+      const message = response.choices?.[0]?.message;
+      if (message?.tool_calls?.[0]?.function?.arguments) {
+        const args = message.tool_calls[0].function.arguments;
+        return JSON.parse(typeof args === 'string' ? args : JSON.stringify(args));
+      }
+      const content = message?.content?.trim?.() || '';
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      throw new Error('No valid response from AI');
+    };
 
     // Determine email for rate limiting
     const rateLimitEmail = userEmail || guestEmail;
@@ -598,9 +612,30 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
       ? `You are an expert fashion historian and costume consultant specializing in period-accurate clothing. For this ${occ.includes('1930') ? '1930s' : occ.includes('1920') ? '1920s' : occ.includes('1940') ? '1940s' : 'historical'} event, you MUST only recommend authentic period pieces. NEVER suggest: jeans, denim, sneakers, trainers, t-shirts, hoodies, modern midi dresses, or any item invented after the specified era. Focus on: bias-cut gowns, T-strap heels, Art Deco accessories, vintage shops, and costume rentals.`
       : 'You are a world-class fashion stylist with expertise in personal styling, body types, and current trends. Create practical, stylish outfits tailored to each client.';
 
+    // Build messages array with conversation history for context
+    const conversationContext = eventDetails?.conversationHistory || conversationHistory || [];
+    const hasConversationContext = conversationContext.length > 0;
+    
+    // If there's conversation history, modify the prompt to acknowledge it
+    let contextualPrompt = prompt;
+    if (hasConversationContext) {
+      const historyText = conversationContext.map((msg: any) => 
+        `${msg.role === 'user' ? 'User' : 'Stylist'}: ${msg.content}`
+      ).join('\n');
+      
+      contextualPrompt = `${prompt}
+
+CONVERSATION HISTORY (for context - the user is refining their request):
+${historyText}
+
+CURRENT USER MESSAGE: ${occasion}
+
+IMPORTANT: This is a follow-up message. The user is refining or adjusting the previous recommendation. Pay close attention to what they liked or want to change. If they're asking for modifications, build on the previous suggestions where appropriate.`;
+    }
+
     const messages = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt }
+      { role: 'user', content: contextualPrompt }
     ];
 
     // Build payload based on model family (GPT-5 vs Gemini)
