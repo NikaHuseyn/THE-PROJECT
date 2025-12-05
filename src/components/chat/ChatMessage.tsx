@@ -22,36 +22,31 @@ interface ChatMessageProps {
 const ChatMessage = ({ role, content, recommendation, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
 
-  const renderOutfitItem = (category: string, item: OutfitItem | OutfitItem[]) => {
-    if (Array.isArray(item)) {
-      return (
-        <div key={category} className="mb-4">
-          <span className="text-sm font-medium text-muted-foreground capitalize">{category}</span>
-          <div className="mt-1 space-y-2">
-            {item.map((accessory, index) => (
-              <div key={index} className="pl-4 border-l-2 border-border">
-                <p className="text-foreground">{accessory.name}</p>
-                {accessory.reasoning && (
-                  <p className="text-sm text-muted-foreground mt-1">{accessory.reasoning}</p>
-                )}
-                {renderShoppingLinks(accessory.purchase_options)}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
+  const renderOutfitItem = (item: OutfitItem, index: number) => {
     return (
-      <div key={category} className="mb-4">
-        <span className="text-sm font-medium text-muted-foreground capitalize">{category}</span>
-        <p className="text-foreground mt-1">{item.name}</p>
+      <div key={index} className="mb-3 pl-4 border-l-2 border-border">
+        <p className="text-foreground font-medium">{item.name}</p>
         {item.reasoning && (
           <p className="text-sm text-muted-foreground mt-1">{item.reasoning}</p>
         )}
         {renderShoppingLinks(item.purchase_options)}
       </div>
     );
+  };
+
+  const flattenItems = (items: Record<string, OutfitItem | OutfitItem[]>): OutfitItem[] => {
+    const result: OutfitItem[] = [];
+    const excludeKeys = ['character_suggestions', 'wardrobe_analysis'];
+    
+    Object.entries(items).forEach(([key, value]) => {
+      if (excludeKeys.includes(key)) return;
+      if (Array.isArray(value)) {
+        result.push(...value);
+      } else if (value && typeof value === 'object' && 'name' in value) {
+        result.push(value);
+      }
+    });
+    return result;
   };
 
   const renderShoppingLinks = (options?: OutfitItem['purchase_options']) => {
@@ -89,17 +84,13 @@ const ChatMessage = ({ role, content, recommendation, isLoading }: ChatMessagePr
     const items = recommendation.recommended_items;
     if (!items) return null;
 
-    // Filter out non-outfit keys
-    const outfitKeys = Object.keys(items).filter(
-      key => !['character_suggestions', 'wardrobe_analysis'].includes(key)
-    );
+    const flatItems = flattenItems(items);
 
     return (
       <div className="mt-4 space-y-2">
-
         {/* Outfit items */}
         <div className="space-y-1">
-          {outfitKeys.map(category => renderOutfitItem(category, items[category]))}
+          {flatItems.map((item, idx) => renderOutfitItem(item, idx))}
         </div>
 
         {/* Styling tips */}
