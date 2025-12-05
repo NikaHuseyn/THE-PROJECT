@@ -96,10 +96,6 @@ const ChatMessage = ({ role, content, recommendation, isLoading }: ChatMessagePr
 
     return (
       <div className="mt-4 space-y-2">
-        {/* Reasoning */}
-        {recommendation.reasoning && (
-          <p className="text-muted-foreground mb-4">{recommendation.reasoning}</p>
-        )}
 
         {/* Outfit items */}
         <div className="space-y-1">
