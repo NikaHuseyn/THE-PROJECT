@@ -706,19 +706,38 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
 
     // Parse response from tool call
     const parseToolResponse = (raw: any) => {
+      console.log('Raw AI response:', JSON.stringify(raw, null, 2));
       const message = raw.choices?.[0]?.message;
       
-      // Check for tool call response
+      if (!message) {
+        console.error('No message in AI response');
+        throw new Error('No message in AI response');
+      }
+      
+      // Check for tool call response (OpenAI format)
       if (message?.tool_calls?.[0]?.function?.arguments) {
+        console.log('Found tool_calls format');
         const args = message.tool_calls[0].function.arguments;
+        return JSON.parse(typeof args === 'string' ? args : JSON.stringify(args));
+      }
+      
+      // Check for function_call response (alternate format)
+      if (message?.function_call?.arguments) {
+        console.log('Found function_call format');
+        const args = message.function_call.arguments;
         return JSON.parse(typeof args === 'string' ? args : JSON.stringify(args));
       }
       
       // Fallback to content parsing
       const content = message?.content?.trim?.() || '';
+      console.log('Trying content parsing, content length:', content.length);
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      if (jsonMatch) {
+        console.log('Found JSON in content');
+        return JSON.parse(jsonMatch[0]);
+      }
       
+      console.error('No valid response format found in:', JSON.stringify(message, null, 2));
       throw new Error('No valid response from AI');
     };
 
