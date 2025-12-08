@@ -209,8 +209,24 @@ CRITICAL WARDROBE INTEGRATION INSTRUCTIONS:
 4. For each outfit piece, explicitly state whether it's "from_wardrobe" or "needs_purchase_or_rental"
 5. Create a balanced mix: use existing wardrobe items where appropriate, and suggest strategic purchases/rentals to complete the look
 
-OCCASION: ${originalRequest || occasion || 'Daily casual wear'}
-${originalRequest ? `USER MODIFICATION REQUEST: ${occasion}` : ''}
+${originalRequest ? `
+🔄 THIS IS A FOLLOW-UP REQUEST - PRESERVE ORIGINAL CONTEXT 🔄
+
+ORIGINAL REQUEST (DO NOT OVERRIDE): ${originalRequest}
+
+CONVERSATION HISTORY:
+${conversationHistory?.map((m: any) => `${m.role.toUpperCase()}: ${m.content}${m.recommendationSummary ? ` [Recommended: ${m.recommendationSummary.items?.join(', ')} for ${m.recommendationSummary.occasion}]` : ''}`).join('\n') || 'No previous messages'}
+
+USER'S MODIFICATION: ${occasion}
+
+CRITICAL INSTRUCTIONS FOR FOLLOW-UP:
+- Keep ALL details from the original request (dress code, event type, style, formality level)
+- ONLY modify what the user explicitly asks to change in their modification
+- If user says "female" or "woman", keep the SAME dress code/style but make it for women
+- If user says "male" or "man", keep the SAME dress code/style but make it for men
+- If user asks to change formality, keep gender and other details the same
+- DO NOT start from scratch - this is a refinement of the previous recommendation
+` : `OCCASION: ${occasion || 'Daily casual wear'}`}
 
 ${eventDetails ? `
 EVENT DETAILS:
