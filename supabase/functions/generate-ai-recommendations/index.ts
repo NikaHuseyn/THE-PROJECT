@@ -675,7 +675,8 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         body.tool_choice = { type: 'function', function: { name: 'provide_outfit_recommendation' } };
       }
       if (model.startsWith('openai/')) {
-        body.max_completion_tokens = 3000;
+        // GPT-5 needs more tokens for reasoning + output (reasoning uses ~3000-5000 tokens internally)
+        body.max_completion_tokens = 12000;
       } else {
         body.max_tokens = 3000;
         body.temperature = 0.7;
