@@ -526,7 +526,8 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
     const occ = (occasion || '').toLowerCase();
     const desc = (eventDetails?.description || '').toLowerCase();
     const isHistorical = /(1920|1930|1940|victorian|edwardian|regency|vintage|period)/.test(`${occ} ${desc}`);
-    const model = 'openai/gpt-5';
+    // Use GPT-5 Mini for faster responses - still high quality but more efficient
+    const model = 'openai/gpt-5-mini';
 
     // Define tool for structured output
     const outfitTool = {
@@ -675,8 +676,8 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         body.tool_choice = { type: 'function', function: { name: 'provide_outfit_recommendation' } };
       }
       if (model.startsWith('openai/')) {
-        // GPT-5 needs more tokens for reasoning + output (reasoning uses ~3000-5000 tokens internally)
-        body.max_completion_tokens = 12000;
+        // GPT-5 Mini needs fewer tokens - optimized for speed
+        body.max_completion_tokens = 4000;
       } else {
         body.max_tokens = 3000;
         body.temperature = 0.7;
