@@ -100,7 +100,7 @@ const ContentModerationPanel = () => {
       if (flaggedError) throw flaggedError;
 
       // Transform the data to match our interfaces
-      const transformedReports: ContentReport[] = (reportsData || []).map(report => ({
+      const transformedReports: ContentReport[] = (reportsData || []).map((report: any) => ({
         ...report,
         reporter: { display_name: 'Unknown User' } // Simplified for now
       }));
