@@ -52,11 +52,10 @@ const Index = () => {
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-3xl font-semibold text-foreground mb-2 text-center">
-              Your Personal Stylist
+              What are you dressing for?
             </h1>
             <p className="text-muted-foreground text-center max-w-md mb-8">
-              Tell me about your event and I'll create the perfect outfit for you. 
-              You can refine my suggestions by chatting with me.
+              Describe your event — I'll build you an outfit that fits the occasion, your style, and what's actually in your wardrobe
             </p>
             {!user && (
               <p className="text-sm text-muted-foreground mb-8">
