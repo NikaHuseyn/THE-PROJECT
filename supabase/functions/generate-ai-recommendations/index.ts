@@ -76,15 +76,17 @@ serve(async (req) => {
       });
     }
 
-    // Check rate limiting
-    console.log('Checking rate limit for:', rateLimitEmail);
-    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_ai_rate_limit', {
-      user_id_param: user?.id || rateLimitEmail
-    });
-
-    if (rateLimitError) {
-      console.error('Rate limit check error:', rateLimitError);
-      // Don't block on rate limit errors, just log and continue
+    // Check rate limiting - only for authenticated users (RPC expects UUID)
+    let rateLimitResult = null;
+    if (user?.id) {
+      console.log('Checking rate limit for user:', user.id);
+      const { data, error: rateLimitError } = await supabase.rpc('check_ai_rate_limit', {
+        user_id_param: user.id
+      });
+      if (rateLimitError) {
+        console.error('Rate limit check error:', rateLimitError);
+      }
+      rateLimitResult = data;
     }
 
     if (rateLimitResult && !rateLimitResult.allowed) {
@@ -663,8 +665,8 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         body.tool_choice = { type: 'function', function: { name: 'provide_outfit_recommendation' } };
       }
       if (model.startsWith('openai/')) {
-        // GPT-5 Mini needs fewer tokens - optimized for speed
-        body.max_completion_tokens = 4000;
+        // GPT-5 Mini uses reasoning tokens from the same budget, so allocate enough
+        body.max_completion_tokens = 16000;
       } else {
         body.max_tokens = 3000;
         body.temperature = 0.7;
@@ -890,12 +892,12 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         fit_guidance: recommendationData.fit_guidance,
         shopping_suggestions: recommendationData.shopping_suggestions
       },
-      rate_limit_info: {
+      rate_limit_info: rateLimitResult ? {
         remaining_requests: rateLimitResult.remaining_requests,
         rate_limit: rateLimitResult.rate_limit,
         subscription_tier: rateLimitResult.subscription_tier,
         reset_time: rateLimitResult.reset_time
-      }
+      } : null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
