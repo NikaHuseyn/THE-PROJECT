@@ -55,7 +55,7 @@ const Index = () => {
               What are you dressing for?
             </h1>
             <p className="text-muted-foreground text-center max-w-md mb-8">
-              Describe your event — I'll build you an outfit that fits the occasion, your style, and what's actually in your wardrobe
+              Get AI styling advice for any occasion, share looks with friends, and build a wardrobe that works
             </p>
             {!user && (
               <p className="text-sm text-muted-foreground mb-8">
