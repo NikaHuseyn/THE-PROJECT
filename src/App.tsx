@@ -33,7 +33,7 @@ const AppRoutes = () => (
       <Route path="/auth" element={<Auth />} />
       <Route path="/wardrobe" element={<AuthGuard><Wardrobe /></AuthGuard>} />
       <Route path="/style-analysis" element={<AuthGuard><StyleAnalysis /></AuthGuard>} />
-      <Route path="/fashion-trends" element={<FashionTrends />} />
+      
       <Route path="/community" element={<Community />} />
       <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
       <Route path="/admin" element={<Admin />} />
