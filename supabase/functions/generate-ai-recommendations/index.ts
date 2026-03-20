@@ -892,12 +892,12 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         fit_guidance: recommendationData.fit_guidance,
         shopping_suggestions: recommendationData.shopping_suggestions
       },
-      rate_limit_info: {
+      rate_limit_info: rateLimitResult ? {
         remaining_requests: rateLimitResult.remaining_requests,
         rate_limit: rateLimitResult.rate_limit,
         subscription_tier: rateLimitResult.subscription_tier,
         reset_time: rateLimitResult.reset_time
-      }
+      } : null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
