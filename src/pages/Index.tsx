@@ -15,9 +15,9 @@ const Index = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestions = [
-    "Black tie gala in London next Saturday",
+    "Black tie gala in London",
     "Job interview at a creative agency",
-    "Beach wedding in Cornwall",
+    "Beach wedding",
     "1930s themed party",
     "First date at a nice restaurant",
     "Smart casual brunch with friends"
@@ -77,6 +77,7 @@ const Index = () => {
               ))}
             </div>
 
+            <p className="text-xs text-muted-foreground/60 mb-2">Try an example:</p>
             <SuggestionChips suggestions={suggestions} onSelect={sendMessage} />
           </div>
         ) : (
