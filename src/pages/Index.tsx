@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
 import SuggestionChips from '@/components/chat/SuggestionChips';
@@ -41,7 +42,7 @@ const Index = () => {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-14">
       <Header />
       
       <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4">
@@ -120,6 +121,7 @@ const Index = () => {
           />
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };
