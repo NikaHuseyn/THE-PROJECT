@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import Header from '@/components/Header';
+
 import BottomNav from '@/components/BottomNav';
 import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
