@@ -62,6 +62,21 @@ const Index = () => {
                 Sign in to get personalised recommendations from your wardrobe
               </p>
             )}
+
+            <div className="grid grid-cols-3 gap-6 mb-10 max-w-lg w-full">
+              {[
+                { icon: Sparkles, label: 'Event-ready outfits', desc: 'Describe any occasion and get a complete look' },
+                { icon: Heart, label: 'Your wardrobe, your style', desc: 'Sign in to get suggestions from clothes you own' },
+                { icon: MessageCircle, label: 'Refine until it\'s perfect', desc: 'Chat to adjust colors, formality, budget' },
+              ].map(({ icon: Icon, label, desc }) => (
+                <div key={label} className="flex flex-col items-center text-center gap-1.5">
+                  <Icon className="h-4 w-4 text-primary/70" />
+                  <span className="text-xs font-semibold text-foreground leading-tight">{label}</span>
+                  <span className="text-[11px] text-muted-foreground leading-snug">{desc}</span>
+                </div>
+              ))}
+            </div>
+
             <SuggestionChips suggestions={suggestions} onSelect={sendMessage} />
           </div>
         ) : (
