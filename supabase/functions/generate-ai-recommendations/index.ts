@@ -663,8 +663,8 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         body.tool_choice = { type: 'function', function: { name: 'provide_outfit_recommendation' } };
       }
       if (model.startsWith('openai/')) {
-        // GPT-5 Mini needs fewer tokens - optimized for speed
-        body.max_completion_tokens = 4000;
+        // GPT-5 Mini uses reasoning tokens from the same budget, so allocate enough
+        body.max_completion_tokens = 16000;
       } else {
         body.max_tokens = 3000;
         body.temperature = 0.7;
