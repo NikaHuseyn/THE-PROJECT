@@ -76,15 +76,17 @@ serve(async (req) => {
       });
     }
 
-    // Check rate limiting
-    console.log('Checking rate limit for:', rateLimitEmail);
-    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_ai_rate_limit', {
-      user_id_param: user?.id || rateLimitEmail
-    });
-
-    if (rateLimitError) {
-      console.error('Rate limit check error:', rateLimitError);
-      // Don't block on rate limit errors, just log and continue
+    // Check rate limiting - only for authenticated users (RPC expects UUID)
+    let rateLimitResult = null;
+    if (user?.id) {
+      console.log('Checking rate limit for user:', user.id);
+      const { data, error: rateLimitError } = await supabase.rpc('check_ai_rate_limit', {
+        user_id_param: user.id
+      });
+      if (rateLimitError) {
+        console.error('Rate limit check error:', rateLimitError);
+      }
+      rateLimitResult = data;
     }
 
     if (rateLimitResult && !rateLimitResult.allowed) {
