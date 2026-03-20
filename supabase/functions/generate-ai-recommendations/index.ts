@@ -77,36 +77,23 @@ serve(async (req) => {
     }
 
     // Check rate limiting
-    console.log('Checking rate limit for email:', rateLimitEmail);
+    console.log('Checking rate limit for:', rateLimitEmail);
     const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_ai_rate_limit', {
-      user_email: rateLimitEmail,
-      target_user_id: user?.id || null
+      user_id_param: user?.id || rateLimitEmail
     });
 
     if (rateLimitError) {
       console.error('Rate limit check error:', rateLimitError);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to check rate limit. Please try again.' 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      // Don't block on rate limit errors, just log and continue
     }
 
-    console.log('Rate limit result:', rateLimitResult);
-    
-    if (!rateLimitResult.allowed) {
+    if (rateLimitResult && !rateLimitResult.allowed) {
       return new Response(JSON.stringify({ 
         error: 'Rate limit exceeded',
         details: {
-          message: `You've reached your daily limit of ${rateLimitResult.rate_limit} AI recommendations.`,
-          current_usage: rateLimitResult.current_usage,
-          rate_limit: rateLimitResult.rate_limit,
-          reset_time: rateLimitResult.reset_time,
-          subscription_tier: rateLimitResult.subscription_tier,
-          upgrade_message: rateLimitResult.subscription_tier === 'free' ? 
-            'Upgrade to Premium for 50 daily recommendations or Pro for 100 daily recommendations!' : 
-            'Your daily limit will reset in 24 hours.'
+          message: `You've reached your daily limit of ${rateLimitResult.limit || 10} AI recommendations.`,
+          remaining: rateLimitResult.remaining || 0,
+          reset_time: rateLimitResult.reset_at,
         }
       }), {
         status: 429,
