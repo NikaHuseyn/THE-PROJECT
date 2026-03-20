@@ -18,6 +18,7 @@ const Community = () => {
 
         <CommunityFeed />
       </main>
+      <BottomNav />
     </div>
   );
 };
