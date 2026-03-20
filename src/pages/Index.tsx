@@ -6,7 +6,7 @@ import SuggestionChips from '@/components/chat/SuggestionChips';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useStylingChat } from '@/hooks/useStylingChat';
-import { Sparkles, RotateCcw } from 'lucide-react';
+import { Sparkles, RotateCcw, Heart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
