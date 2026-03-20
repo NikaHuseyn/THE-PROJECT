@@ -77,6 +77,7 @@ const Index = () => {
               ))}
             </div>
 
+            <p className="text-xs text-muted-foreground/60 mb-2">Try an example:</p>
             <SuggestionChips suggestions={suggestions} onSelect={sendMessage} />
           </div>
         ) : (
