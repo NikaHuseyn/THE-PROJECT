@@ -42,7 +42,7 @@ const Index = () => {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-14">
+    <div className="min-h-screen bg-background flex flex-col pt-14">
       
       
       <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4">
