@@ -536,7 +536,7 @@ Please provide a detailed outfit recommendation in the following JSON format:
     }
   ],
   "overall_confidence": 0.87,
-  "style_reasoning": "Comprehensive explanation of the outfit's cohesiveness, how it flatters the user's body type, reflects their style preferences, suits the occasion, and works with the weather",
+  "style_reasoning": "Lead with the VISUAL STORY: describe how the outfit will look in the specific setting and lighting, what emotional impact it creates, how the colours and silhouettes work with the backdrop. Then explain cohesiveness, body type flattery, style preferences, occasion suitability, and weather considerations. This should read like a creative director's vision, not a dress code checklist.",
   "color_analysis": "Detailed explanation of color choices and how they work with the user's preferences and complexion",
   "fit_guidance": "Specific advice on fit and silhouette based on body type and preferences",
   "styling_tips": [
