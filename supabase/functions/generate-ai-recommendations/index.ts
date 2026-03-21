@@ -1037,6 +1037,61 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           const allResults = await Promise.all(retailerSearches);
           retailer_results = allResults.flat().slice(0, 6);
           console.log(`Firecrawl: ${retailer_results.length} products found for "${searchQuery}"`);
+
+          // Firecrawl rental platform search
+          const rentalPlatforms = [
+            { name: 'HURR', domain: 'hurr.co.uk' },
+            { name: 'By Rotation', domain: 'byrotation.com' },
+          ];
+
+          const rentalSearches = rentalPlatforms.map(async (platform) => {
+            try {
+              const response = await fetch('https://api.firecrawl.dev/v1/search', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${firecrawlApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: `${searchQuery} site:${platform.domain}`,
+                  limit: 2,
+                  scrapeOptions: { formats: ['markdown'] },
+                }),
+              });
+
+              if (!response.ok) {
+                console.warn(`Firecrawl rental search failed for ${platform.name}:`, response.status);
+                return [];
+              }
+
+              const searchData = await response.json();
+              const results = searchData?.data || [];
+
+              return results.slice(0, 2).map((result: any) => {
+                const markdown = result.markdown || '';
+                // Match rental price patterns like "£X/day", "£X per day", "from £X"
+                const rentalPriceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?\s*(?:\/\s*day|per\s*day|per\s*occasion|to\s*rent)/i)
+                  || markdown.match(/(?:rent|rental|from)\s*£[\d,]+(?:\.\d{2})?/i)
+                  || markdown.match(/£[\d,]+(?:\.\d{2})?/);
+                const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
+
+                return {
+                  platform: platform.name,
+                  product_name: result.title || result.metadata?.title || 'Unknown product',
+                  rental_price: rentalPriceMatch ? rentalPriceMatch[0] : null,
+                  product_url: result.url || '',
+                  image_url: imageUrl,
+                };
+              });
+            } catch (err) {
+              console.warn(`Firecrawl rental error for ${platform.name}:`, err);
+              return [];
+            }
+          });
+
+          const allRentalResults = await Promise.all(rentalSearches);
+          rental_results = allRentalResults.flat().slice(0, 4);
+          console.log(`Firecrawl: ${rental_results.length} rental results found for "${searchQuery}"`);
         }
 
         return {
@@ -1047,6 +1102,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           category: item.category,
           db_matches: matches || [],
           retailer_results,
+          rental_results,
         };
       });
 
