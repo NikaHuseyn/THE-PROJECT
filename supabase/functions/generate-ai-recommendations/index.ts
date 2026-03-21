@@ -49,7 +49,8 @@ serve(async (req) => {
       eventDetails,
       guestEmail,
       conversationHistory = [],
-      originalRequest = null
+      originalRequest = null,
+      venueContext = null
     } = await req.json();
 
     // Helper to parse AI JSON safely
