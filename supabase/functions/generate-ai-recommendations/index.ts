@@ -229,6 +229,19 @@ EVENT DETAILS:
 WEATHER CONTEXT:
 ${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weatherData.condition}, Humidity: ${weatherData.humidity}%, Location: ${weatherData.location}` : 'Weather not specified'}
 
+${venueContext ? `
+🏢 VENUE INTELLIGENCE (scraped from venue website - USE THIS):
+- Venue: ${venueContext.venue_name || 'Unknown'}
+- Type: ${venueContext.venue_type || 'Unknown'}
+- Dress Code: ${venueContext.dress_code || 'Not specified'} ${venueContext.dress_code_details ? `(${venueContext.dress_code_details})` : ''}
+- Atmosphere: ${venueContext.atmosphere || 'Not specified'}
+- Formality Level: ${venueContext.formality_level || 'N/A'}/10
+- Style Keywords: ${venueContext.style_keywords?.join(', ') || 'None'}
+- Additional Notes: ${venueContext.notes || 'None'}
+
+CRITICAL: This venue information was scraped from the actual venue's website. You MUST tailor the outfit recommendation to match this venue's specific dress code and atmosphere. This takes priority over generic occasion-based styling.
+` : ''}
+
 🚫 ABSOLUTE PROHIBITION FOR HISTORICAL/THEMED EVENTS 🚫
 ${(occasion?.toLowerCase().includes('1930') || occasion?.toLowerCase().includes('1920') || occasion?.toLowerCase().includes('1940') || occasion?.toLowerCase().includes('victorian') || occasion?.toLowerCase().includes('vintage') || occasion?.toLowerCase().includes('period') || eventDetails?.description?.toLowerCase().includes('1930') || eventDetails?.description?.toLowerCase().includes('1920')) ? `
 ⛔ THIS IS A HISTORICAL PERIOD EVENT - MODERN ITEMS ARE STRICTLY FORBIDDEN ⛔
