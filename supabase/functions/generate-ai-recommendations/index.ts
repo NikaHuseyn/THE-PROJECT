@@ -435,6 +435,16 @@ Please provide a detailed outfit recommendation in the following JSON format:
       }
     }
   },
+  "missing_items_search": [
+    {
+      "item_type": "navy midi dress",
+      "style_descriptor": "elegant, fitted",
+      "occasion_suitability": "smart casual to formal",
+      "price_tier": "budget|mid_range|luxury",
+      "category": "dresses|tops|bottoms|shoes|outerwear|accessories|knitwear|bags",
+      "search_keywords": ["navy", "midi", "dress", "fitted"]
+    }
+  ],
   "overall_confidence": 0.87,
   "style_reasoning": "Comprehensive explanation of the outfit's cohesiveness, how it flatters the user's body type, reflects their style preferences, suits the occasion, and works with the weather",
   "color_analysis": "Detailed explanation of color choices and how they work with the user's preferences and complexion",
