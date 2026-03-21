@@ -673,9 +673,25 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
                 total_investment_needed: { type: 'string' },
                 wardrobe_utilization: { type: 'string' }
               }
+            },
+            missing_items_search: {
+              type: 'array',
+              description: 'Structured search data for each item the user needs to buy or rent',
+              items: {
+                type: 'object',
+                properties: {
+                  item_type: { type: 'string', description: 'Specific item description e.g. navy midi dress' },
+                  style_descriptor: { type: 'string', description: 'Style keywords e.g. elegant, fitted' },
+                  occasion_suitability: { type: 'string', description: 'Formality range e.g. smart casual to formal' },
+                  price_tier: { type: 'string', enum: ['budget', 'mid_range', 'luxury'] },
+                  category: { type: 'string' },
+                  search_keywords: { type: 'array', items: { type: 'string' } }
+                },
+                required: ['item_type', 'style_descriptor', 'category', 'search_keywords']
+              }
             }
           },
-          required: ['recommended_items', 'overall_confidence', 'style_reasoning', 'styling_tips']
+          required: ['recommended_items', 'overall_confidence', 'style_reasoning', 'styling_tips', 'missing_items_search']
         }
       }
     };
