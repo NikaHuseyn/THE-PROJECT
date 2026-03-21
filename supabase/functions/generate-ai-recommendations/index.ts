@@ -565,6 +565,13 @@ CRITICAL FINAL INSTRUCTIONS:
 4. VALUE OPTIMIZATION: Help users maximize their existing wardrobe while strategically filling gaps
 5. For period/themed events: Provide specific links to costume rental shops and vintage stores with authentic pieces
 6. Price transparency: Always include price ranges for both purchase and rental options in GBP (£)
+7. MISSING ITEMS: For every item with source "needs_purchase" or "needs_rental", you MUST include a corresponding entry in "missing_items_search" with:
+   - item_type: specific item description (e.g. "navy midi dress")
+   - style_descriptor: 2-3 style keywords (e.g. "elegant, fitted")
+   - occasion_suitability: formality range (e.g. "smart casual to formal")
+   - price_tier: based on user budget profile - "budget" (under £50), "mid_range" (£50-150), or "luxury" (£150+)
+   - category: one of dresses, tops, bottoms, shoes, outerwear, accessories, knitwear, bags
+   - search_keywords: array of 3-5 keywords for database search
 
 Remember: The goal is to create perfect, achievable outfits using what the user owns + targeted shopping/rental recommendations with real, clickable links.`;
 
