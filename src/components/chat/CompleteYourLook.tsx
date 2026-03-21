@@ -139,9 +139,6 @@ const MissingItemCard = ({ item }: { item: MissingItem }) => {
           </div>
         ))}
 
-        {/* If only one type exists, show it without tabs */}
-        {!hasBuy && hasRent && activeTab === 'buy' && setActiveTab('rent') as unknown as null}
-        {hasBuy && !hasRent && activeTab === 'rent' && setActiveTab('buy') as unknown as null}
       </div>
     </div>
   );
