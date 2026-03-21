@@ -9,6 +9,7 @@ export interface ChatMessage {
   content: string;
   recommendation?: any;
   venueContext?: any;
+  eventContext?: any;
   timestamp: Date;
 }
 
@@ -19,14 +20,34 @@ const VENUE_INDICATORS = [
   /\b(?:The\s+)?([A-Z][A-Za-z''&\-\s]{2,35})\s+(?:in\s+(?:London|Manchester|Birmingham|Edinburgh|Glasgow|Liverpool|Bristol|Leeds|Brighton|Soho|Mayfair|Shoreditch|Chelsea|Covent Garden|Knightsbridge|Notting Hill|Fitzrovia|Marylebone|Kensington|Westminster|Dalston|Hackney|Brixton|Peckham|Camden))/i,
 ];
 
+// Patterns that suggest a named event mention
+const EVENT_INDICATORS = [
+  /\b(?:going to|attending|tickets? (?:for|to)|invited to|registered for|signed up for|heading to)\s+(?:the\s+)?([A-Z][A-Za-z''&\-\s]{3,50}(?:Festival|Fest|Gala|Ball|Awards?|Ceremony|Conference|Summit|Expo|Exhibition|Show|Concert|Premiere|Launch|Party|Benefit|Fundraiser|Marathon|Cup|Open|Prix|Week|Fashion Week))/i,
+  /\b(?:the\s+)?([A-Z][A-Za-z''&\-\s]{3,40}(?:Festival|Fest|Gala|Ball|Awards?|Ceremony|Conference|Summit|Expo|Exhibition|Show|Concert|Premiere|Launch|Benefit|Fundraiser|Fashion Week))\b/i,
+  /\b(?:going to|attending|tickets? (?:for|to)|invited to)\s+(?:the\s+)?([A-Z][A-Za-z''&\-\s]{3,50})\s+(?:festival|gala|ball|awards?|ceremony|conference|summit|expo|exhibition|concert|premiere|event)\b/i,
+];
+
+const FALSE_POSITIVE_NAMES = ['I', 'My', 'The', 'A', 'An', 'We', 'They', 'He', 'She', 'It', 'This', 'That', 'What', 'How', 'Going', 'Looking'];
+
 function detectVenueName(message: string): string | null {
   for (const pattern of VENUE_INDICATORS) {
     const match = message.match(pattern);
     if (match?.[1]) {
       const name = match[1].trim();
-      // Filter out common false positives
-      const falsePositives = ['I', 'My', 'The', 'A', 'An', 'We', 'They', 'He', 'She', 'It', 'This', 'That', 'What', 'How'];
-      if (name.length > 2 && !falsePositives.includes(name)) {
+      if (name.length > 2 && !FALSE_POSITIVE_NAMES.includes(name)) {
+        return name;
+      }
+    }
+  }
+  return null;
+}
+
+function detectEventName(message: string): string | null {
+  for (const pattern of EVENT_INDICATORS) {
+    const match = message.match(pattern);
+    if (match?.[1]) {
+      const name = match[1].trim();
+      if (name.length > 3 && !FALSE_POSITIVE_NAMES.includes(name)) {
         return name;
       }
     }
@@ -52,14 +73,12 @@ export const useStylingChat = () => {
       }
 
       if (data?.success && data?.venueContext) {
-        // Check if the scraped data actually has useful dress code info
         const vc = data.venueContext;
         const hasUsefulInfo = vc.dress_code !== 'none_specified' || vc.atmosphere || vc.formality_level;
         if (hasUsefulInfo) {
           console.log('Venue context extracted:', vc);
           return { ...vc, source: 'scraped' };
         }
-        // Scraped but no useful dress code info — fall back to name only
         console.log('Scraped venue but no useful dress code info, falling back to name-only');
         return { venue_name: vc.venue_name || venueName, venue_type: vc.venue_type, source: 'name_only' };
       }
@@ -71,8 +90,37 @@ export const useStylingChat = () => {
     }
   }, []);
 
+  const scrapeEvent = useCallback(async (eventName: string) => {
+    try {
+      console.log('Detecting event, scraping:', eventName);
+      const { data, error } = await supabase.functions.invoke('scrape-event', {
+        body: { eventName },
+      });
+
+      if (error) {
+        console.warn('Event scrape error, falling back to name-only:', error);
+        return { event_name: eventName, source: 'name_only' };
+      }
+
+      if (data?.success && data?.eventContext) {
+        const ec = data.eventContext;
+        const hasUsefulInfo = ec.dress_code !== 'none_specified' || ec.indoor_outdoor !== 'unknown' || ec.time_of_day !== 'unknown' || ec.style_guidance;
+        if (hasUsefulInfo) {
+          console.log('Event context extracted:', ec);
+          return { ...ec, source: 'scraped' };
+        }
+        console.log('Scraped event but no useful info, falling back to name-only');
+        return { event_name: ec.event_name || eventName, event_type: ec.event_type, source: 'name_only' };
+      }
+
+      return { event_name: eventName, source: 'name_only' };
+    } catch (err) {
+      console.warn('Event scrape failed, falling back to name-only:', err);
+      return { event_name: eventName, source: 'name_only' };
+    }
+  }, []);
+
   const sendMessage = useCallback(async (userMessage: string) => {
-    // Add user message
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -83,10 +131,11 @@ export const useStylingChat = () => {
     setIsLoading(true);
 
     try {
-      // Detect venue in parallel with weather fetch
+      // Detect venue and event in parallel with weather fetch
       const detectedVenue = detectVenueName(userMessage);
+      const detectedEvent = detectEventName(userMessage);
       
-      const [weatherData, venueContext] = await Promise.all([
+      const [weatherData, venueContext, eventContext] = await Promise.all([
         // Get weather data
         (async () => {
           try {
@@ -109,6 +158,8 @@ export const useStylingChat = () => {
         })(),
         // Scrape venue if detected
         detectedVenue ? scrapeVenue(detectedVenue) : Promise.resolve(null),
+        // Scrape event if detected
+        detectedEvent ? scrapeEvent(detectedEvent) : Promise.resolve(null),
       ]);
 
       // Get session for auth
@@ -128,7 +179,7 @@ export const useStylingChat = () => {
       const isFollowUp = messages.length > 0;
       const originalRequest = messages.find(m => m.role === 'user')?.content || '';
 
-      // Call AI recommendations with venue context
+      // Call AI recommendations with venue and event context
       const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
         body: {
           recommendationType: 'event_outfit',
@@ -139,6 +190,7 @@ export const useStylingChat = () => {
             type: 'event',
           },
           venueContext: venueContext || undefined,
+          eventContext: eventContext || undefined,
           conversationHistory: isFollowUp ? conversationContext : [],
           originalRequest: isFollowUp ? originalRequest : null,
           guestEmail: session?.user?.email || `guest-${Date.now()}@temp.com`
@@ -166,6 +218,26 @@ export const useStylingChat = () => {
         }
       }
 
+      // Add event context notice only if we scraped useful data
+      if (eventContext?.source === 'scraped') {
+        const parts: string[] = [];
+        if (eventContext.dress_code && eventContext.dress_code !== 'none_specified') {
+          parts.push(`**Dress code:** ${eventContext.dress_code_details || eventContext.dress_code}`);
+        }
+        if (eventContext.indoor_outdoor && eventContext.indoor_outdoor !== 'unknown') {
+          parts.push(`**Setting:** ${eventContext.indoor_outdoor}`);
+        }
+        if (eventContext.time_of_day && eventContext.time_of_day !== 'unknown') {
+          parts.push(`**Time:** ${eventContext.time_of_day}`);
+        }
+        if (eventContext.practical_notes) {
+          parts.push(`**Note:** ${eventContext.practical_notes}`);
+        }
+        if (parts.length > 0) {
+          responseContent += `🎫 I found info about **${eventContext.event_name || detectedEvent}**:\n${parts.join('\n')}\n\n`;
+        }
+      }
+
       if (data?.recommendation?.reasoning) {
         responseContent += data.recommendation.reasoning;
       } else if (data?.recommendation?.recommended_items) {
@@ -184,6 +256,7 @@ export const useStylingChat = () => {
           ai_insights: data.ai_insights
         } : undefined,
         venueContext: venueContext || undefined,
+        eventContext: eventContext || undefined,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMsg]);
@@ -202,7 +275,7 @@ export const useStylingChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, getLocation, scrapeVenue]);
+  }, [messages, getLocation, scrapeVenue, scrapeEvent]);
 
   const clearChat = useCallback(() => {
     setMessages([]);
