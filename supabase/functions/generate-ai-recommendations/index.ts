@@ -327,6 +327,13 @@ ${(eventContext && venueContext) ? `
 If the event dress code conflicts with the venue dress code, follow the EVENT dress code. Use the venue context for atmosphere and styling cues.
 ` : ''}
 
+${culturalNorms.length > 0 ? `
+🌍 CULTURAL DRESS NORMS FOR ${detectedCountry?.toUpperCase()} (from travel research - FOLLOW THESE):
+${culturalNorms.map(n => `**${n.context_type.replace(/_/g, ' ').toUpperCase()}:** ${n.guidance.slice(0, 500)}`).join('\n\n')}
+
+CRITICAL: These are real cultural dress expectations for ${detectedCountry}. Your outfit recommendation MUST respect these norms. If modesty is expected, do not suggest revealing clothing. If religious site dress codes apply and the user mentions visiting temples/mosques/churches, ensure the outfit complies.
+` : ''}
+
 🚫 ABSOLUTE PROHIBITION FOR HISTORICAL/THEMED EVENTS 🚫
 ${(occasion?.toLowerCase().includes('1930') || occasion?.toLowerCase().includes('1920') || occasion?.toLowerCase().includes('1940') || occasion?.toLowerCase().includes('victorian') || occasion?.toLowerCase().includes('vintage') || occasion?.toLowerCase().includes('period') || eventDetails?.description?.toLowerCase().includes('1930') || eventDetails?.description?.toLowerCase().includes('1920')) ? `
 ⛔ THIS IS A HISTORICAL PERIOD EVENT - MODERN ITEMS ARE STRICTLY FORBIDDEN ⛔
