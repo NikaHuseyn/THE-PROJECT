@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CompleteYourLook from './CompleteYourLook';
 
 interface OutfitItem {
   name: string;
