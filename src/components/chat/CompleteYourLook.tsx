@@ -145,6 +145,10 @@ const MissingItemCard = ({ item, savedTab }: { item: MissingItem; savedTab: TabT
 };
 
 const CompleteYourLook = ({ missingItems }: CompleteYourLookProps) => {
+  const savedTab = (() => {
+    try { return (localStorage.getItem('cyl-tab-pref') as TabType) || 'buy'; } catch { return 'buy' as TabType; }
+  })();
+
   const itemsWithResults = missingItems.filter(
     (m) =>
       (m.retailer_results?.length || 0) > 0 ||
@@ -162,7 +166,7 @@ const CompleteYourLook = ({ missingItems }: CompleteYourLookProps) => {
       </div>
       <div className="space-y-3">
         {itemsWithResults.map((item, idx) => (
-          <MissingItemCard key={idx} item={item} />
+          <MissingItemCard key={idx} item={item} savedTab={savedTab} />
         ))}
       </div>
     </div>
