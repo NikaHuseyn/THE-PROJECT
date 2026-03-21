@@ -186,6 +186,39 @@ export type Database = {
           },
         ]
       }
+      cultural_dress_norms: {
+        Row: {
+          city: string | null
+          context_type: string
+          country: string
+          created_at: string | null
+          guidance: string
+          id: string
+          last_updated: string | null
+          source_url: string | null
+        }
+        Insert: {
+          city?: string | null
+          context_type: string
+          country: string
+          created_at?: string | null
+          guidance: string
+          id?: string
+          last_updated?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          city?: string | null
+          context_type?: string
+          country?: string
+          created_at?: string | null
+          guidance?: string
+          id?: string
+          last_updated?: string | null
+          source_url?: string | null
+        }
+        Relationships: []
+      }
       fashion_trends: {
         Row: {
           category: string
