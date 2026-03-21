@@ -91,6 +91,8 @@ const Index = () => {
                   role={message.role}
                   content={message.content}
                   recommendation={message.recommendation}
+                  venueContext={message.venueContext}
+                  eventContext={message.eventContext}
                 />
               ))}
               {isLoading && <ChatMessage role="assistant" content="" isLoading />}
