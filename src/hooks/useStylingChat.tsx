@@ -10,6 +10,10 @@ export interface ChatMessage {
   recommendation?: any;
   venueContext?: any;
   eventContext?: any;
+  culturalContext?: {
+    country: string;
+    norms: Array<{ context_type: string; guidance: string }>;
+  } | null;
   timestamp: Date;
 }
 
@@ -258,6 +262,7 @@ export const useStylingChat = () => {
         } : undefined,
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,
+        culturalContext: data?.cultural_context || undefined,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMsg]);

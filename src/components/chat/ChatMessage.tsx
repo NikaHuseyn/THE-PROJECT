@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket } from 'lucide-react';
+import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CompleteYourLook from './CompleteYourLook';
 
@@ -19,10 +19,14 @@ interface ChatMessageProps {
   recommendation?: any;
   venueContext?: any;
   eventContext?: any;
+  culturalContext?: {
+    country: string;
+    norms: Array<{ context_type: string; guidance: string }>;
+  } | null;
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
 
   const renderOutfitItem = (item: OutfitItem, index: number) => {
@@ -156,7 +160,7 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
         )}
       </div>
       <div className="flex-1 pt-1">
-        {!isUser && (venueContext?.source === 'scraped' || eventContext?.source === 'scraped') && (
+        {!isUser && (venueContext?.source === 'scraped' || eventContext?.source === 'scraped' || culturalContext) && (
           <div className="flex flex-col gap-2 mb-3">
             {venueContext?.source === 'scraped' && (
               <div className="flex items-start gap-2 rounded-lg bg-accent/50 border border-border px-3 py-2 text-sm">
@@ -182,6 +186,27 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
                         : eventContext.indoor_outdoor && eventContext.indoor_outdoor !== 'unknown'
                           ? `${eventContext.indoor_outdoor} event${eventContext.time_of_day && eventContext.time_of_day !== 'unknown' ? `, ${eventContext.time_of_day}` : ''}`
                           : 'Event details found'
+                  }</span>
+                </span>
+              </div>
+            )}
+            {culturalContext && (
+              <div className="flex items-start gap-2 rounded-lg bg-accent/50 border border-border px-3 py-2 text-sm">
+                <Globe className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-foreground">
+                  <span className="font-medium">{culturalContext.country}</span>
+                  <span className="text-muted-foreground"> — {
+                    (() => {
+                      const modesty = culturalContext.norms.find(n => n.context_type === 'general_modesty');
+                      const religious = culturalContext.norms.find(n => n.context_type === 'religious_sites');
+                      const avoid = culturalContext.norms.find(n => n.context_type === 'items_to_avoid');
+                      const note = modesty || religious || avoid;
+                      if (!note) return 'Cultural dress guidance applied';
+                      // Extract first meaningful sentence
+                      const text = note.guidance.replace(/[#*_\[\]]/g, '').trim();
+                      const firstSentence = text.split(/[.!?\n]/).find(s => s.trim().length > 15);
+                      return firstSentence ? firstSentence.trim().slice(0, 120) : 'Cultural dress guidance applied';
+                    })()
                   }</span>
                 </span>
               </div>

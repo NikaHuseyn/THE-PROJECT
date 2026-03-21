@@ -93,6 +93,7 @@ const Index = () => {
                   recommendation={message.recommendation}
                   venueContext={message.venueContext}
                   eventContext={message.eventContext}
+                  culturalContext={message.culturalContext}
                 />
               ))}
               {isLoading && <ChatMessage role="assistant" content="" isLoading />}
