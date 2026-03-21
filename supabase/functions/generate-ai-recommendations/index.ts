@@ -1219,6 +1219,13 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         wardrobe_analysis: recommendationData.wardrobe_analysis
       },
       missing_items: shoppingMatches,
+      cultural_context: culturalNorms.length > 0 ? {
+        country: detectedCountry,
+        norms: culturalNorms.map(n => ({
+          context_type: n.context_type,
+          guidance: n.guidance.slice(0, 300),
+        })),
+      } : null,
       rate_limit_info: rateLimitResult ? {
         remaining_requests: rateLimitResult.remaining_requests,
         rate_limit: rateLimitResult.rate_limit,

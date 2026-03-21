@@ -262,6 +262,7 @@ export const useStylingChat = () => {
         } : undefined,
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,
+        culturalContext: data?.cultural_context || undefined,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMsg]);
