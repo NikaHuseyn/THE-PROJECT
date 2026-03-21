@@ -266,6 +266,15 @@ CRITICAL: This event information was scraped from the actual event's website. Yo
 We could not scrape the event's website for details. Use your own knowledge of this event to infer the likely dress code, setting (indoor/outdoor), time of day, and formality level. Factor this into the outfit recommendation. If you don't recognise the event, make reasonable assumptions based on the event type.
 ` : ''}
 
+${(eventContext && venueContext) ? `
+⚖️ DRESS CODE PRIORITY (when both event and venue context exist):
+1. Explicit dress code from the scraped EVENT page (highest priority)
+2. Venue formality and atmosphere from the scraped VENUE page
+3. Event type inferred from the user's message
+4. Your general knowledge (fallback)
+If the event dress code conflicts with the venue dress code, follow the EVENT dress code. Use the venue context for atmosphere and styling cues.
+` : ''}
+
 🚫 ABSOLUTE PROHIBITION FOR HISTORICAL/THEMED EVENTS 🚫
 ${(occasion?.toLowerCase().includes('1930') || occasion?.toLowerCase().includes('1920') || occasion?.toLowerCase().includes('1940') || occasion?.toLowerCase().includes('victorian') || occasion?.toLowerCase().includes('vintage') || occasion?.toLowerCase().includes('period') || eventDetails?.description?.toLowerCase().includes('1930') || eventDetails?.description?.toLowerCase().includes('1920')) ? `
 ⛔ THIS IS A HISTORICAL PERIOD EVENT - MODERN ITEMS ARE STRICTLY FORBIDDEN ⛔
