@@ -15,7 +15,7 @@ export interface ChatMessage {
 
 // Patterns that suggest a venue mention
 const VENUE_INDICATORS = [
-  /\b(?:at|going to|dinner at|lunch at|drinks at|visiting|booked|reservation at|table at|staying at|checked into)\s+([A-Z][A-Za-z''&\-\s]{2,40}(?:Restaurant|Bar|Club|Hotel|Lounge|Grill|Bistro|Brasserie|Café|Tavern|Inn|House|Kitchen|Room|Rooms|Terrace|Rooftop)?)/i,
+  /\b(?:at|going to|dinner at|lunch at|drinks at|visiting|booked|reservation at|table at|staying at|checked into)\s+(?:the\s+)?([A-Z][A-Za-z''&\-\s]{2,30}(?:Hotel|Restaurant|Bar|Club|Lounge|Grill|Bistro|Brasserie|Café|Tavern|Inn|House|Kitchen|Room|Rooms|Terrace|Rooftop))/i,
   /\b([A-Z][A-Za-z''&\-]{2,30}(?:'s)?)\s+(?:restaurant|bar|club|hotel|lounge|rooftop|bistro|brasserie|pub|cocktail bar|wine bar|speakeasy|supper club)/i,
   /\b(?:The\s+)?([A-Z][A-Za-z''&\-\s]{2,35})\s+(?:in\s+(?:London|Manchester|Birmingham|Edinburgh|Glasgow|Liverpool|Bristol|Leeds|Brighton|Soho|Mayfair|Shoreditch|Chelsea|Covent Garden|Knightsbridge|Notting Hill|Fitzrovia|Marylebone|Kensington|Westminster|Dalston|Hackney|Brixton|Peckham|Camden))/i,
 ];
