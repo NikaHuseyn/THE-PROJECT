@@ -126,6 +126,34 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
                     </a>
                   ))}
                 </div>
+                {missing.rental_results?.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-1">👗 Rent instead</p>
+                    <div className="grid gap-2">
+                      {missing.rental_results.map((rental: any, rIdx: number) => (
+                        <a
+                          key={rIdx}
+                          href={rental.product_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 rounded-lg border border-border bg-accent/20 p-2 hover:bg-accent/50 transition-colors"
+                        >
+                          {rental.image_url && (
+                            <img src={rental.image_url} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-foreground truncate">{rental.product_name}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{rental.platform}</span>
+                              {rental.rental_price && <span className="font-medium text-foreground">{rental.rental_price}</span>}
+                            </div>
+                          </div>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
