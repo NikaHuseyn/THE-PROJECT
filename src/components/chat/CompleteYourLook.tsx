@@ -73,17 +73,18 @@ const ProductCard = ({ product, priceLabel, subtitle }: {
   </div>
 );
 
-const MissingItemCard = ({ item }: { item: MissingItem }) => {
+const MissingItemCard = ({ item, savedTab }: { item: MissingItem; savedTab: TabType }) => {
   const hasBuy = (item.retailer_results?.length || 0) > 0;
   const hasRent = (item.rental_results?.length || 0) > 0;
   const hasSecondhand = (item.secondhand_results?.length || 0) > 0;
-  const tabs: { key: TabType; label: string; icon: React.ReactNode; available: boolean }[] = [
-    { key: 'buy', label: 'Buy', icon: <ShoppingBag className="h-3 w-3" />, available: hasBuy },
-    { key: 'rent', label: 'Rent', icon: <Tag className="h-3 w-3" />, available: hasRent },
-    { key: 'secondhand', label: 'Pre-owned', icon: <Recycle className="h-3 w-3" />, available: hasSecondhand },
+  const tabs: { key: TabType; label: string; icon: React.ReactNode; available: boolean; badge?: string }[] = [
+    { key: 'buy', label: 'Buy New', icon: <ShoppingBag className="h-3 w-3" />, available: hasBuy },
+    { key: 'rent', label: 'Rent', icon: <Tag className="h-3 w-3" />, available: hasRent, badge: '♻️' },
+    { key: 'secondhand', label: 'Secondhand', icon: <Recycle className="h-3 w-3" />, available: hasSecondhand, badge: '♻️' },
   ];
   const availableTabs = tabs.filter(t => t.available);
-  const [activeTab, setActiveTab] = useState<TabType>(availableTabs[0]?.key || 'buy');
+  const defaultTab = availableTabs.find(t => t.key === savedTab)?.key || availableTabs[0]?.key || 'buy';
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
 
   if (availableTabs.length === 0) return null;
 
