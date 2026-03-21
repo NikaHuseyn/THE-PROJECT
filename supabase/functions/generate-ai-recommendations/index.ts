@@ -1025,8 +1025,10 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         alternative_options: recommendationData.alternative_options,
         color_analysis: recommendationData.color_analysis,
         fit_guidance: recommendationData.fit_guidance,
-        shopping_suggestions: recommendationData.shopping_suggestions
+        shopping_suggestions: recommendationData.shopping_suggestions,
+        wardrobe_analysis: recommendationData.wardrobe_analysis
       },
+      missing_items: shoppingMatches,
       rate_limit_info: rateLimitResult ? {
         remaining_requests: rateLimitResult.remaining_requests,
         rate_limit: rateLimitResult.rate_limit,
