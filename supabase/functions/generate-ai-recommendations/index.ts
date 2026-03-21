@@ -925,6 +925,61 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
       }
     }
 
+    // Search shopping_items DB for missing items
+    let shoppingMatches: any[] = [];
+    const missingItems = recommendationData.missing_items_search || [];
+    if (missingItems.length > 0) {
+      console.log('Searching shopping_items for', missingItems.length, 'missing items');
+      
+      // Determine max price from user profile or price tier
+      const getPriceLimit = (tier: string) => {
+        if (tier === 'budget') return 50;
+        if (tier === 'mid_range') return 150;
+        if (tier === 'luxury') return 9999;
+        // Fall back to user profile budget
+        return styleProfile?.budget_max || 500;
+      };
+
+      const searchPromises = missingItems.map(async (item: any) => {
+        const keywords = item.search_keywords || [];
+        const category = item.category || '';
+        const maxPrice = getPriceLimit(item.price_tier);
+
+        // Build OR filter from keywords
+        const keywordFilters = keywords
+          .map((kw: string) => `name.ilike.%${kw}%,description.ilike.%${kw}%,brand.ilike.%${kw}%`)
+          .join(',');
+
+        let query = supabase
+          .from('shopping_items')
+          .select('id, name, brand, category, price, rental_price, image_url, retailer_name, retailer_url, colors, sizes, description')
+          .eq('in_stock', true)
+          .lte('price', maxPrice);
+
+        if (category) {
+          query = query.ilike('category', `%${category}%`);
+        }
+
+        if (keywordFilters) {
+          query = query.or(keywordFilters);
+        }
+
+        const { data: matches } = await query.order('price', { ascending: true }).limit(3);
+
+        return {
+          item_type: item.item_type,
+          style_descriptor: item.style_descriptor,
+          occasion_suitability: item.occasion_suitability,
+          price_tier: item.price_tier,
+          category: item.category,
+          db_matches: matches || []
+        };
+      });
+
+      shoppingMatches = await Promise.all(searchPromises);
+      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.db_matches.length} results`));
+    }
+
     // Save recommendation to database only if user is authenticated
     let savedRecommendation = null;
     if (user) {
