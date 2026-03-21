@@ -984,7 +984,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
 
         // Firecrawl retailer search
         let retailer_results: any[] = [];
-        if (firecrawlApiKey) {
+        let rental_results: any[] = [];
           const tier = item.price_tier || 'mid_range';
           const retailers = retailersByTier[tier] || retailersByTier.mid_range;
           const searchQuery = `${item.item_type} ${item.style_descriptor || ''}`.trim();
