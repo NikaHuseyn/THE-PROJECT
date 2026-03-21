@@ -153,8 +153,8 @@ export const useStylingChat = () => {
       // Determine response content
       let responseContent = '';
       
-      // Add venue context notice if found
-      if (venueContext) {
+      // Add venue context notice only if we scraped useful data
+      if (venueContext?.source === 'scraped') {
         const dressCodeText = venueContext.dress_code !== 'none_specified' 
           ? `**Dress code:** ${venueContext.dress_code_details || venueContext.dress_code}`
           : '';
