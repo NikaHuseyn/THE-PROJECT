@@ -73,17 +73,18 @@ const ProductCard = ({ product, priceLabel, subtitle }: {
   </div>
 );
 
-const MissingItemCard = ({ item }: { item: MissingItem }) => {
+const MissingItemCard = ({ item, savedTab }: { item: MissingItem; savedTab: TabType }) => {
   const hasBuy = (item.retailer_results?.length || 0) > 0;
   const hasRent = (item.rental_results?.length || 0) > 0;
   const hasSecondhand = (item.secondhand_results?.length || 0) > 0;
-  const tabs: { key: TabType; label: string; icon: React.ReactNode; available: boolean }[] = [
-    { key: 'buy', label: 'Buy', icon: <ShoppingBag className="h-3 w-3" />, available: hasBuy },
-    { key: 'rent', label: 'Rent', icon: <Tag className="h-3 w-3" />, available: hasRent },
-    { key: 'secondhand', label: 'Pre-owned', icon: <Recycle className="h-3 w-3" />, available: hasSecondhand },
+  const tabs: { key: TabType; label: string; icon: React.ReactNode; available: boolean; badge?: string }[] = [
+    { key: 'buy', label: 'Buy New', icon: <ShoppingBag className="h-3 w-3" />, available: hasBuy },
+    { key: 'rent', label: 'Rent', icon: <Tag className="h-3 w-3" />, available: hasRent, badge: '♻️' },
+    { key: 'secondhand', label: 'Secondhand', icon: <Recycle className="h-3 w-3" />, available: hasSecondhand, badge: '♻️' },
   ];
   const availableTabs = tabs.filter(t => t.available);
-  const [activeTab, setActiveTab] = useState<TabType>(availableTabs[0]?.key || 'buy');
+  const defaultTab = availableTabs.find(t => t.key === savedTab)?.key || availableTabs[0]?.key || 'buy';
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
 
   if (availableTabs.length === 0) return null;
 
@@ -101,7 +102,10 @@ const MissingItemCard = ({ item }: { item: MissingItem }) => {
           {availableTabs.map(tab => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                try { localStorage.setItem('cyl-tab-pref', tab.key); } catch {}
+              }}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
                   ? 'border-primary text-primary'
@@ -110,6 +114,7 @@ const MissingItemCard = ({ item }: { item: MissingItem }) => {
             >
               {tab.icon}
               {tab.label}
+              {tab.badge && <span className="text-[10px] leading-none">{tab.badge}</span>}
             </button>
           ))}
         </div>
@@ -140,6 +145,10 @@ const MissingItemCard = ({ item }: { item: MissingItem }) => {
 };
 
 const CompleteYourLook = ({ missingItems }: CompleteYourLookProps) => {
+  const savedTab = (() => {
+    try { return (localStorage.getItem('cyl-tab-pref') as TabType) || 'buy'; } catch { return 'buy' as TabType; }
+  })();
+
   const itemsWithResults = missingItems.filter(
     (m) =>
       (m.retailer_results?.length || 0) > 0 ||
@@ -157,7 +166,7 @@ const CompleteYourLook = ({ missingItems }: CompleteYourLookProps) => {
       </div>
       <div className="space-y-3">
         {itemsWithResults.map((item, idx) => (
-          <MissingItemCard key={idx} item={item} />
+          <MissingItemCard key={idx} item={item} savedTab={savedTab} />
         ))}
       </div>
     </div>
