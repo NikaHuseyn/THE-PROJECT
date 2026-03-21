@@ -1198,7 +1198,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           db_matches: matches || [],
           retailer_results,
           rental_results,
-          secondhand_results: firecrawlApiKey ? secondhand_results : [],
+          secondhand_results,
         };
       });
 
