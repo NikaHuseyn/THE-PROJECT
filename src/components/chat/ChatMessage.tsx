@@ -95,6 +95,42 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
           {flatItems.map((item, idx) => renderOutfitItem(item, idx))}
         </div>
 
+        {/* Missing items - retailer results */}
+        {recommendation.missing_items?.length > 0 && recommendation.missing_items.some((m: any) => m.retailer_results?.length > 0) && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <span className="text-sm font-medium text-muted-foreground">🛍️ Shop Missing Items</span>
+            {recommendation.missing_items.filter((m: any) => m.retailer_results?.length > 0).map((missing: any, mIdx: number) => (
+              <div key={mIdx} className="mt-3">
+                <p className="text-sm font-medium text-foreground">{missing.item_type}</p>
+                <p className="text-xs text-muted-foreground mb-2">{missing.style_descriptor} · {missing.occasion_suitability}</p>
+                <div className="grid gap-2">
+                  {missing.retailer_results.map((product: any, pIdx: number) => (
+                    <a
+                      key={pIdx}
+                      href={product.product_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-lg border border-border bg-card p-2 hover:bg-accent/50 transition-colors"
+                    >
+                      {product.image_url && (
+                        <img src={product.image_url} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{product.product_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{product.retailer}</span>
+                          {product.price && <span className="font-medium text-foreground">{product.price}</span>}
+                        </div>
+                      </div>
+                      <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Styling tips */}
         {recommendation.ai_insights?.styling_tips?.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border">
