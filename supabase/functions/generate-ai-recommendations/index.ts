@@ -1044,6 +1044,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         // Firecrawl retailer search
         let retailer_results: any[] = [];
         let rental_results: any[] = [];
+        let secondhand_results: any[] = [];
         if (firecrawlApiKey) {
           const tier = item.price_tier || 'mid_range';
           const retailers = retailersByTier[tier] || retailersByTier.mid_range;
@@ -1098,13 +1099,23 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           retailer_results = allResults.flat().slice(0, 6);
           console.log(`Firecrawl: ${retailer_results.length} products found for "${searchQuery}"`);
 
-          // Firecrawl rental platform search
+          // Firecrawl rental platform search (expanded)
           const rentalPlatforms = [
             { name: 'HURR', domain: 'hurr.co.uk' },
             { name: 'By Rotation', domain: 'byrotation.com' },
+            { name: 'My Wardrobe HQ', domain: 'mywardrobehq.com' },
+            { name: 'On Loan', domain: 'onloan.co.uk' },
           ];
 
-          const rentalSearches = rentalPlatforms.map(async (platform) => {
+          // Firecrawl secondhand/resale platform search
+          const secondhandPlatforms = [
+            { name: 'Vestiaire Collective', domain: 'vestiairecollective.com' },
+            { name: 'Depop', domain: 'depop.com' },
+            { name: 'Vinted', domain: 'vinted.co.uk' },
+            { name: 'The RealReal', domain: 'therealreal.com' },
+          ];
+
+          const searchPlatform = async (platform: { name: string; domain: string }, type: 'rental' | 'secondhand') => {
             try {
               const response = await fetch('https://api.firecrawl.dev/v1/search', {
                 method: 'POST',
@@ -1120,38 +1131,62 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
               });
 
               if (!response.ok) {
-                console.warn(`Firecrawl rental search failed for ${platform.name}:`, response.status);
+                console.warn(`Firecrawl ${type} search failed for ${platform.name}:`, response.status);
                 return [];
               }
 
               const searchData = await response.json();
               const results = searchData?.data || [];
 
-              return results.slice(0, 2).map((result: any) => {
+              return results.slice(0, 1).map((result: any) => {
                 const markdown = result.markdown || '';
-                // Match rental price patterns like "£X/day", "£X per day", "from £X"
-                const rentalPriceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?\s*(?:\/\s*day|per\s*day|per\s*occasion|to\s*rent)/i)
-                  || markdown.match(/(?:rent|rental|from)\s*£[\d,]+(?:\.\d{2})?/i)
-                  || markdown.match(/£[\d,]+(?:\.\d{2})?/);
                 const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
 
-                return {
-                  platform: platform.name,
-                  product_name: result.title || result.metadata?.title || 'Unknown product',
-                  rental_price: rentalPriceMatch ? rentalPriceMatch[0] : null,
-                  product_url: result.url || '',
-                  image_url: imageUrl,
-                };
+                if (type === 'rental') {
+                  const rentalPriceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?\s*(?:\/\s*day|per\s*day|per\s*occasion|to\s*rent)/i)
+                    || markdown.match(/(?:rent|rental|from)\s*£[\d,]+(?:\.\d{2})?/i)
+                    || markdown.match(/£[\d,]+(?:\.\d{2})?/);
+                  return {
+                    platform: platform.name,
+                    product_name: result.title || result.metadata?.title || 'Unknown product',
+                    price: rentalPriceMatch ? rentalPriceMatch[0] : null,
+                    product_url: result.url || '',
+                    image_url: imageUrl,
+                    type: 'rental',
+                  };
+                } else {
+                  const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/) || markdown.match(/\$[\d,]+(?:\.\d{2})?/);
+                  // Try to detect condition
+                  const conditionMatch = markdown.match(/(?:condition|quality)[:\s]*(excellent|very good|good|fair|new with tags|like new|pristine)/i);
+                  const condition = conditionMatch ? conditionMatch[1] : 
+                    markdown.match(/\b(excellent|pristine|like new|new with tags)\b/i) ? 'excellent' :
+                    markdown.match(/\b(very good|great condition)\b/i) ? 'good' : null;
+                  return {
+                    platform: platform.name,
+                    product_name: result.title || result.metadata?.title || 'Unknown product',
+                    price: priceMatch ? priceMatch[0] : null,
+                    product_url: result.url || '',
+                    image_url: imageUrl,
+                    condition: condition || 'good',
+                    type: 'secondhand',
+                  };
+                }
               });
             } catch (err) {
-              console.warn(`Firecrawl rental error for ${platform.name}:`, err);
+              console.warn(`Firecrawl ${type} error for ${platform.name}:`, err);
               return [];
             }
-          });
+          };
 
-          const allRentalResults = await Promise.all(rentalSearches);
-          rental_results = allRentalResults.flat().slice(0, 4);
-          console.log(`Firecrawl: ${rental_results.length} rental results found for "${searchQuery}"`);
+          // Run rental and secondhand searches in parallel
+          const [rentalResults, secondhandResults] = await Promise.all([
+            Promise.all(rentalPlatforms.map(p => searchPlatform(p, 'rental'))),
+            Promise.all(secondhandPlatforms.map(p => searchPlatform(p, 'secondhand'))),
+          ]);
+
+          rental_results = rentalResults.flat().slice(0, 2);
+          const secondhand_results = secondhandResults.flat().slice(0, 2);
+          console.log(`Firecrawl: ${rental_results.length} rental, ${secondhand_results.length} secondhand for "${searchQuery}"`);
         }
 
         return {
@@ -1163,6 +1198,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           db_matches: matches || [],
           retailer_results,
           rental_results,
+          secondhand_results,
         };
       });
 

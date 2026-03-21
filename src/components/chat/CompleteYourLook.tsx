@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Tag, ExternalLink } from 'lucide-react';
+import { ShoppingBag, Tag, Recycle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface MissingItem {
   item_type: string;
@@ -17,9 +18,19 @@ interface MissingItem {
   rental_results?: Array<{
     platform: string;
     product_name: string;
-    rental_price: string | null;
+    price: string | null;
     product_url: string;
     image_url: string | null;
+    type?: string;
+  }>;
+  secondhand_results?: Array<{
+    platform: string;
+    product_name: string;
+    price: string | null;
+    product_url: string;
+    image_url: string | null;
+    condition: string | null;
+    type?: string;
   }>;
 }
 
@@ -27,17 +38,57 @@ interface CompleteYourLookProps {
   missingItems: MissingItem[];
 }
 
+type TabType = 'buy' | 'rent' | 'secondhand';
+
+const ProductCard = ({ product, priceLabel, subtitle }: {
+  product: { product_name: string; price: string | null; product_url: string; image_url: string | null };
+  priceLabel?: string;
+  subtitle: string;
+}) => (
+  <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-2.5">
+    {product.image_url && (
+      <img
+        src={product.image_url}
+        alt=""
+        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted"
+      />
+    )}
+    <div className="flex-1 min-w-0">
+      <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug">
+        {product.product_name}
+      </p>
+      <div className="flex items-center gap-1.5 mt-1">
+        <span className="text-[11px] text-muted-foreground">{subtitle}</span>
+        {(priceLabel || product.price) && (
+          <span className="text-xs font-semibold text-foreground">{priceLabel || product.price}</span>
+        )}
+      </div>
+    </div>
+    <Button variant="outline" size="sm" className="h-7 text-xs flex-shrink-0" asChild>
+      <a href={product.product_url} target="_blank" rel="noopener noreferrer">
+        View
+        <ExternalLink className="h-3 w-3 ml-1" />
+      </a>
+    </Button>
+  </div>
+);
+
 const MissingItemCard = ({ item }: { item: MissingItem }) => {
   const hasBuy = (item.retailer_results?.length || 0) > 0;
   const hasRent = (item.rental_results?.length || 0) > 0;
-  const defaultTab = hasBuy ? 'buy' : 'rent';
-  const [activeTab, setActiveTab] = useState<'buy' | 'rent'>(defaultTab);
+  const hasSecondhand = (item.secondhand_results?.length || 0) > 0;
+  const tabs: { key: TabType; label: string; icon: React.ReactNode; available: boolean }[] = [
+    { key: 'buy', label: 'Buy', icon: <ShoppingBag className="h-3 w-3" />, available: hasBuy },
+    { key: 'rent', label: 'Rent', icon: <Tag className="h-3 w-3" />, available: hasRent },
+    { key: 'secondhand', label: 'Pre-owned', icon: <Recycle className="h-3 w-3" />, available: hasSecondhand },
+  ];
+  const availableTabs = tabs.filter(t => t.available);
+  const [activeTab, setActiveTab] = useState<TabType>(availableTabs[0]?.key || 'buy');
 
-  if (!hasBuy && !hasRent) return null;
+  if (availableTabs.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {/* Item header */}
       <div className="px-4 pt-4 pb-3">
         <h4 className="text-sm font-semibold text-foreground">{item.item_type}</h4>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -45,100 +96,44 @@ const MissingItemCard = ({ item }: { item: MissingItem }) => {
         </p>
       </div>
 
-      {/* Tabs */}
-      {(hasBuy && hasRent) && (
+      {availableTabs.length > 1 && (
         <div className="flex border-b border-border mx-4">
-          <button
-            onClick={() => setActiveTab('buy')}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === 'buy'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <ShoppingBag className="h-3 w-3" />
-            Buy
-          </button>
-          <button
-            onClick={() => setActiveTab('rent')}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === 'rent'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Tag className="h-3 w-3" />
-            Rent
-          </button>
+          {availableTabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                activeTab === tab.key
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Product cards */}
       <div className="p-3 space-y-2">
         {activeTab === 'buy' && hasBuy && item.retailer_results!.map((product, idx) => (
-          <div
-            key={idx}
-            className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-2.5"
-          >
-            {product.image_url && (
-              <img
-                src={product.image_url}
-                alt=""
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug">
-                {product.product_name}
-              </p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[11px] text-muted-foreground">{product.retailer}</span>
-                {product.price && (
-                  <span className="text-xs font-semibold text-foreground">{product.price}</span>
-                )}
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs flex-shrink-0" asChild>
-              <a href={product.product_url} target="_blank" rel="noopener noreferrer">
-                View
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
-            </Button>
-          </div>
+          <ProductCard key={idx} product={product} subtitle={product.retailer} />
         ))}
 
         {activeTab === 'rent' && hasRent && item.rental_results!.map((rental, idx) => (
-          <div
-            key={idx}
-            className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-2.5"
-          >
-            {rental.image_url && (
-              <img
-                src={rental.image_url}
-                alt=""
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-muted"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug">
-                {rental.product_name}
-              </p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[11px] text-muted-foreground">{rental.platform}</span>
-                {rental.rental_price && (
-                  <span className="text-xs font-semibold text-foreground">{rental.rental_price}</span>
-                )}
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs flex-shrink-0" asChild>
-              <a href={rental.product_url} target="_blank" rel="noopener noreferrer">
-                View
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
-            </Button>
-          </div>
+          <ProductCard key={idx} product={rental} subtitle={rental.platform} />
         ))}
 
+        {activeTab === 'secondhand' && hasSecondhand && item.secondhand_results!.map((item, idx) => (
+          <div key={idx}>
+            <ProductCard product={item} subtitle={item.platform} />
+            {item.condition && (
+              <Badge variant="secondary" className="ml-[60px] mt-1 text-[10px] h-4">
+                Condition: {item.condition}
+              </Badge>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -146,7 +141,10 @@ const MissingItemCard = ({ item }: { item: MissingItem }) => {
 
 const CompleteYourLook = ({ missingItems }: CompleteYourLookProps) => {
   const itemsWithResults = missingItems.filter(
-    (m) => (m.retailer_results?.length || 0) > 0 || (m.rental_results?.length || 0) > 0
+    (m) =>
+      (m.retailer_results?.length || 0) > 0 ||
+      (m.rental_results?.length || 0) > 0 ||
+      (m.secondhand_results?.length || 0) > 0
   );
 
   if (itemsWithResults.length === 0) return null;
