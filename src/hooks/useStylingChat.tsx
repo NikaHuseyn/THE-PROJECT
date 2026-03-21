@@ -253,7 +253,8 @@ export const useStylingChat = () => {
         content: responseContent,
         recommendation: data?.recommendation ? {
           ...data.recommendation,
-          ai_insights: data.ai_insights
+          ai_insights: data.ai_insights,
+          missing_items: data.missing_items
         } : undefined,
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,

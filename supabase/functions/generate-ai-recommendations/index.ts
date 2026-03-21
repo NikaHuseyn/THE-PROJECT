@@ -435,6 +435,16 @@ Please provide a detailed outfit recommendation in the following JSON format:
       }
     }
   },
+  "missing_items_search": [
+    {
+      "item_type": "navy midi dress",
+      "style_descriptor": "elegant, fitted",
+      "occasion_suitability": "smart casual to formal",
+      "price_tier": "budget|mid_range|luxury",
+      "category": "dresses|tops|bottoms|shoes|outerwear|accessories|knitwear|bags",
+      "search_keywords": ["navy", "midi", "dress", "fitted"]
+    }
+  ],
   "overall_confidence": 0.87,
   "style_reasoning": "Comprehensive explanation of the outfit's cohesiveness, how it flatters the user's body type, reflects their style preferences, suits the occasion, and works with the weather",
   "color_analysis": "Detailed explanation of color choices and how they work with the user's preferences and complexion",
@@ -555,6 +565,13 @@ CRITICAL FINAL INSTRUCTIONS:
 4. VALUE OPTIMIZATION: Help users maximize their existing wardrobe while strategically filling gaps
 5. For period/themed events: Provide specific links to costume rental shops and vintage stores with authentic pieces
 6. Price transparency: Always include price ranges for both purchase and rental options in GBP (£)
+7. MISSING ITEMS: For every item with source "needs_purchase" or "needs_rental", you MUST include a corresponding entry in "missing_items_search" with:
+   - item_type: specific item description (e.g. "navy midi dress")
+   - style_descriptor: 2-3 style keywords (e.g. "elegant, fitted")
+   - occasion_suitability: formality range (e.g. "smart casual to formal")
+   - price_tier: based on user budget profile - "budget" (under £50), "mid_range" (£50-150), or "luxury" (£150+)
+   - category: one of dresses, tops, bottoms, shoes, outerwear, accessories, knitwear, bags
+   - search_keywords: array of 3-5 keywords for database search
 
 Remember: The goal is to create perfect, achievable outfits using what the user owns + targeted shopping/rental recommendations with real, clickable links.`;
 
@@ -656,9 +673,25 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
                 total_investment_needed: { type: 'string' },
                 wardrobe_utilization: { type: 'string' }
               }
+            },
+            missing_items_search: {
+              type: 'array',
+              description: 'Structured search data for each item the user needs to buy or rent',
+              items: {
+                type: 'object',
+                properties: {
+                  item_type: { type: 'string', description: 'Specific item description e.g. navy midi dress' },
+                  style_descriptor: { type: 'string', description: 'Style keywords e.g. elegant, fitted' },
+                  occasion_suitability: { type: 'string', description: 'Formality range e.g. smart casual to formal' },
+                  price_tier: { type: 'string', enum: ['budget', 'mid_range', 'luxury'] },
+                  category: { type: 'string' },
+                  search_keywords: { type: 'array', items: { type: 'string' } }
+                },
+                required: ['item_type', 'style_descriptor', 'category', 'search_keywords']
+              }
             }
           },
-          required: ['recommended_items', 'overall_confidence', 'style_reasoning', 'styling_tips']
+          required: ['recommended_items', 'overall_confidence', 'style_reasoning', 'styling_tips', 'missing_items_search']
         }
       }
     };
@@ -892,6 +925,61 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
       }
     }
 
+    // Search shopping_items DB for missing items
+    let shoppingMatches: any[] = [];
+    const missingItems = recommendationData.missing_items_search || [];
+    if (missingItems.length > 0) {
+      console.log('Searching shopping_items for', missingItems.length, 'missing items');
+      
+      // Determine max price from user profile or price tier
+      const getPriceLimit = (tier: string) => {
+        if (tier === 'budget') return 50;
+        if (tier === 'mid_range') return 150;
+        if (tier === 'luxury') return 9999;
+        // Fall back to user profile budget
+        return styleProfile?.budget_max || 500;
+      };
+
+      const searchPromises = missingItems.map(async (item: any) => {
+        const keywords = item.search_keywords || [];
+        const category = item.category || '';
+        const maxPrice = getPriceLimit(item.price_tier);
+
+        // Build OR filter from keywords
+        const keywordFilters = keywords
+          .map((kw: string) => `name.ilike.%${kw}%,description.ilike.%${kw}%,brand.ilike.%${kw}%`)
+          .join(',');
+
+        let query = supabase
+          .from('shopping_items')
+          .select('id, name, brand, category, price, rental_price, image_url, retailer_name, retailer_url, colors, sizes, description')
+          .eq('in_stock', true)
+          .lte('price', maxPrice);
+
+        if (category) {
+          query = query.ilike('category', `%${category}%`);
+        }
+
+        if (keywordFilters) {
+          query = query.or(keywordFilters);
+        }
+
+        const { data: matches } = await query.order('price', { ascending: true }).limit(3);
+
+        return {
+          item_type: item.item_type,
+          style_descriptor: item.style_descriptor,
+          occasion_suitability: item.occasion_suitability,
+          price_tier: item.price_tier,
+          category: item.category,
+          db_matches: matches || []
+        };
+      });
+
+      shoppingMatches = await Promise.all(searchPromises);
+      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.db_matches.length} results`));
+    }
+
     // Save recommendation to database only if user is authenticated
     let savedRecommendation = null;
     if (user) {
@@ -937,8 +1025,10 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         alternative_options: recommendationData.alternative_options,
         color_analysis: recommendationData.color_analysis,
         fit_guidance: recommendationData.fit_guidance,
-        shopping_suggestions: recommendationData.shopping_suggestions
+        shopping_suggestions: recommendationData.shopping_suggestions,
+        wardrobe_analysis: recommendationData.wardrobe_analysis
       },
+      missing_items: shoppingMatches,
       rate_limit_info: rateLimitResult ? {
         remaining_requests: rateLimitResult.remaining_requests,
         rate_limit: rateLimitResult.rate_limit,
