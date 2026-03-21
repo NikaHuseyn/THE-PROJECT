@@ -28,9 +28,10 @@ interface CompleteYourLookProps {
 }
 
 const MissingItemCard = ({ item }: { item: MissingItem }) => {
-  const [activeTab, setActiveTab] = useState<'buy' | 'rent'>('buy');
   const hasBuy = (item.retailer_results?.length || 0) > 0;
   const hasRent = (item.rental_results?.length || 0) > 0;
+  const defaultTab = hasBuy ? 'buy' : 'rent';
+  const [activeTab, setActiveTab] = useState<'buy' | 'rent'>(defaultTab);
 
   if (!hasBuy && !hasRent) return null;
 
