@@ -102,7 +102,10 @@ const MissingItemCard = ({ item, savedTab }: { item: MissingItem; savedTab: TabT
           {availableTabs.map(tab => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                try { localStorage.setItem('cyl-tab-pref', tab.key); } catch {}
+              }}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
                   ? 'border-primary text-primary'
@@ -111,6 +114,7 @@ const MissingItemCard = ({ item, savedTab }: { item: MissingItem; savedTab: TabT
             >
               {tab.icon}
               {tab.label}
+              {tab.badge && <span className="text-[10px] leading-none">{tab.badge}</span>}
             </button>
           ))}
         </div>
