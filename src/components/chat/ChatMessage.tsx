@@ -19,6 +19,10 @@ interface ChatMessageProps {
   recommendation?: any;
   venueContext?: any;
   eventContext?: any;
+  culturalContext?: {
+    country: string;
+    norms: Array<{ context_type: string; guidance: string }>;
+  } | null;
   isLoading?: boolean;
 }
 
