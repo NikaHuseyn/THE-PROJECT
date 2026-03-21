@@ -26,7 +26,7 @@ interface ChatMessageProps {
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
 
   const renderOutfitItem = (item: OutfitItem, index: number) => {
