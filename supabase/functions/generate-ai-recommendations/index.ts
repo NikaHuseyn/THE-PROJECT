@@ -229,7 +229,7 @@ EVENT DETAILS:
 WEATHER CONTEXT:
 ${weatherData ? `Temperature: ${weatherData.temperature}°F, Condition: ${weatherData.condition}, Humidity: ${weatherData.humidity}%, Location: ${weatherData.location}` : 'Weather not specified'}
 
-${venueContext ? `
+${venueContext?.source === 'scraped' ? `
 🏢 VENUE INTELLIGENCE (scraped from venue website - USE THIS):
 - Venue: ${venueContext.venue_name || 'Unknown'}
 - Type: ${venueContext.venue_type || 'Unknown'}
@@ -240,6 +240,10 @@ ${venueContext ? `
 - Additional Notes: ${venueContext.notes || 'None'}
 
 CRITICAL: This venue information was scraped from the actual venue's website. You MUST tailor the outfit recommendation to match this venue's specific dress code and atmosphere. This takes priority over generic occasion-based styling.
+` : venueContext?.source === 'name_only' ? `
+🏢 VENUE MENTIONED: "${venueContext.venue_name}"${venueContext.venue_type ? ` (${venueContext.venue_type})` : ''}
+
+We could not scrape the venue's website for dress code details. Use your own knowledge of this venue (or similar venues with this name) to infer the likely dress code, formality level, and atmosphere. Factor this into the outfit recommendation. If you don't recognise the venue, make reasonable assumptions based on the venue type and location context from the user's message.
 ` : ''}
 
 🚫 ABSOLUTE PROHIBITION FOR HISTORICAL/THEMED EVENTS 🚫
