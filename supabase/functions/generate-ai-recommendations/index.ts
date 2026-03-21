@@ -1044,6 +1044,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         // Firecrawl retailer search
         let retailer_results: any[] = [];
         let rental_results: any[] = [];
+        let secondhand_results: any[] = [];
         if (firecrawlApiKey) {
           const tier = item.price_tier || 'mid_range';
           const retailers = retailersByTier[tier] || retailersByTier.mid_range;
