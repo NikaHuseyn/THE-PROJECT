@@ -47,19 +47,27 @@ export const useStylingChat = () => {
       });
 
       if (error) {
-        console.warn('Venue scrape error:', error);
-        return null;
+        console.warn('Venue scrape error, falling back to name-only:', error);
+        return { venue_name: venueName, source: 'name_only' };
       }
 
       if (data?.success && data?.venueContext) {
-        console.log('Venue context extracted:', data.venueContext);
-        return data.venueContext;
+        // Check if the scraped data actually has useful dress code info
+        const vc = data.venueContext;
+        const hasUsefulInfo = vc.dress_code !== 'none_specified' || vc.atmosphere || vc.formality_level;
+        if (hasUsefulInfo) {
+          console.log('Venue context extracted:', vc);
+          return { ...vc, source: 'scraped' };
+        }
+        // Scraped but no useful dress code info — fall back to name only
+        console.log('Scraped venue but no useful dress code info, falling back to name-only');
+        return { venue_name: vc.venue_name || venueName, venue_type: vc.venue_type, source: 'name_only' };
       }
 
-      return null;
+      return { venue_name: venueName, source: 'name_only' };
     } catch (err) {
-      console.warn('Venue scrape failed:', err);
-      return null;
+      console.warn('Venue scrape failed, falling back to name-only:', err);
+      return { venue_name: venueName, source: 'name_only' };
     }
   }, []);
 
