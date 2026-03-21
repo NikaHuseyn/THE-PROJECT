@@ -160,6 +160,58 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(15);
 
+    // Fetch cultural dress norms if a country is mentioned
+    let culturalNorms: any[] = [];
+    const countryDetectionText = [occasion, venueContext?.venue_name, eventContext?.event_name, weatherData?.location].filter(Boolean).join(' ');
+    const knownCountries = ['France', 'Spain', 'United States', 'China', 'Italy', 'Turkey', 'Mexico', 'Thailand', 'Germany', 'United Kingdom', 'Austria', 'Malaysia', 'Greece', 'Japan', 'Portugal', 'Canada', 'Poland', 'Netherlands', 'United Arab Emirates', 'India', 'Croatia', 'Saudi Arabia', 'South Korea', 'Hungary', 'Czech Republic', 'Morocco', 'Indonesia', 'Egypt', 'Singapore', 'Vietnam'];
+    const cityToCountry: Record<string, string> = {
+      'London': 'United Kingdom', 'Paris': 'France', 'Madrid': 'Spain', 'Barcelona': 'Spain',
+      'Rome': 'Italy', 'Milan': 'Italy', 'Florence': 'Italy', 'Venice': 'Italy',
+      'Tokyo': 'Japan', 'Osaka': 'Japan', 'Kyoto': 'Japan',
+      'Dubai': 'United Arab Emirates', 'Abu Dhabi': 'United Arab Emirates',
+      'Bangkok': 'Thailand', 'Istanbul': 'Turkey', 'Berlin': 'Germany', 'Munich': 'Germany',
+      'Amsterdam': 'Netherlands', 'Prague': 'Czech Republic', 'Budapest': 'Hungary',
+      'Marrakech': 'Morocco', 'Cairo': 'Egypt', 'Bali': 'Indonesia', 'Jakarta': 'Indonesia',
+      'Seoul': 'South Korea', 'Beijing': 'China', 'Shanghai': 'China',
+      'Mumbai': 'India', 'Delhi': 'India', 'New Delhi': 'India',
+      'Riyadh': 'Saudi Arabia', 'Jeddah': 'Saudi Arabia',
+      'Kuala Lumpur': 'Malaysia', 'Athens': 'Greece', 'Lisbon': 'Portugal',
+      'Warsaw': 'Poland', 'Krakow': 'Poland', 'Zagreb': 'Croatia', 'Dubrovnik': 'Croatia',
+      'Ho Chi Minh': 'Vietnam', 'Hanoi': 'Vietnam', 'Mexico City': 'Mexico', 'Cancun': 'Mexico',
+      'Toronto': 'Canada', 'Vancouver': 'Canada', 'Vienna': 'Austria', 'Salzburg': 'Austria',
+      'New York': 'United States', 'Los Angeles': 'United States', 'Chicago': 'United States',
+    };
+    
+    let detectedCountry: string | null = null;
+    // Check city names first (more specific)
+    for (const [city, country] of Object.entries(cityToCountry)) {
+      if (countryDetectionText.toLowerCase().includes(city.toLowerCase())) {
+        detectedCountry = country;
+        break;
+      }
+    }
+    // Then check country names
+    if (!detectedCountry) {
+      for (const country of knownCountries) {
+        if (countryDetectionText.toLowerCase().includes(country.toLowerCase())) {
+          detectedCountry = country;
+          break;
+        }
+      }
+    }
+
+    if (detectedCountry) {
+      console.log('Detected country for cultural norms:', detectedCountry);
+      const { data: norms } = await supabase
+        .from('cultural_dress_norms')
+        .select('context_type, guidance')
+        .eq('country', detectedCountry);
+      if (norms && norms.length > 0) {
+        culturalNorms = norms;
+        console.log(`Found ${norms.length} cultural dress norms for ${detectedCountry}`);
+      }
+    }
+
 // Enhanced AI prompt with more context
     const prompt = `You are an expert fashion stylist and costume consultant with deep knowledge of fashion trends, literary characters, theatrical costume design, and themed party styling. Create a highly personalized outfit recommendation.
 
