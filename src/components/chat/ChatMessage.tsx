@@ -151,6 +151,38 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
         )}
       </div>
       <div className="flex-1 pt-1">
+        {!isUser && (venueContext?.source === 'scraped' || eventContext?.source === 'scraped') && (
+          <div className="flex flex-col gap-2 mb-3">
+            {venueContext?.source === 'scraped' && (
+              <div className="flex items-start gap-2 rounded-lg bg-accent/50 border border-border px-3 py-2 text-sm">
+                <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-foreground">
+                  <span className="font-medium">{venueContext.venue_name}</span>
+                  {venueContext.dress_code && venueContext.dress_code !== 'none_specified' && (
+                    <span className="text-muted-foreground"> — {venueContext.dress_code_details || venueContext.dress_code}{venueContext.atmosphere ? `, ${venueContext.atmosphere.toLowerCase()}` : ''}</span>
+                  )}
+                </span>
+              </div>
+            )}
+            {eventContext?.source === 'scraped' && (
+              <div className="flex items-start gap-2 rounded-lg bg-accent/50 border border-border px-3 py-2 text-sm">
+                <Ticket className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-foreground">
+                  <span className="font-medium">{eventContext.event_name}</span>
+                  <span className="text-muted-foreground"> — {
+                    eventContext.dress_code && eventContext.dress_code !== 'none_specified'
+                      ? (eventContext.dress_code_details || eventContext.dress_code)
+                      : eventContext.style_guidance
+                        ? eventContext.style_guidance
+                        : eventContext.indoor_outdoor && eventContext.indoor_outdoor !== 'unknown'
+                          ? `${eventContext.indoor_outdoor} event${eventContext.time_of_day && eventContext.time_of_day !== 'unknown' ? `, ${eventContext.time_of_day}` : ''}`
+                          : 'Event details found'
+                  }</span>
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         <p className="text-foreground whitespace-pre-wrap">{content}</p>
         {renderRecommendation()}
       </div>
