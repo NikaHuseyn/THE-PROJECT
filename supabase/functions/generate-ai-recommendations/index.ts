@@ -50,7 +50,8 @@ serve(async (req) => {
       guestEmail,
       conversationHistory = [],
       originalRequest = null,
-      venueContext = null
+      venueContext = null,
+      eventContext = null
     } = await req.json();
 
     // Helper to parse AI JSON safely
@@ -244,6 +245,25 @@ CRITICAL: This venue information was scraped from the actual venue's website. Yo
 🏢 VENUE MENTIONED: "${venueContext.venue_name}"${venueContext.venue_type ? ` (${venueContext.venue_type})` : ''}
 
 We could not scrape the venue's website for dress code details. Use your own knowledge of this venue (or similar venues with this name) to infer the likely dress code, formality level, and atmosphere. Factor this into the outfit recommendation. If you don't recognise the venue, make reasonable assumptions based on the venue type and location context from the user's message.
+` : ''}
+
+${eventContext?.source === 'scraped' ? `
+🎫 EVENT INTELLIGENCE (scraped from event website - USE THIS):
+- Event: ${eventContext.event_name || 'Unknown'}
+- Type: ${eventContext.event_type || 'Unknown'}
+- Dress Code: ${eventContext.dress_code || 'Not specified'} ${eventContext.dress_code_details ? `(${eventContext.dress_code_details})` : ''}
+- Setting: ${eventContext.indoor_outdoor || 'Unknown'}
+- Time: ${eventContext.time_of_day || 'Unknown'}
+- Style Guidance: ${eventContext.style_guidance || 'None'}
+- Formality Level: ${eventContext.formality_level || 'N/A'}/10
+- Style Keywords: ${eventContext.style_keywords?.join(', ') || 'None'}
+- Practical Notes: ${eventContext.practical_notes || 'None'}
+
+CRITICAL: This event information was scraped from the actual event's website. You MUST tailor the outfit recommendation to match this event's specific dress code, setting (indoor/outdoor), and time of day. If the event is outdoor, consider layering and practical footwear. If evening, lean more formal. This takes priority over generic occasion-based styling.
+` : eventContext?.source === 'name_only' ? `
+🎫 EVENT MENTIONED: "${eventContext.event_name}"${eventContext.event_type ? ` (${eventContext.event_type})` : ''}
+
+We could not scrape the event's website for details. Use your own knowledge of this event to infer the likely dress code, setting (indoor/outdoor), time of day, and formality level. Factor this into the outfit recommendation. If you don't recognise the event, make reasonable assumptions based on the event type.
 ` : ''}
 
 🚫 ABSOLUTE PROHIBITION FOR HISTORICAL/THEMED EVENTS 🚫
