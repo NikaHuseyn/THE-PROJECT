@@ -931,21 +931,38 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
     if (missingItems.length > 0) {
       console.log('Searching shopping_items for', missingItems.length, 'missing items');
       
-      // Determine max price from user profile or price tier
       const getPriceLimit = (tier: string) => {
         if (tier === 'budget') return 50;
         if (tier === 'mid_range') return 150;
         if (tier === 'luxury') return 9999;
-        // Fall back to user profile budget
         return styleProfile?.budget_max || 500;
       };
+
+      // Retailer tiers for Firecrawl search
+      const retailersByTier: Record<string, { name: string; domain: string }[]> = {
+        budget: [
+          { name: 'ASOS', domain: 'asos.com' },
+          { name: 'H&M', domain: 'hm.com' },
+        ],
+        mid_range: [
+          { name: '& Other Stories', domain: 'stories.com' },
+          { name: 'Reiss', domain: 'reiss.com' },
+          { name: 'Mango', domain: 'mango.com' },
+        ],
+        luxury: [
+          { name: 'Net-a-Porter', domain: 'net-a-porter.com' },
+          { name: 'Matches Fashion', domain: 'matchesfashion.com' },
+        ],
+      };
+
+      const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 
       const searchPromises = missingItems.map(async (item: any) => {
         const keywords = item.search_keywords || [];
         const category = item.category || '';
         const maxPrice = getPriceLimit(item.price_tier);
 
-        // Build OR filter from keywords
+        // DB search
         const keywordFilters = keywords
           .map((kw: string) => `name.ilike.%${kw}%,description.ilike.%${kw}%,brand.ilike.%${kw}%`)
           .join(',');
@@ -959,12 +976,68 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         if (category) {
           query = query.ilike('category', `%${category}%`);
         }
-
         if (keywordFilters) {
           query = query.or(keywordFilters);
         }
 
         const { data: matches } = await query.order('price', { ascending: true }).limit(3);
+
+        // Firecrawl retailer search
+        let retailer_results: any[] = [];
+        if (firecrawlApiKey) {
+          const tier = item.price_tier || 'mid_range';
+          const retailers = retailersByTier[tier] || retailersByTier.mid_range;
+          const searchQuery = `${item.item_type} ${item.style_descriptor || ''}`.trim();
+
+          const retailerSearches = retailers.map(async (retailer) => {
+            try {
+              const response = await fetch('https://api.firecrawl.dev/v1/search', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${firecrawlApiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: `${searchQuery} site:${retailer.domain}`,
+                  limit: 2,
+                  scrapeOptions: { formats: ['markdown'] },
+                }),
+              });
+
+              if (!response.ok) {
+                console.warn(`Firecrawl search failed for ${retailer.name}:`, response.status);
+                return [];
+              }
+
+              const searchData = await response.json();
+              const results = searchData?.data || [];
+
+              return results.slice(0, 2).map((result: any) => {
+                // Extract price from markdown content
+                const markdown = result.markdown || '';
+                const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/) || markdown.match(/\$[\d,]+(?:\.\d{2})?/);
+                
+                // Extract image URL from metadata or markdown
+                const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
+
+                return {
+                  retailer: retailer.name,
+                  product_name: result.title || result.metadata?.title || 'Unknown product',
+                  price: priceMatch ? priceMatch[0] : null,
+                  product_url: result.url || '',
+                  image_url: imageUrl,
+                };
+              });
+            } catch (err) {
+              console.warn(`Firecrawl error for ${retailer.name}:`, err);
+              return [];
+            }
+          });
+
+          const allResults = await Promise.all(retailerSearches);
+          retailer_results = allResults.flat().slice(0, 6);
+          console.log(`Firecrawl: ${retailer_results.length} products found for "${searchQuery}"`);
+        }
 
         return {
           item_type: item.item_type,
@@ -972,12 +1045,13 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           occasion_suitability: item.occasion_suitability,
           price_tier: item.price_tier,
           category: item.category,
-          db_matches: matches || []
+          db_matches: matches || [],
+          retailer_results,
         };
       });
 
       shoppingMatches = await Promise.all(searchPromises);
-      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.db_matches.length} results`));
+      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.db_matches.length} db, ${m.retailer_results?.length || 0} retailer`));
     }
 
     // Save recommendation to database only if user is authenticated
