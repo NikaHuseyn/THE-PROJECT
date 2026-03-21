@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Sparkles, ExternalLink, ShoppingBag, Tag } from 'lucide-react';
+import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface OutfitItem {
@@ -16,10 +16,12 @@ interface ChatMessageProps {
   role: 'user' | 'assistant';
   content: string;
   recommendation?: any;
+  venueContext?: any;
+  eventContext?: any;
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
 
   const renderOutfitItem = (item: OutfitItem, index: number) => {
