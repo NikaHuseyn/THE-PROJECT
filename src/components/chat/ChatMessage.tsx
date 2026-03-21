@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket } from 'lucide-react';
+import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CompleteYourLook from './CompleteYourLook';
 
