@@ -216,6 +216,19 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
           </div>
         )}
         <p className="text-foreground whitespace-pre-wrap">{content}</p>
+        {cityClarificationChips && cityClarificationChips.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {cityClarificationChips.map((city) => (
+              <button
+                key={city}
+                onClick={() => onCitySelect?.(city)}
+                className="px-3 py-1.5 text-sm border border-border rounded-full text-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors"
+              >
+                {city}
+              </button>
+            ))}
+          </div>
+        )}
         {renderRecommendation()}
       </div>
     </div>
