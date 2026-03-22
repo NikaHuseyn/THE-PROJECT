@@ -188,6 +188,21 @@ export const useStylingChat = () => {
 
       let responseContent = '';
 
+      // Build weather note
+      let weatherNote: string | undefined;
+      if (weatherData && weatherData.temperature != null) {
+        const weatherIcon = getWeatherIcon(weatherData.condition);
+        const locationDisplay = weatherData.source === 'current_location'
+          ? 'Your current location'
+          : (weatherData.location || mentionedLocation || 'Unknown');
+        const dayLabel = formatDateLabel(mentionedDate) || (weatherData.forecastDate ? formatDateLabel(weatherData.forecastDate) : null);
+        const dayPart = dayLabel ? `, ${dayLabel}` : '';
+        const conditionDesc = weatherData.description
+          ? weatherData.description.charAt(0).toUpperCase() + weatherData.description.slice(1)
+          : weatherData.condition;
+        weatherNote = `${weatherIcon} ${locationDisplay}${dayPart}: ${weatherData.temperature}°C, ${conditionDesc}`;
+      }
+
       if (venueContext?.source === 'scraped') {
         const dressCodeText = venueContext.dress_code !== 'none_specified'
           ? `**Dress code:** ${venueContext.dress_code_details || venueContext.dress_code}`
@@ -238,6 +253,7 @@ export const useStylingChat = () => {
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,
         culturalContext: data?.cultural_context || undefined,
+        weatherNote,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMsg]);
