@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from '@/hooks/useLocation';
 import { toast } from 'sonner';
 import { detectVenue, detectEvent, VenueDetectionResult } from './styling-chat/venueEventDetection';
+import { extractLocation, extractFutureDate, formatDateLabel } from './styling-chat/weatherExtraction';
 
 export interface ChatMessage {
   id: string;
@@ -17,6 +18,8 @@ export interface ChatMessage {
   } | null;
   /** When set, the UI should render tappable city chips for venue disambiguation */
   cityClarificationChips?: string[];
+  /** One-line weather context shown above recommendation */
+  weatherNote?: string;
   timestamp: Date;
 }
 
@@ -92,6 +95,17 @@ export const useStylingChat = () => {
     }
   }, []);
 
+  function getWeatherIcon(condition: string): string {
+    const c = (condition || '').toLowerCase();
+    if (c.includes('rain') || c.includes('drizzle')) return '🌧';
+    if (c.includes('thunder')) return '⛈';
+    if (c.includes('snow')) return '🌨';
+    if (c.includes('cloud') || c.includes('overcast')) return '☁️';
+    if (c.includes('fog') || c.includes('mist')) return '🌫';
+    if (c.includes('clear') || c.includes('sunny')) return '☀️';
+    return '🌤';
+  }
+
   /**
    * Core recommendation flow — called after venue/event detection is resolved.
    */
@@ -101,22 +115,46 @@ export const useStylingChat = () => {
     detectedEventName: string | null,
   ) => {
     try {
+      // Extract location and date from the user's message for weather
+      const mentionedLocation = extractLocation(userMessage);
+      const mentionedDate = extractFutureDate(userMessage);
+
       const [weatherData, venueContext, eventContext] = await Promise.all([
         (async () => {
           try {
-            const coordinates = await getLocation();
-            if (coordinates) {
+            if (mentionedLocation) {
+              // Use the mentioned location string
+              console.log('Fetching weather for mentioned location:', mentionedLocation);
               const { data } = await supabase.functions.invoke('weather-recommendations', {
-                body: { lat: coordinates.latitude, lon: coordinates.longitude }
+                body: {
+                  location: mentionedLocation,
+                  ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
+                }
               });
-              return data;
+              return data ? { ...data, source: 'mentioned_location' } : null;
+            } else {
+              // Fall back to device GPS
+              const coordinates = await getLocation();
+              if (coordinates) {
+                const { data } = await supabase.functions.invoke('weather-recommendations', {
+                  body: {
+                    lat: coordinates.latitude,
+                    lon: coordinates.longitude,
+                    ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
+                  }
+                });
+                return data
+                  ? { ...data, source: 'current_location', location_label: 'your current location' }
+                  : null;
+              }
             }
           } catch {
             return {
               temperature: 55,
               condition: 'Partly Cloudy',
               location: 'London, UK',
-              humidity: 65
+              humidity: 65,
+              source: 'fallback',
             };
           }
           return null;
@@ -160,6 +198,21 @@ export const useStylingChat = () => {
       }
 
       let responseContent = '';
+
+      // Build weather note
+      let weatherNote: string | undefined;
+      if (weatherData && weatherData.temperature != null) {
+        const weatherIcon = getWeatherIcon(weatherData.condition);
+        const locationDisplay = weatherData.source === 'current_location'
+          ? 'Your current location'
+          : (weatherData.location || mentionedLocation || 'Unknown');
+        const dayLabel = formatDateLabel(mentionedDate) || (weatherData.forecastDate ? formatDateLabel(weatherData.forecastDate) : null);
+        const dayPart = dayLabel ? `, ${dayLabel}` : '';
+        const conditionDesc = weatherData.description
+          ? weatherData.description.charAt(0).toUpperCase() + weatherData.description.slice(1)
+          : weatherData.condition;
+        weatherNote = `${weatherIcon} ${locationDisplay}${dayPart}: ${weatherData.temperature}°C, ${conditionDesc}`;
+      }
 
       if (venueContext?.source === 'scraped') {
         const dressCodeText = venueContext.dress_code !== 'none_specified'
@@ -211,6 +264,7 @@ export const useStylingChat = () => {
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,
         culturalContext: data?.cultural_context || undefined,
+        weatherNote,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMsg]);

@@ -25,10 +25,11 @@ interface ChatMessageProps {
   } | null;
   cityClarificationChips?: string[];
   onCitySelect?: (city: string) => void;
+  weatherNote?: string;
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, weatherNote, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
 
   const renderOutfitItem = (item: OutfitItem, index: number) => {
@@ -214,6 +215,9 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
               </div>
             )}
           </div>
+        )}
+        {!isUser && weatherNote && (
+          <p className="text-sm text-muted-foreground mb-2">{weatherNote}</p>
         )}
         <p className="text-foreground whitespace-pre-wrap">{content}</p>
         {cityClarificationChips && cityClarificationChips.length > 0 && (

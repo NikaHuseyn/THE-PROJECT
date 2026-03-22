@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 function getClothingRecommendations(temp: number, condition: string, windSpeed: number, humidity: number): string[] {
@@ -43,38 +43,128 @@ serve(async (req) => {
   }
 
   try {
-    const { lat, lon } = await req.json();
-    
+    const { lat, lon, location, forecastDate } = await req.json();
+
     const openWeatherApiKey = Deno.env.get('OPENWEATHER_API_KEY');
-    
     if (!openWeatherApiKey) {
       throw new Error('Missing OPENWEATHER_API_KEY');
     }
 
-    const weatherResponse = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherApiKey}&units=metric`
-    );
-    
-    if (!weatherResponse.ok) {
-      throw new Error('Failed to fetch weather data');
+    // Determine coordinates: either from params or geocode a location string
+    let resolvedLat = lat;
+    let resolvedLon = lon;
+    let resolvedLocationName = '';
+
+    if (location && !lat && !lon) {
+      // Geocode the location string using OpenWeatherMap geocoding API
+      console.log('Geocoding location:', location);
+      const geoResponse = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(location)}&limit=1&appid=${openWeatherApiKey}`
+      );
+
+      if (!geoResponse.ok) {
+        throw new Error('Failed to geocode location');
+      }
+
+      const geoData = await geoResponse.json();
+      if (!geoData || geoData.length === 0) {
+        throw new Error(`Could not find location: ${location}`);
+      }
+
+      resolvedLat = geoData[0].lat;
+      resolvedLon = geoData[0].lon;
+      resolvedLocationName = geoData[0].name + (geoData[0].country ? `, ${geoData[0].country}` : '');
+      console.log(`Geocoded "${location}" → ${resolvedLat}, ${resolvedLon} (${resolvedLocationName})`);
     }
-    
-    const weatherData = await weatherResponse.json();
-    
-    const temperature = Math.round(weatherData.main.temp);
-    const condition = weatherData.weather[0].main;
-    const humidity = weatherData.main.humidity;
-    const windSpeed = Math.round(weatherData.wind?.speed || 0);
+
+    if (resolvedLat == null || resolvedLon == null) {
+      throw new Error('Either lat/lon or location string is required');
+    }
+
+    // Determine if we need forecast or current weather
+    const isForecast = !!forecastDate;
+    let temperature: number;
+    let condition: string;
+    let humidity: number;
+    let windSpeed: number;
+    let description: string;
+    let feelsLike: number;
+    let locationLabel: string;
+    let forecastDay: string | null = null;
+
+    if (isForecast) {
+      // Use OpenWeatherMap 5-day/3-hour forecast (free tier)
+      // For dates beyond 5 days, we'll still try and fall back to current
+      console.log('Fetching forecast for date:', forecastDate);
+      const forecastResponse = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${resolvedLat}&lon=${resolvedLon}&appid=${openWeatherApiKey}&units=metric`
+      );
+
+      if (!forecastResponse.ok) {
+        throw new Error('Failed to fetch forecast data');
+      }
+
+      const forecastData = await forecastResponse.json();
+      locationLabel = resolvedLocationName || `${forecastData.city?.name || 'Unknown'}, ${forecastData.city?.country || ''}`;
+
+      // Find the forecast entry closest to midday on the target date
+      const targetDate = forecastDate; // YYYY-MM-DD
+      const targetMidday = `${targetDate} 12:00:00`;
+
+      let bestEntry = null;
+      let bestDiff = Infinity;
+
+      for (const entry of forecastData.list || []) {
+        if (entry.dt_txt?.startsWith(targetDate)) {
+          const diff = Math.abs(new Date(entry.dt_txt).getTime() - new Date(targetMidday).getTime());
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestEntry = entry;
+          }
+        }
+      }
+
+      if (bestEntry) {
+        temperature = Math.round(bestEntry.main.temp);
+        condition = bestEntry.weather[0].main;
+        humidity = bestEntry.main.humidity;
+        windSpeed = Math.round(bestEntry.wind?.speed || 0);
+        description = bestEntry.weather[0].description;
+        feelsLike = Math.round(bestEntry.main.feels_like);
+        forecastDay = targetDate;
+      } else {
+        // Target date outside forecast range — fall back to current weather
+        console.log('Forecast date outside range, falling back to current weather');
+        const currentData = await fetchCurrentWeather(resolvedLat, resolvedLon, openWeatherApiKey);
+        temperature = currentData.temperature;
+        condition = currentData.condition;
+        humidity = currentData.humidity;
+        windSpeed = currentData.windSpeed;
+        description = currentData.description;
+        feelsLike = currentData.feelsLike;
+        locationLabel = resolvedLocationName || currentData.locationLabel;
+      }
+    } else {
+      // Current weather
+      const currentData = await fetchCurrentWeather(resolvedLat, resolvedLon, openWeatherApiKey);
+      temperature = currentData.temperature;
+      condition = currentData.condition;
+      humidity = currentData.humidity;
+      windSpeed = currentData.windSpeed;
+      description = currentData.description;
+      feelsLike = currentData.feelsLike;
+      locationLabel = resolvedLocationName || currentData.locationLabel;
+    }
 
     const result = {
       temperature,
       condition,
       humidity,
       windSpeed,
-      location: `${weatherData.name}, ${weatherData.sys.country}`,
-      description: weatherData.weather[0].description,
-      feelsLike: Math.round(weatherData.main.feels_like),
-      uvIndex: weatherData.uvi || undefined,
+      location: locationLabel,
+      description,
+      feelsLike,
+      forecastDate: forecastDay,
       clothingRecommendations: getClothingRecommendations(temperature, condition, windSpeed, humidity),
     };
 
@@ -90,3 +180,24 @@ serve(async (req) => {
     );
   }
 });
+
+async function fetchCurrentWeather(lat: number, lon: number, apiKey: string) {
+  const weatherResponse = await fetch(
+    `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+  );
+
+  if (!weatherResponse.ok) {
+    throw new Error('Failed to fetch weather data');
+  }
+
+  const weatherData = await weatherResponse.json();
+  return {
+    temperature: Math.round(weatherData.main.temp),
+    condition: weatherData.weather[0].main,
+    humidity: weatherData.main.humidity,
+    windSpeed: Math.round(weatherData.wind?.speed || 0),
+    description: weatherData.weather[0].description,
+    feelsLike: Math.round(weatherData.main.feels_like),
+    locationLabel: `${weatherData.name}, ${weatherData.sys.country}`,
+  };
+}
