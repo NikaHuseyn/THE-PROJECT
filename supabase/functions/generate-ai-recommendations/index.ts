@@ -1306,6 +1306,11 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         wardrobe_analysis: recommendationData.wardrobe_analysis
       },
       missing_items: shoppingMatches,
+      wardrobe_status: {
+        is_authenticated: !!user,
+        wardrobe_count: wardrobeItems?.length || 0,
+        has_wardrobe: (wardrobeItems?.length || 0) > 0,
+      },
       cultural_context: culturalNorms.length > 0 ? {
         country: detectedCountry,
         norms: culturalNorms.map(n => ({
