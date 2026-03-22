@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import CompleteYourLook from './CompleteYourLook';
+import EmotionalToneCards from './EmotionalToneCards';
 
 interface OutfitItem {
   name: string;
@@ -14,6 +15,13 @@ interface OutfitItem {
     uk_retailers?: Array<{ store: string; url: string; price_range: string }>;
     rental_platforms?: Array<{ platform: string; url: string; price_range: string }>;
   };
+}
+
+interface EmotionalTone {
+  id: string;
+  emoji: string;
+  label: string;
+  description: string;
 }
 
 interface ChatMessageProps {
@@ -34,6 +42,9 @@ interface ChatMessageProps {
     wardrobe_count: number;
     has_wardrobe: boolean;
   };
+  emotionalToneCards?: EmotionalTone[];
+  toneRecommendations?: Record<string, { recommendation: any; content: string; missing_items?: any[] }>;
+  onSelectTone?: (toneId: string) => void;
   isLoading?: boolean;
 }
 
