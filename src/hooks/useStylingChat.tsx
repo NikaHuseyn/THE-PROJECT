@@ -18,6 +18,8 @@ export interface ChatMessage {
   } | null;
   /** When set, the UI should render tappable city chips for venue disambiguation */
   cityClarificationChips?: string[];
+  /** One-line weather context shown above recommendation */
+  weatherNote?: string;
   timestamp: Date;
 }
 
