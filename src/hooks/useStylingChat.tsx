@@ -4,6 +4,7 @@ import { useLocation } from '@/hooks/useLocation';
 import { toast } from 'sonner';
 import { detectVenue, detectEvent, VenueDetectionResult } from './styling-chat/venueEventDetection';
 import { extractLocation, extractFutureDate, formatDateLabel } from './styling-chat/weatherExtraction';
+import { detectVagueVenue, getRelevantEmotionalTones, detectExplicitEmotionalGoal, EmotionalTone } from './styling-chat/vagueVenueDetection';
 
 export interface ChatMessage {
   id: string;
@@ -26,6 +27,14 @@ export interface ChatMessage {
     wardrobe_count: number;
     has_wardrobe: boolean;
   };
+  /** Emotional tone cards for vague occasions */
+  emotionalToneCards?: EmotionalTone[];
+  /** Multi-tone recommendations keyed by tone id */
+  toneRecommendations?: Record<string, {
+    recommendation: any;
+    content: string;
+    missing_items?: any[];
+  }>;
   timestamp: Date;
 }
 
@@ -40,6 +49,9 @@ export const useStylingChat = () => {
     venueName: string;
     possibleCities: string[];
   } | null>(null);
+
+  // Tracks selected emotional tone for follow-up context
+  const [selectedEmotionalTone, setSelectedEmotionalTone] = useState<string | null>(null);
 
   const scrapeVenue = useCallback(async (venueName: string) => {
     try {
@@ -113,112 +125,136 @@ export const useStylingChat = () => {
   }
 
   /**
+   * Build weather note string from weather data.
+   */
+  const buildWeatherNote = useCallback((weatherData: any, mentionedLocation: string | null, mentionedDate: string | null): string | undefined => {
+    if (!weatherData || weatherData.temperature == null) return undefined;
+    const weatherIcon = getWeatherIcon(weatherData.condition);
+    const locationDisplay = weatherData.source === 'current_location'
+      ? 'Your current location'
+      : (weatherData.location || mentionedLocation || 'Unknown');
+    const dayLabel = formatDateLabel(mentionedDate) || (weatherData.forecastDate ? formatDateLabel(weatherData.forecastDate) : null);
+    const dayPart = dayLabel ? `, ${dayLabel}` : '';
+    const conditionDesc = weatherData.description
+      ? weatherData.description.charAt(0).toUpperCase() + weatherData.description.slice(1)
+      : weatherData.condition;
+    return `${weatherIcon} ${locationDisplay}${dayPart}: ${weatherData.temperature}°C, ${conditionDesc}`;
+  }, []);
+
+  /**
+   * Fetch weather data.
+   */
+  const fetchWeather = useCallback(async (userMessage: string) => {
+    const mentionedLocation = extractLocation(userMessage);
+    const mentionedDate = extractFutureDate(userMessage);
+
+    try {
+      if (mentionedLocation) {
+        console.log('Fetching weather for mentioned location:', mentionedLocation);
+        const { data } = await supabase.functions.invoke('weather-recommendations', {
+          body: {
+            location: mentionedLocation,
+            ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
+          }
+        });
+        return { weatherData: data ? { ...data, source: 'mentioned_location' } : null, mentionedLocation, mentionedDate };
+      } else {
+        const coordinates = await getLocation();
+        if (coordinates) {
+          const { data } = await supabase.functions.invoke('weather-recommendations', {
+            body: {
+              lat: coordinates.latitude,
+              lon: coordinates.longitude,
+              ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
+            }
+          });
+          return {
+            weatherData: data ? { ...data, source: 'current_location', location_label: 'your current location' } : null,
+            mentionedLocation,
+            mentionedDate,
+          };
+        }
+      }
+    } catch {
+      return {
+        weatherData: { temperature: 55, condition: 'Partly Cloudy', location: 'London, UK', humidity: 65, source: 'fallback' },
+        mentionedLocation,
+        mentionedDate,
+      };
+    }
+    return { weatherData: null, mentionedLocation, mentionedDate };
+  }, [getLocation]);
+
+  /**
+   * Call the AI recommendation edge function.
+   */
+  const callRecommendation = useCallback(async (
+    userMessage: string,
+    resolvedVenueName: string | null,
+    detectedEventName: string | null,
+    weatherData: any,
+    extraContext?: Record<string, any>,
+  ) => {
+    const [venueContext, eventContext] = await Promise.all([
+      resolvedVenueName ? scrapeVenue(resolvedVenueName) : Promise.resolve(null),
+      detectedEventName ? scrapeEvent(detectedEventName) : Promise.resolve(null),
+    ]);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers = session ? { Authorization: `Bearer ${session.access_token}` } : {};
+
+    const conversationContext = messages.map(m => ({
+      role: m.role,
+      content: m.content,
+      recommendationSummary: m.recommendation ? {
+        items: m.recommendation.recommended_items ? Object.keys(m.recommendation.recommended_items) : [],
+        occasion: m.recommendation.occasion,
+      } : undefined,
+    }));
+
+    const isFollowUp = messages.length > 0;
+    const originalRequest = messages.find(m => m.role === 'user')?.content || '';
+
+    const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
+      body: {
+        recommendationType: 'event_outfit',
+        weatherData,
+        occasion: userMessage,
+        eventDetails: { name: userMessage, type: 'event' },
+        venueContext: venueContext || undefined,
+        eventContext: eventContext || undefined,
+        conversationHistory: isFollowUp ? conversationContext : [],
+        originalRequest: isFollowUp ? originalRequest : null,
+        guestEmail: session?.user?.email || `guest-${Date.now()}@temp.com`,
+        ...extraContext,
+      },
+      headers
+    });
+
+    if (error) throw new Error(error.message || 'Failed to get recommendation');
+
+    return { data, venueContext, eventContext };
+  }, [messages, scrapeVenue, scrapeEvent]);
+
+  /**
    * Core recommendation flow — called after venue/event detection is resolved.
    */
   const executeRecommendation = useCallback(async (
     userMessage: string,
     resolvedVenueName: string | null,
     detectedEventName: string | null,
+    extraContext?: Record<string, any>,
   ) => {
     try {
-      // Extract location and date from the user's message for weather
-      const mentionedLocation = extractLocation(userMessage);
-      const mentionedDate = extractFutureDate(userMessage);
+      const { weatherData, mentionedLocation, mentionedDate } = await fetchWeather(userMessage);
 
-      const [weatherData, venueContext, eventContext] = await Promise.all([
-        (async () => {
-          try {
-            if (mentionedLocation) {
-              // Use the mentioned location string
-              console.log('Fetching weather for mentioned location:', mentionedLocation);
-              const { data } = await supabase.functions.invoke('weather-recommendations', {
-                body: {
-                  location: mentionedLocation,
-                  ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
-                }
-              });
-              return data ? { ...data, source: 'mentioned_location' } : null;
-            } else {
-              // Fall back to device GPS
-              const coordinates = await getLocation();
-              if (coordinates) {
-                const { data } = await supabase.functions.invoke('weather-recommendations', {
-                  body: {
-                    lat: coordinates.latitude,
-                    lon: coordinates.longitude,
-                    ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
-                  }
-                });
-                return data
-                  ? { ...data, source: 'current_location', location_label: 'your current location' }
-                  : null;
-              }
-            }
-          } catch {
-            return {
-              temperature: 55,
-              condition: 'Partly Cloudy',
-              location: 'London, UK',
-              humidity: 65,
-              source: 'fallback',
-            };
-          }
-          return null;
-        })(),
-        resolvedVenueName ? scrapeVenue(resolvedVenueName) : Promise.resolve(null),
-        detectedEventName ? scrapeEvent(detectedEventName) : Promise.resolve(null),
-      ]);
+      const { data, venueContext, eventContext } = await callRecommendation(
+        userMessage, resolvedVenueName, detectedEventName, weatherData, extraContext,
+      );
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const headers = session ? { Authorization: `Bearer ${session.access_token}` } : {};
-
-      const conversationContext = messages.map(m => ({
-        role: m.role,
-        content: m.content,
-        recommendationSummary: m.recommendation ? {
-          items: m.recommendation.recommended_items ? Object.keys(m.recommendation.recommended_items) : [],
-          occasion: m.recommendation.occasion,
-        } : undefined,
-      }));
-
-      const isFollowUp = messages.length > 0;
-      const originalRequest = messages.find(m => m.role === 'user')?.content || '';
-
-      const { data, error } = await supabase.functions.invoke('generate-ai-recommendations', {
-        body: {
-          recommendationType: 'event_outfit',
-          weatherData,
-          occasion: userMessage,
-          eventDetails: { name: userMessage, type: 'event' },
-          venueContext: venueContext || undefined,
-          eventContext: eventContext || undefined,
-          conversationHistory: isFollowUp ? conversationContext : [],
-          originalRequest: isFollowUp ? originalRequest : null,
-          guestEmail: session?.user?.email || `guest-${Date.now()}@temp.com`
-        },
-        headers
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to get recommendation');
-      }
+      const weatherNote = buildWeatherNote(weatherData, mentionedLocation, mentionedDate);
 
       let responseContent = '';
-
-      // Build weather note
-      let weatherNote: string | undefined;
-      if (weatherData && weatherData.temperature != null) {
-        const weatherIcon = getWeatherIcon(weatherData.condition);
-        const locationDisplay = weatherData.source === 'current_location'
-          ? 'Your current location'
-          : (weatherData.location || mentionedLocation || 'Unknown');
-        const dayLabel = formatDateLabel(mentionedDate) || (weatherData.forecastDate ? formatDateLabel(weatherData.forecastDate) : null);
-        const dayPart = dayLabel ? `, ${dayLabel}` : '';
-        const conditionDesc = weatherData.description
-          ? weatherData.description.charAt(0).toUpperCase() + weatherData.description.slice(1)
-          : weatherData.condition;
-        weatherNote = `${weatherIcon} ${locationDisplay}${dayPart}: ${weatherData.temperature}°C, ${conditionDesc}`;
-      }
 
       if (venueContext?.source === 'scraped') {
         const dressCodeText = venueContext.dress_code !== 'none_specified'
@@ -288,7 +324,106 @@ export const useStylingChat = () => {
       };
       setMessages(prev => [...prev, errorMsg]);
     }
-  }, [messages, getLocation, scrapeVenue, scrapeEvent]);
+  }, [messages, fetchWeather, callRecommendation, buildWeatherNote]);
+
+  /**
+   * Execute multi-tone recommendations for vague occasions.
+   */
+  const executeMultiToneRecommendation = useCallback(async (
+    userMessage: string,
+    vagueVenue: { inferredFormality: string; mealType: string | null; occasionType: string | null },
+    tones: EmotionalTone[],
+  ) => {
+    try {
+      const { weatherData, mentionedLocation, mentionedDate } = await fetchWeather(userMessage);
+      const weatherNote = buildWeatherNote(weatherData, mentionedLocation, mentionedDate);
+
+      // Generate recommendations for all tones in parallel
+      const toneResults = await Promise.all(tones.map(async (tone) => {
+        try {
+          const { data } = await callRecommendation(
+            userMessage, null, null, weatherData, {
+              inferred_venue_formality: vagueVenue.inferredFormality,
+              inferred_meal_type: vagueVenue.mealType,
+              inferred_occasion_type: vagueVenue.occasionType,
+              emotional_tone: tone.id,
+              emotional_tone_label: tone.label,
+              is_multi_tone: true,
+            },
+          );
+          return {
+            toneId: tone.id,
+            recommendation: data?.recommendation ? {
+              ...data.recommendation,
+              ai_insights: data.ai_insights,
+              missing_items: data.missing_items,
+            } : undefined,
+            content: data?.recommendation?.reasoning || `Here's a ${tone.label.toLowerCase()} look for this occasion.`,
+            missing_items: data?.missing_items,
+            wardrobeStatus: data?.wardrobe_status,
+          };
+        } catch (err) {
+          console.warn(`Failed to generate ${tone.label} recommendation:`, err);
+          return null;
+        }
+      }));
+
+      const validResults = toneResults.filter(Boolean) as NonNullable<typeof toneResults[0]>[];
+
+      // Build conversational intro
+      const mealLabel = vagueVenue.mealType || 'occasion';
+      let intro = '';
+      if (vagueVenue.mealType === 'dinner') {
+        intro = `A ${vagueVenue.inferredFormality === 'formal smart' ? 'fancy' : 'nice'} restaurant for dinner — I love that. Here are a few directions depending on the vibe you're going for tonight:`;
+      } else if (vagueVenue.mealType === 'drinks') {
+        intro = `Drinks out — exciting. Here are a few different vibes to choose from:`;
+      } else if (vagueVenue.mealType === 'brunch') {
+        intro = `Brunch plans — here are some styling directions to match the mood:`;
+      } else {
+        intro = `Great choice. Here are a few outfit directions depending on how you want to feel:`;
+      }
+
+      // Build tone recommendations map
+      const toneRecommendations: Record<string, { recommendation: any; content: string; missing_items?: any[] }> = {};
+      for (const result of validResults) {
+        toneRecommendations[result.toneId] = {
+          recommendation: result.recommendation,
+          content: result.content,
+          missing_items: result.missing_items,
+        };
+      }
+
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: intro,
+        emotionalToneCards: tones,
+        toneRecommendations,
+        wardrobeStatus: validResults[0]?.wardrobeStatus || undefined,
+        weatherNote,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMsg]);
+
+    } catch (error) {
+      console.error('Error in multi-tone styling chat:', error);
+      toast.error('Something went wrong. Please try again.');
+      const errorMsg: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: "I'm sorry, I couldn't process your request. Please try again or rephrase your question.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    }
+  }, [fetchWeather, callRecommendation, buildWeatherNote]);
+
+  /**
+   * Handle emotional tone card selection.
+   */
+  const selectEmotionalTone = useCallback((toneId: string) => {
+    setSelectedEmotionalTone(toneId);
+  }, []);
 
   const sendMessage = useCallback(async (userMessage: string) => {
     // --- Handle pending venue city clarification ---
@@ -296,7 +431,6 @@ export const useStylingChat = () => {
       const selectedCity = userMessage.trim();
       const resolvedName = `${pendingVenue.venueName} ${selectedCity}`;
 
-      // Add user's city selection as a message
       const userMsg: ChatMessage = {
         id: `user-${Date.now()}`,
         role: 'user',
@@ -329,6 +463,7 @@ export const useStylingChat = () => {
     setIsLoading(true);
 
     try {
+      // First check for specific named venue
       const venueResult: VenueDetectionResult | null = detectVenue(userMessage);
       const detectedEvent = detectEvent(userMessage);
 
@@ -360,7 +495,41 @@ export const useStylingChat = () => {
           : venueResult.venueName;
       }
 
-      await executeRecommendation(userMessage, resolvedVenueName, detectedEvent);
+      // If we have a specific venue or event, do normal flow
+      if (resolvedVenueName || detectedEvent) {
+        // Pass selected emotional tone as context if present
+        const extraContext: Record<string, any> = {};
+        if (selectedEmotionalTone) {
+          extraContext.emotional_tone = selectedEmotionalTone;
+        }
+        await executeRecommendation(userMessage, resolvedVenueName, detectedEvent, extraContext);
+      } else {
+        // Check for vague venue description
+        const vagueVenue = detectVagueVenue(userMessage);
+
+        // Check if user already specified an emotional goal
+        const explicitTone = detectExplicitEmotionalGoal(userMessage);
+
+        if (vagueVenue && !explicitTone && !selectedEmotionalTone) {
+          // Vague occasion, no explicit tone → generate multi-tone options
+          const tones = getRelevantEmotionalTones(vagueVenue.mealType, vagueVenue.occasionType);
+          await executeMultiToneRecommendation(userMessage, vagueVenue, tones);
+        } else {
+          // Either explicit tone, previously selected tone, or non-venue request
+          const extraContext: Record<string, any> = {};
+          if (vagueVenue) {
+            extraContext.inferred_venue_formality = vagueVenue.inferredFormality;
+            extraContext.inferred_meal_type = vagueVenue.mealType;
+            extraContext.inferred_occasion_type = vagueVenue.occasionType;
+          }
+          if (explicitTone) {
+            extraContext.emotional_tone = explicitTone;
+          } else if (selectedEmotionalTone) {
+            extraContext.emotional_tone = selectedEmotionalTone;
+          }
+          await executeRecommendation(userMessage, resolvedVenueName, detectedEvent, extraContext);
+        }
+      }
     } catch (error) {
       console.error('Error in styling chat:', error);
       toast.error('Something went wrong. Please try again.');
@@ -375,11 +544,12 @@ export const useStylingChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, pendingVenue, executeRecommendation]);
+  }, [messages, pendingVenue, selectedEmotionalTone, executeRecommendation, executeMultiToneRecommendation]);
 
   const clearChat = useCallback(() => {
     setMessages([]);
     setPendingVenue(null);
+    setSelectedEmotionalTone(null);
   }, []);
 
   return {
@@ -387,5 +557,7 @@ export const useStylingChat = () => {
     isLoading,
     sendMessage,
     clearChat,
+    selectEmotionalTone,
+    selectedEmotionalTone,
   };
 };

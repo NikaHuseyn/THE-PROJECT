@@ -51,7 +51,14 @@ serve(async (req) => {
       conversationHistory = [],
       originalRequest = null,
       venueContext = null,
-      eventContext = null
+      eventContext = null,
+      // New: vague venue / emotional tone context
+      inferred_venue_formality = null,
+      inferred_meal_type = null,
+      inferred_occasion_type = null,
+      emotional_tone = null,
+      emotional_tone_label = null,
+      is_multi_tone = false,
     } = await req.json();
 
     // Helper to parse AI JSON safely
@@ -348,6 +355,22 @@ CRITICAL: This venue information was scraped from the actual venue's website. Yo
 🏢 VENUE MENTIONED: "${venueContext.venue_name}"${venueContext.venue_type ? ` (${venueContext.venue_type})` : ''}
 
 We could not scrape the venue's website for dress code details. Use your own knowledge of this venue (or similar venues with this name) to infer the likely dress code, formality level, and atmosphere. Factor this into the outfit recommendation. If you don't recognise the venue, make reasonable assumptions based on the venue type and location context from the user's message.
+` : ''}
+
+${inferred_venue_formality ? `
+🏠 INFERRED VENUE CONTEXT (no specific venue named):
+- Inferred Formality: ${inferred_venue_formality}
+- Meal Type: ${inferred_meal_type || 'not specified'}
+- Social Context: ${inferred_occasion_type || 'not specified'}
+
+The user described a vague venue (e.g. "nice restaurant", "fancy place"). There is NO specific venue to look up. Use the inferred formality level and context to guide your recommendation. Do NOT ask for more details — provide a confident recommendation based on these cues.
+` : ''}
+
+${emotional_tone ? `
+🎭 EMOTIONAL TONE (${is_multi_tone ? 'generating one of multiple options' : 'user-specified'}):
+Target emotional feeling: "${emotional_tone_label || emotional_tone}"
+
+${is_multi_tone ? `You are generating ONE specific outfit for the "${emotional_tone_label}" emotional direction. Make this outfit DISTINCT from other emotional tones — not just a colour swap. The silhouette, key pieces, and overall styling approach should genuinely reflect this specific mood.` : `The user wants to feel "${emotional_tone_label || emotional_tone}". Every item should serve this emotional goal. Lead with the feeling, not the dress code.`}
 ` : ''}
 
 ${eventContext?.source === 'scraped' ? `
@@ -808,7 +831,11 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
 
     const systemPrompt = isHistorical
       ? `You are an expert fashion historian and costume consultant specializing in period-accurate clothing. For this ${occ.includes('1930') ? '1930s' : occ.includes('1920') ? '1920s' : occ.includes('1940') ? '1940s' : 'historical'} event, you MUST only recommend authentic period pieces. NEVER suggest: jeans, denim, sneakers, trainers, t-shirts, hoodies, modern midi dresses, or any item invented after the specified era. Focus on: bias-cut gowns, T-strap heels, Art Deco accessories, vintage shops, and costume rentals.`
-      : 'You are a world-class fashion stylist with expertise in personal styling, body types, and current trends. Create practical, stylish outfits tailored to each client.';
+      : emotional_tone
+        ? `You are a world-class fashion stylist. The user wants to feel "${emotional_tone_label || emotional_tone}". Every piece you recommend should serve this emotional goal. Lead with the feeling — how the outfit makes the user FEEL in the setting — not generic styling advice. Be conversational and warm, never clinical. Never ask the user for more information — use your expert judgment.`
+        : inferred_venue_formality
+          ? `You are a world-class fashion stylist. The user described a vague venue or occasion. You should NEVER ask for more details or say you need more information. Use the context clues provided (formality level, meal type, occasion type) to make a confident, expert recommendation. Be conversational and warm. Open with a sentence that acknowledges the specific vibe, not a generic opener.`
+          : 'You are a world-class fashion stylist with expertise in personal styling, body types, and current trends. Create practical, stylish outfits tailored to each client.';
 
     // Build messages array with conversation history for context
     const conversationContext = eventDetails?.conversationHistory || conversationHistory || [];

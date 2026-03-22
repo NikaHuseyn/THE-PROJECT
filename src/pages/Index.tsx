@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const { shouldShowOnboarding, isLoading: onboardingLoading, user, completeOnboarding } = useOnboarding();
-  const { messages, isLoading, sendMessage, clearChat } = useStylingChat();
+  const { messages, isLoading, sendMessage, clearChat, selectEmotionalTone } = useStylingChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestions = [
@@ -98,6 +98,9 @@ const Index = () => {
                   onCitySelect={sendMessage}
                   weatherNote={message.weatherNote}
                   wardrobeStatus={message.wardrobeStatus}
+                  emotionalToneCards={message.emotionalToneCards}
+                  toneRecommendations={message.toneRecommendations}
+                  onSelectTone={selectEmotionalTone}
                 />
               ))}
               {isLoading && <ChatMessage role="assistant" content="" isLoading />}

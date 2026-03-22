@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import CompleteYourLook from './CompleteYourLook';
+import EmotionalToneCards from './EmotionalToneCards';
 
 interface OutfitItem {
   name: string;
@@ -14,6 +15,13 @@ interface OutfitItem {
     uk_retailers?: Array<{ store: string; url: string; price_range: string }>;
     rental_platforms?: Array<{ platform: string; url: string; price_range: string }>;
   };
+}
+
+interface EmotionalTone {
+  id: string;
+  emoji: string;
+  label: string;
+  description: string;
 }
 
 interface ChatMessageProps {
@@ -34,10 +42,13 @@ interface ChatMessageProps {
     wardrobe_count: number;
     has_wardrobe: boolean;
   };
+  emotionalToneCards?: EmotionalTone[];
+  toneRecommendations?: Record<string, { recommendation: any; content: string; missing_items?: any[] }>;
+  onSelectTone?: (toneId: string) => void;
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, weatherNote, wardrobeStatus, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, weatherNote, wardrobeStatus, emotionalToneCards, toneRecommendations, onSelectTone, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -279,6 +290,15 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
               </button>
             ))}
           </div>
+        )}
+        {/* Emotional tone cards for vague occasions */}
+        {emotionalToneCards && toneRecommendations && onSelectTone && (
+          <EmotionalToneCards
+            tones={emotionalToneCards}
+            toneRecommendations={toneRecommendations}
+            onSelectTone={onSelectTone}
+            wardrobeStatus={wardrobeStatus}
+          />
         )}
         {renderRecommendation()}
       </div>
