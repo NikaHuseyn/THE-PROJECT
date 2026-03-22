@@ -21,6 +21,9 @@ const LOCATION_FALSE_POSITIVES = new Set([
   'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
+  'Nice', 'Good', 'Great', 'Big', 'Small', 'New', 'Old', 'Best', 'Top',
+  'Some', 'Any', 'Every', 'All', 'Just', 'Really', 'Very', 'Pretty',
+  'Home', 'Work', 'Office', 'Church', 'School',
 ]);
 
 export function extractLocation(message: string): string | null {
