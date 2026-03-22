@@ -1062,12 +1062,18 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
       }
     }
 
-    // Search shopping_items DB for missing items
+    // ============================================
+    // PRODUCT SEARCH: Layered strategy
+    // Layer 1: ShopStyle Collective API (best data, requires key)
+    // Layer 2: Firecrawl web search (good fallback)
+    // Layer 3: Pre-built search URLs (guaranteed, always works)
+    // ============================================
+
     let shoppingMatches: any[] = [];
     const missingItems = recommendationData.missing_items_search || [];
     if (missingItems.length > 0) {
-      console.log('Searching shopping_items for', missingItems.length, 'missing items');
-      
+      console.log('Searching for', missingItems.length, 'missing items');
+
       const getPriceLimit = (tier: string) => {
         if (tier === 'budget') return 50;
         if (tier === 'mid_range') return 150;
@@ -1075,7 +1081,85 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         return styleProfile?.budget_max || 500;
       };
 
-      // Retailer tiers for Firecrawl search
+      // --- Pre-built search URL generators (Layer 3 — guaranteed fallback) ---
+      const buildSearchUrls = (query: string, tier: string): any[] => {
+        const encoded = encodeURIComponent(query);
+        const retailersByTierUrls: Record<string, { name: string; url: string }[]> = {
+          budget: [
+            { name: 'ASOS', url: `https://www.asos.com/search/?q=${encoded}` },
+            { name: 'H&M', url: `https://www2.hm.com/en_gb/search-results.html?q=${encoded}` },
+            { name: 'Zara', url: `https://www.zara.com/uk/en/search?searchTerm=${encoded}` },
+          ],
+          mid_range: [
+            { name: '& Other Stories', url: `https://www.stories.com/en_gbp/search.html?q=${encoded}` },
+            { name: 'Reiss', url: `https://www.reiss.com/uk/search?q=${encoded}` },
+            { name: 'Mango', url: `https://shop.mango.com/gb/search?kw=${encoded}` },
+            { name: 'COS', url: `https://www.cos.com/en_gbp/search.html?q=${encoded}` },
+          ],
+          luxury: [
+            { name: 'Net-a-Porter', url: `https://www.net-a-porter.com/en-gb/shop/search/${encoded}` },
+            { name: 'Selfridges', url: `https://www.selfridges.com/GB/en/cat/?freeText=${encoded}` },
+            { name: 'Matches Fashion', url: `https://www.matchesfashion.com/search?q=${encoded}` },
+          ],
+        };
+        const retailers = retailersByTierUrls[tier] || retailersByTierUrls.mid_range;
+        return retailers.map(r => ({
+          retailer: r.name,
+          product_name: `Search ${r.name} for "${query}"`,
+          price: null,
+          product_url: r.url,
+          image_url: null,
+          source: 'search_url',
+        }));
+      };
+
+      const buildRentalSearchUrls = (query: string): any[] => {
+        const encoded = encodeURIComponent(query);
+        return [
+          { platform: 'HURR', product_name: `Rent on HURR: "${query}"`, price: null, product_url: `https://www.hurr.com/search?q=${encoded}`, image_url: null, type: 'rental', source: 'search_url' },
+          { platform: 'By Rotation', product_name: `Rent on By Rotation: "${query}"`, price: null, product_url: `https://www.byrotation.com/search?q=${encoded}`, image_url: null, type: 'rental', source: 'search_url' },
+        ];
+      };
+
+      const buildSecondhandSearchUrls = (query: string): any[] => {
+        const encoded = encodeURIComponent(query);
+        return [
+          { platform: 'Vestiaire Collective', product_name: `Shop pre-owned: "${query}"`, price: null, product_url: `https://www.vestiairecollective.com/search/?q=${encoded}`, image_url: null, condition: null, type: 'secondhand', source: 'search_url' },
+          { platform: 'Vinted', product_name: `Find on Vinted: "${query}"`, price: null, product_url: `https://www.vinted.co.uk/catalog?search_text=${encoded}`, image_url: null, condition: null, type: 'secondhand', source: 'search_url' },
+        ];
+      };
+
+      // --- ShopStyle Collective API (Layer 1) ---
+      const shopStyleApiKey = Deno.env.get('SHOPSTYLE_API_KEY');
+
+      const searchShopStyle = async (query: string, maxPrice: number): Promise<any[]> => {
+        if (!shopStyleApiKey) return [];
+        try {
+          const encoded = encodeURIComponent(query);
+          const url = `https://api.shopstyle.com/api/v2/products?pid=${shopStyleApiKey}&fts=${encoded}&offset=0&limit=4&fl=p0:${maxPrice}&fl=d0:GB`;
+          const response = await fetch(url);
+          if (!response.ok) {
+            console.warn('ShopStyle API error:', response.status);
+            return [];
+          }
+          const data = await response.json();
+          return (data.products || []).map((p: any) => ({
+            retailer: p.retailer?.name || p.brand?.name || 'Retailer',
+            product_name: p.name || p.brandedName || 'Product',
+            price: p.priceLabel || (p.price ? `£${p.price}` : null),
+            product_url: p.clickUrl || p.url || '',
+            image_url: p.image?.sizes?.Best?.url || p.image?.sizes?.Large?.url || null,
+            source: 'shopstyle',
+          }));
+        } catch (err) {
+          console.warn('ShopStyle error:', err);
+          return [];
+        }
+      };
+
+      // --- Firecrawl (Layer 2) ---
+      const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+
       const retailersByTier: Record<string, { name: string; domain: string }[]> = {
         budget: [
           { name: 'ASOS', domain: 'asos.com' },
@@ -1092,12 +1176,108 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         ],
       };
 
-      const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+      const searchFirecrawl = async (query: string, retailers: { name: string; domain: string }[]): Promise<any[]> => {
+        if (!firecrawlApiKey) return [];
+        const searches = retailers.map(async (retailer) => {
+          try {
+            const response = await fetch('https://api.firecrawl.dev/v1/search', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${firecrawlApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: `${query} site:${retailer.domain}`,
+                limit: 2,
+                scrapeOptions: { formats: ['markdown'] },
+              }),
+            });
+            if (!response.ok) return [];
+            const searchData = await response.json();
+            return (searchData?.data || []).slice(0, 2).map((result: any) => {
+              const markdown = result.markdown || '';
+              const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/) || markdown.match(/\$[\d,]+(?:\.\d{2})?/);
+              const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
+              return {
+                retailer: retailer.name,
+                product_name: result.title || result.metadata?.title || 'Unknown product',
+                price: priceMatch ? priceMatch[0] : null,
+                product_url: result.url || '',
+                image_url: imageUrl,
+                source: 'firecrawl',
+              };
+            });
+          } catch (err) {
+            console.warn(`Firecrawl error for ${retailer.name}:`, err);
+            return [];
+          }
+        });
+        return (await Promise.all(searches)).flat();
+      };
 
+      const searchFirecrawlPlatform = async (query: string, platform: { name: string; domain: string }, type: 'rental' | 'secondhand'): Promise<any> => {
+        if (!firecrawlApiKey) return null;
+        try {
+          const response = await fetch('https://api.firecrawl.dev/v1/search', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: `${query} site:${platform.domain}`,
+              limit: 1,
+              scrapeOptions: { formats: ['markdown'] },
+            }),
+          });
+          if (!response.ok) return null;
+          const searchData = await response.json();
+          const result = (searchData?.data || [])[0];
+          if (!result) return null;
+          const markdown = result.markdown || '';
+          const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
+          if (type === 'rental') {
+            const rentalPriceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?\s*(?:\/\s*day|per\s*day|per\s*occasion|to\s*rent)/i)
+              || markdown.match(/(?:rent|rental|from)\s*£[\d,]+(?:\.\d{2})?/i)
+              || markdown.match(/£[\d,]+(?:\.\d{2})?/);
+            return {
+              platform: platform.name,
+              product_name: result.title || result.metadata?.title || 'Unknown product',
+              price: rentalPriceMatch ? rentalPriceMatch[0] : null,
+              product_url: result.url || '',
+              image_url: imageUrl,
+              type: 'rental',
+              source: 'firecrawl',
+            };
+          } else {
+            const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/);
+            const conditionMatch = markdown.match(/(?:condition|quality)[:\s]*(excellent|very good|good|fair|new with tags|like new|pristine)/i);
+            const condition = conditionMatch ? conditionMatch[1] :
+              markdown.match(/\b(excellent|pristine|like new|new with tags)\b/i) ? 'excellent' :
+              markdown.match(/\b(very good|great condition)\b/i) ? 'good' : null;
+            return {
+              platform: platform.name,
+              product_name: result.title || result.metadata?.title || 'Unknown product',
+              price: priceMatch ? priceMatch[0] : null,
+              product_url: result.url || '',
+              image_url: imageUrl,
+              condition: condition || 'good',
+              type: 'secondhand',
+              source: 'firecrawl',
+            };
+          }
+        } catch (err) {
+          return null;
+        }
+      };
+
+      // --- Run all searches per missing item ---
       const searchPromises = missingItems.map(async (item: any) => {
         const keywords = item.search_keywords || [];
         const category = item.category || '';
         const maxPrice = getPriceLimit(item.price_tier);
+        const searchQuery = `${item.item_type} ${item.style_descriptor || ''}`.trim();
+        const tier = item.price_tier || 'mid_range';
 
         // DB search
         const keywordFilters = keywords
@@ -1110,162 +1290,56 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           .eq('in_stock', true)
           .lte('price', maxPrice);
 
-        if (category) {
-          query = query.ilike('category', `%${category}%`);
-        }
-        if (keywordFilters) {
-          query = query.or(keywordFilters);
-        }
+        if (category) query = query.ilike('category', `%${category}%`);
+        if (keywordFilters) query = query.or(keywordFilters);
 
         const { data: matches } = await query.order('price', { ascending: true }).limit(3);
 
-        // Firecrawl retailer search
-        let retailer_results: any[] = [];
-        let rental_results: any[] = [];
-        let secondhand_results: any[] = [];
-        if (firecrawlApiKey) {
-          const tier = item.price_tier || 'mid_range';
-          const retailers = retailersByTier[tier] || retailersByTier.mid_range;
-          const searchQuery = `${item.item_type} ${item.style_descriptor || ''}`.trim();
+        // Layer 1: ShopStyle
+        const shopStyleResults = await searchShopStyle(searchQuery, maxPrice);
 
-          const retailerSearches = retailers.map(async (retailer) => {
-            try {
-              const response = await fetch('https://api.firecrawl.dev/v1/search', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${firecrawlApiKey}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  query: `${searchQuery} site:${retailer.domain}`,
-                  limit: 2,
-                  scrapeOptions: { formats: ['markdown'] },
-                }),
-              });
+        // Layer 2: Firecrawl retailer search
+        const retailers = retailersByTier[tier] || retailersByTier.mid_range;
+        const firecrawlRetailerResults = await searchFirecrawl(searchQuery, retailers);
 
-              if (!response.ok) {
-                console.warn(`Firecrawl search failed for ${retailer.name}:`, response.status);
-                return [];
-              }
-
-              const searchData = await response.json();
-              const results = searchData?.data || [];
-
-              return results.slice(0, 2).map((result: any) => {
-                // Extract price from markdown content
-                const markdown = result.markdown || '';
-                const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/) || markdown.match(/\$[\d,]+(?:\.\d{2})?/);
-                
-                // Extract image URL from metadata or markdown
-                const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
-
-                return {
-                  retailer: retailer.name,
-                  product_name: result.title || result.metadata?.title || 'Unknown product',
-                  price: priceMatch ? priceMatch[0] : null,
-                  product_url: result.url || '',
-                  image_url: imageUrl,
-                };
-              });
-            } catch (err) {
-              console.warn(`Firecrawl error for ${retailer.name}:`, err);
-              return [];
-            }
-          });
-
-          const allResults = await Promise.all(retailerSearches);
-          retailer_results = allResults.flat().slice(0, 6);
-          console.log(`Firecrawl: ${retailer_results.length} products found for "${searchQuery}"`);
-
-          // Firecrawl rental platform search (expanded)
-          const rentalPlatforms = [
-            { name: 'HURR', domain: 'hurr.co.uk' },
-            { name: 'By Rotation', domain: 'byrotation.com' },
-            { name: 'My Wardrobe HQ', domain: 'mywardrobehq.com' },
-            { name: 'On Loan', domain: 'onloan.co.uk' },
-          ];
-
-          // Firecrawl secondhand/resale platform search
-          const secondhandPlatforms = [
-            { name: 'Vestiaire Collective', domain: 'vestiairecollective.com' },
-            { name: 'Depop', domain: 'depop.com' },
-            { name: 'Vinted', domain: 'vinted.co.uk' },
-            { name: 'The RealReal', domain: 'therealreal.com' },
-          ];
-
-          const searchPlatform = async (platform: { name: string; domain: string }, type: 'rental' | 'secondhand') => {
-            try {
-              const response = await fetch('https://api.firecrawl.dev/v1/search', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${firecrawlApiKey}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  query: `${searchQuery} site:${platform.domain}`,
-                  limit: 2,
-                  scrapeOptions: { formats: ['markdown'] },
-                }),
-              });
-
-              if (!response.ok) {
-                console.warn(`Firecrawl ${type} search failed for ${platform.name}:`, response.status);
-                return [];
-              }
-
-              const searchData = await response.json();
-              const results = searchData?.data || [];
-
-              return results.slice(0, 1).map((result: any) => {
-                const markdown = result.markdown || '';
-                const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
-
-                if (type === 'rental') {
-                  const rentalPriceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?\s*(?:\/\s*day|per\s*day|per\s*occasion|to\s*rent)/i)
-                    || markdown.match(/(?:rent|rental|from)\s*£[\d,]+(?:\.\d{2})?/i)
-                    || markdown.match(/£[\d,]+(?:\.\d{2})?/);
-                  return {
-                    platform: platform.name,
-                    product_name: result.title || result.metadata?.title || 'Unknown product',
-                    price: rentalPriceMatch ? rentalPriceMatch[0] : null,
-                    product_url: result.url || '',
-                    image_url: imageUrl,
-                    type: 'rental',
-                  };
-                } else {
-                  const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/) || markdown.match(/\$[\d,]+(?:\.\d{2})?/);
-                  // Try to detect condition
-                  const conditionMatch = markdown.match(/(?:condition|quality)[:\s]*(excellent|very good|good|fair|new with tags|like new|pristine)/i);
-                  const condition = conditionMatch ? conditionMatch[1] : 
-                    markdown.match(/\b(excellent|pristine|like new|new with tags)\b/i) ? 'excellent' :
-                    markdown.match(/\b(very good|great condition)\b/i) ? 'good' : null;
-                  return {
-                    platform: platform.name,
-                    product_name: result.title || result.metadata?.title || 'Unknown product',
-                    price: priceMatch ? priceMatch[0] : null,
-                    product_url: result.url || '',
-                    image_url: imageUrl,
-                    condition: condition || 'good',
-                    type: 'secondhand',
-                  };
-                }
-              });
-            } catch (err) {
-              console.warn(`Firecrawl ${type} error for ${platform.name}:`, err);
-              return [];
-            }
-          };
-
-          // Run rental and secondhand searches in parallel
-          const [rentalResults, secondhandResults] = await Promise.all([
-            Promise.all(rentalPlatforms.map(p => searchPlatform(p, 'rental'))),
-            Promise.all(secondhandPlatforms.map(p => searchPlatform(p, 'secondhand'))),
-          ]);
-
-          rental_results = rentalResults.flat().slice(0, 2);
-          const secondhand_results = secondhandResults.flat().slice(0, 2);
-          console.log(`Firecrawl: ${rental_results.length} rental, ${secondhand_results.length} secondhand for "${searchQuery}"`);
+        // Merge retailer results: ShopStyle first, then Firecrawl, then fallback URLs
+        let retailer_results = [...shopStyleResults, ...firecrawlRetailerResults];
+        if (retailer_results.length === 0) {
+          // Layer 3: Guaranteed fallback search URLs
+          retailer_results = buildSearchUrls(searchQuery, tier);
+          console.log(`Using fallback search URLs for "${searchQuery}"`);
         }
+        retailer_results = retailer_results.slice(0, 6);
+
+        // Rental searches: Firecrawl then fallback
+        const rentalPlatforms = [
+          { name: 'HURR', domain: 'hurr.co.uk' },
+          { name: 'By Rotation', domain: 'byrotation.com' },
+          { name: 'My Wardrobe HQ', domain: 'mywardrobehq.com' },
+          { name: 'On Loan', domain: 'onloan.co.uk' },
+        ];
+        const rentalFirecrawlResults = (await Promise.all(
+          rentalPlatforms.map(p => searchFirecrawlPlatform(searchQuery, p, 'rental'))
+        )).filter(Boolean);
+        let rental_results = rentalFirecrawlResults.length > 0
+          ? rentalFirecrawlResults.slice(0, 2)
+          : buildRentalSearchUrls(searchQuery);
+
+        // Secondhand searches: Firecrawl then fallback
+        const secondhandPlatforms = [
+          { name: 'Vestiaire Collective', domain: 'vestiairecollective.com' },
+          { name: 'Depop', domain: 'depop.com' },
+          { name: 'Vinted', domain: 'vinted.co.uk' },
+          { name: 'The RealReal', domain: 'therealreal.com' },
+        ];
+        const secondhandFirecrawlResults = (await Promise.all(
+          secondhandPlatforms.map(p => searchFirecrawlPlatform(searchQuery, p, 'secondhand'))
+        )).filter(Boolean);
+        let secondhand_results = secondhandFirecrawlResults.length > 0
+          ? secondhandFirecrawlResults.slice(0, 2)
+          : buildSecondhandSearchUrls(searchQuery);
+
+        console.log(`Item "${searchQuery}": ${shopStyleResults.length} ShopStyle, ${firecrawlRetailerResults.length} Firecrawl, ${retailer_results.length} total retailer, ${rental_results.length} rental, ${secondhand_results.length} secondhand`);
 
         return {
           item_type: item.item_type,
@@ -1281,7 +1355,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
       });
 
       shoppingMatches = await Promise.all(searchPromises);
-      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.db_matches.length} db, ${m.retailer_results?.length || 0} retailer`));
+      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.retailer_results?.length || 0} retailer`));
     }
 
     // Save recommendation to database only if user is authenticated
