@@ -25,6 +25,7 @@ interface ChatMessageProps {
   } | null;
   cityClarificationChips?: string[];
   onCitySelect?: (city: string) => void;
+  weatherNote?: string;
   isLoading?: boolean;
 }
 
