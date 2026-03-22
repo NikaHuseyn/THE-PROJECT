@@ -291,6 +291,15 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
             ))}
           </div>
         )}
+        {/* Emotional tone cards for vague occasions */}
+        {emotionalToneCards && toneRecommendations && onSelectTone && (
+          <EmotionalToneCards
+            tones={emotionalToneCards}
+            toneRecommendations={toneRecommendations}
+            onSelectTone={onSelectTone}
+            wardrobeStatus={wardrobeStatus}
+          />
+        )}
         {renderRecommendation()}
       </div>
     </div>
