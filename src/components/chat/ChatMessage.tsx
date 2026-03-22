@@ -216,6 +216,9 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
             )}
           </div>
         )}
+        {!isUser && weatherNote && (
+          <p className="text-sm text-muted-foreground mb-2">{weatherNote}</p>
+        )}
         <p className="text-foreground whitespace-pre-wrap">{content}</p>
         {cityClarificationChips && cityClarificationChips.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
