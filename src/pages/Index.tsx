@@ -98,6 +98,9 @@ const Index = () => {
                   onCitySelect={sendMessage}
                   weatherNote={message.weatherNote}
                   wardrobeStatus={message.wardrobeStatus}
+                  emotionalToneCards={message.emotionalToneCards}
+                  toneRecommendations={message.toneRecommendations}
+                  onSelectTone={selectEmotionalTone}
                 />
               ))}
               {isLoading && <ChatMessage role="assistant" content="" isLoading />}
