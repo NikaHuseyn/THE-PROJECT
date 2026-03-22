@@ -94,6 +94,8 @@ const Index = () => {
                   venueContext={message.venueContext}
                   eventContext={message.eventContext}
                   culturalContext={message.culturalContext}
+                  cityClarificationChips={message.cityClarificationChips}
+                  onCitySelect={sendMessage}
                 />
               ))}
               {isLoading && <ChatMessage role="assistant" content="" isLoading />}
