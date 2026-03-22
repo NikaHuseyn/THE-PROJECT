@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from '@/hooks/useLocation';
 import { toast } from 'sonner';
 import { detectVenue, detectEvent, VenueDetectionResult } from './styling-chat/venueEventDetection';
+import { extractLocation, extractFutureDate, formatDateLabel } from './styling-chat/weatherExtraction';
 
 export interface ChatMessage {
   id: string;
