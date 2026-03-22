@@ -831,7 +831,11 @@ Remember: The goal is to create perfect, achievable outfits using what the user 
 
     const systemPrompt = isHistorical
       ? `You are an expert fashion historian and costume consultant specializing in period-accurate clothing. For this ${occ.includes('1930') ? '1930s' : occ.includes('1920') ? '1920s' : occ.includes('1940') ? '1940s' : 'historical'} event, you MUST only recommend authentic period pieces. NEVER suggest: jeans, denim, sneakers, trainers, t-shirts, hoodies, modern midi dresses, or any item invented after the specified era. Focus on: bias-cut gowns, T-strap heels, Art Deco accessories, vintage shops, and costume rentals.`
-      : 'You are a world-class fashion stylist with expertise in personal styling, body types, and current trends. Create practical, stylish outfits tailored to each client.';
+      : emotional_tone
+        ? `You are a world-class fashion stylist. The user wants to feel "${emotional_tone_label || emotional_tone}". Every piece you recommend should serve this emotional goal. Lead with the feeling — how the outfit makes the user FEEL in the setting — not generic styling advice. Be conversational and warm, never clinical. Never ask the user for more information — use your expert judgment.`
+        : inferred_venue_formality
+          ? `You are a world-class fashion stylist. The user described a vague venue or occasion. You should NEVER ask for more details or say you need more information. Use the context clues provided (formality level, meal type, occasion type) to make a confident, expert recommendation. Be conversational and warm. Open with a sentence that acknowledges the specific vibe, not a generic opener.`
+          : 'You are a world-class fashion stylist with expertise in personal styling, body types, and current trends. Create practical, stylish outfits tailored to each client.';
 
     // Build messages array with conversation history for context
     const conversationContext = eventDetails?.conversationHistory || conversationHistory || [];
