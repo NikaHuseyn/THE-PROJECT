@@ -95,6 +95,17 @@ export const useStylingChat = () => {
     }
   }, []);
 
+  function getWeatherIcon(condition: string): string {
+    const c = (condition || '').toLowerCase();
+    if (c.includes('rain') || c.includes('drizzle')) return '🌧';
+    if (c.includes('thunder')) return '⛈';
+    if (c.includes('snow')) return '🌨';
+    if (c.includes('cloud') || c.includes('overcast')) return '☁️';
+    if (c.includes('fog') || c.includes('mist')) return '🌫';
+    if (c.includes('clear') || c.includes('sunny')) return '☀️';
+    return '🌤';
+  }
+
   /**
    * Core recommendation flow — called after venue/event detection is resolved.
    */
