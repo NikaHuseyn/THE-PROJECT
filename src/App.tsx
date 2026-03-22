@@ -28,8 +28,7 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AppRoutes = () => (
   <Suspense fallback={<LoadingState message="Loading page..." />}>
     <Routes>
-      <Route path="/" element={<ComingSoon />} />
-      <Route path="/app" element={<Index />} />
+      <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/wardrobe" element={<AuthGuard><Wardrobe /></AuthGuard>} />
       <Route path="/style-analysis" element={<AuthGuard><StyleAnalysis /></AuthGuard>} />
