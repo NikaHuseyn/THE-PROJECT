@@ -104,22 +104,46 @@ export const useStylingChat = () => {
     detectedEventName: string | null,
   ) => {
     try {
+      // Extract location and date from the user's message for weather
+      const mentionedLocation = extractLocation(userMessage);
+      const mentionedDate = extractFutureDate(userMessage);
+
       const [weatherData, venueContext, eventContext] = await Promise.all([
         (async () => {
           try {
-            const coordinates = await getLocation();
-            if (coordinates) {
+            if (mentionedLocation) {
+              // Use the mentioned location string
+              console.log('Fetching weather for mentioned location:', mentionedLocation);
               const { data } = await supabase.functions.invoke('weather-recommendations', {
-                body: { lat: coordinates.latitude, lon: coordinates.longitude }
+                body: {
+                  location: mentionedLocation,
+                  ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
+                }
               });
-              return data;
+              return data ? { ...data, source: 'mentioned_location' } : null;
+            } else {
+              // Fall back to device GPS
+              const coordinates = await getLocation();
+              if (coordinates) {
+                const { data } = await supabase.functions.invoke('weather-recommendations', {
+                  body: {
+                    lat: coordinates.latitude,
+                    lon: coordinates.longitude,
+                    ...(mentionedDate ? { forecastDate: mentionedDate } : {}),
+                  }
+                });
+                return data
+                  ? { ...data, source: 'current_location', location_label: 'your current location' }
+                  : null;
+              }
             }
           } catch {
             return {
               temperature: 55,
               condition: 'Partly Cloudy',
               location: 'London, UK',
-              humidity: 65
+              humidity: 65,
+              source: 'fallback',
             };
           }
           return null;
