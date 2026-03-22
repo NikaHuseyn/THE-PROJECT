@@ -51,7 +51,14 @@ serve(async (req) => {
       conversationHistory = [],
       originalRequest = null,
       venueContext = null,
-      eventContext = null
+      eventContext = null,
+      // New: vague venue / emotional tone context
+      inferred_venue_formality = null,
+      inferred_meal_type = null,
+      inferred_occasion_type = null,
+      emotional_tone = null,
+      emotional_tone_label = null,
+      is_multi_tone = false,
     } = await req.json();
 
     // Helper to parse AI JSON safely
