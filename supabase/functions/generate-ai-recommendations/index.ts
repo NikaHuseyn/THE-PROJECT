@@ -1063,10 +1063,11 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
     }
 
     // ============================================
-    // PRODUCT SEARCH: Layered strategy
-    // Layer 1: ShopStyle Collective API (best data, requires key)
-    // Layer 2: Firecrawl web search (good fallback)
-    // Layer 3: Pre-built search URLs (guaranteed, always works)
+    // PRODUCT SEARCH: 4-Layer Strategy
+    // Primary:     ShopStyle Collective API (best data, affiliate revenue)
+    // Secondary:   SerpAPI Google Shopping (fills gaps ShopStyle misses)
+    // Fallback:    Pre-built search URLs (guaranteed, zero cost)
+    // Enhancement: Firecrawl for rental/secondhand platforms only
     // ============================================
 
     let shoppingMatches: any[] = [];
@@ -1081,7 +1082,71 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         return styleProfile?.budget_max || 500;
       };
 
-      // --- Pre-built search URL generators (Layer 3 — guaranteed fallback) ---
+      // ── API keys ──
+      const shopStyleApiKey = Deno.env.get('SHOPSTYLE_API_KEY');
+      const serpApiKey = Deno.env.get('SERPAPI_API_KEY');
+      const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+
+      // ── PRIMARY: ShopStyle Collective API ──
+      const searchShopStyle = async (query: string, maxPrice: number): Promise<any[]> => {
+        if (!shopStyleApiKey) return [];
+        try {
+          const encoded = encodeURIComponent(query);
+          // ShopStyle API v2 — filter by price, UK locale
+          const url = `https://api.shopstyle.com/api/v2/products?pid=${shopStyleApiKey}&fts=${encoded}&offset=0&limit=5&fl=p0:${maxPrice}&fl=d0:GB&fl=b0:GBP`;
+          console.log(`[ShopStyle] Searching: "${query}" (max £${maxPrice})`);
+          const response = await fetch(url);
+          if (!response.ok) {
+            console.warn('[ShopStyle] API error:', response.status);
+            return [];
+          }
+          const data = await response.json();
+          const products = (data.products || []).map((p: any) => ({
+            retailer: p.retailer?.name || p.brand?.name || 'Retailer',
+            product_name: p.name || p.brandedName || 'Product',
+            price: p.priceLabel || (p.price ? `£${p.price}` : null),
+            product_url: p.clickUrl || p.url || '',
+            image_url: p.image?.sizes?.Best?.url || p.image?.sizes?.Large?.url || p.image?.sizes?.Medium?.url || null,
+            source: 'shopstyle',
+          }));
+          console.log(`[ShopStyle] Found ${products.length} products for "${query}"`);
+          return products;
+        } catch (err) {
+          console.warn('[ShopStyle] Error:', err);
+          return [];
+        }
+      };
+
+      // ── SECONDARY: SerpAPI Google Shopping ──
+      const searchGoogleShopping = async (query: string, maxPrice: number): Promise<any[]> => {
+        if (!serpApiKey) return [];
+        try {
+          const encoded = encodeURIComponent(query);
+          const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encoded}&gl=uk&hl=en&google_domain=google.co.uk&api_key=${serpApiKey}&num=5&tbs=mr:1,price:1,ppr_max:${maxPrice}`;
+          console.log(`[SerpAPI] Searching Google Shopping: "${query}"`);
+          const response = await fetch(url);
+          if (!response.ok) {
+            console.warn('[SerpAPI] API error:', response.status);
+            return [];
+          }
+          const data = await response.json();
+          const results = (data.shopping_results || []).slice(0, 5).map((r: any) => ({
+            retailer: r.source || r.merchant?.name || 'Retailer',
+            product_name: r.title || 'Product',
+            price: r.extracted_price ? `£${r.extracted_price}` : (r.price || null),
+            product_url: r.link || r.product_link || '',
+            image_url: r.thumbnail || null,
+            source: 'google_shopping',
+          }));
+          console.log(`[SerpAPI] Found ${results.length} products for "${query}"`);
+          return results;
+        } catch (err) {
+          console.warn('[SerpAPI] Error:', err);
+          return [];
+        }
+      };
+
+      // ── FALLBACK: Pre-built search URLs (guaranteed, zero cost) ──
       const buildSearchUrls = (query: string, tier: string): any[] => {
         const encoded = encodeURIComponent(query);
         const retailersByTierUrls: Record<string, { name: string; url: string }[]> = {
@@ -1126,95 +1191,11 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         return [
           { platform: 'Vestiaire Collective', product_name: `Shop pre-owned: "${query}"`, price: null, product_url: `https://www.vestiairecollective.com/search/?q=${encoded}`, image_url: null, condition: null, type: 'secondhand', source: 'search_url' },
           { platform: 'Vinted', product_name: `Find on Vinted: "${query}"`, price: null, product_url: `https://www.vinted.co.uk/catalog?search_text=${encoded}`, image_url: null, condition: null, type: 'secondhand', source: 'search_url' },
+          { platform: 'Depop', product_name: `Find on Depop: "${query}"`, price: null, product_url: `https://www.depop.com/search/?q=${encoded}`, image_url: null, condition: null, type: 'secondhand', source: 'search_url' },
         ];
       };
 
-      // --- ShopStyle Collective API (Layer 1) ---
-      const shopStyleApiKey = Deno.env.get('SHOPSTYLE_API_KEY');
-
-      const searchShopStyle = async (query: string, maxPrice: number): Promise<any[]> => {
-        if (!shopStyleApiKey) return [];
-        try {
-          const encoded = encodeURIComponent(query);
-          const url = `https://api.shopstyle.com/api/v2/products?pid=${shopStyleApiKey}&fts=${encoded}&offset=0&limit=4&fl=p0:${maxPrice}&fl=d0:GB`;
-          const response = await fetch(url);
-          if (!response.ok) {
-            console.warn('ShopStyle API error:', response.status);
-            return [];
-          }
-          const data = await response.json();
-          return (data.products || []).map((p: any) => ({
-            retailer: p.retailer?.name || p.brand?.name || 'Retailer',
-            product_name: p.name || p.brandedName || 'Product',
-            price: p.priceLabel || (p.price ? `£${p.price}` : null),
-            product_url: p.clickUrl || p.url || '',
-            image_url: p.image?.sizes?.Best?.url || p.image?.sizes?.Large?.url || null,
-            source: 'shopstyle',
-          }));
-        } catch (err) {
-          console.warn('ShopStyle error:', err);
-          return [];
-        }
-      };
-
-      // --- Firecrawl (Layer 2) ---
-      const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
-
-      const retailersByTier: Record<string, { name: string; domain: string }[]> = {
-        budget: [
-          { name: 'ASOS', domain: 'asos.com' },
-          { name: 'H&M', domain: 'hm.com' },
-        ],
-        mid_range: [
-          { name: '& Other Stories', domain: 'stories.com' },
-          { name: 'Reiss', domain: 'reiss.com' },
-          { name: 'Mango', domain: 'mango.com' },
-        ],
-        luxury: [
-          { name: 'Net-a-Porter', domain: 'net-a-porter.com' },
-          { name: 'Matches Fashion', domain: 'matchesfashion.com' },
-        ],
-      };
-
-      const searchFirecrawl = async (query: string, retailers: { name: string; domain: string }[]): Promise<any[]> => {
-        if (!firecrawlApiKey) return [];
-        const searches = retailers.map(async (retailer) => {
-          try {
-            const response = await fetch('https://api.firecrawl.dev/v1/search', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${firecrawlApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                query: `${query} site:${retailer.domain}`,
-                limit: 2,
-                scrapeOptions: { formats: ['markdown'] },
-              }),
-            });
-            if (!response.ok) return [];
-            const searchData = await response.json();
-            return (searchData?.data || []).slice(0, 2).map((result: any) => {
-              const markdown = result.markdown || '';
-              const priceMatch = markdown.match(/£[\d,]+(?:\.\d{2})?/) || markdown.match(/\$[\d,]+(?:\.\d{2})?/);
-              const imageUrl = result.metadata?.ogImage || result.metadata?.image || null;
-              return {
-                retailer: retailer.name,
-                product_name: result.title || result.metadata?.title || 'Unknown product',
-                price: priceMatch ? priceMatch[0] : null,
-                product_url: result.url || '',
-                image_url: imageUrl,
-                source: 'firecrawl',
-              };
-            });
-          } catch (err) {
-            console.warn(`Firecrawl error for ${retailer.name}:`, err);
-            return [];
-          }
-        });
-        return (await Promise.all(searches)).flat();
-      };
-
+      // ── ENHANCEMENT: Firecrawl for rental & secondhand platforms only ──
       const searchFirecrawlPlatform = async (query: string, platform: { name: string; domain: string }, type: 'rental' | 'secondhand'): Promise<any> => {
         if (!firecrawlApiKey) return null;
         try {
@@ -1271,7 +1252,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         }
       };
 
-      // --- Run all searches per missing item ---
+      // ── Run all searches per missing item ──
       const searchPromises = missingItems.map(async (item: any) => {
         const keywords = item.search_keywords || [];
         const category = item.category || '';
@@ -1279,39 +1260,44 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         const searchQuery = `${item.item_type} ${item.style_descriptor || ''}`.trim();
         const tier = item.price_tier || 'mid_range';
 
-        // DB search
+        // Internal DB search (always runs)
         const keywordFilters = keywords
           .map((kw: string) => `name.ilike.%${kw}%,description.ilike.%${kw}%,brand.ilike.%${kw}%`)
           .join(',');
 
-        let query = supabase
+        let dbQuery = supabase
           .from('shopping_items')
           .select('id, name, brand, category, price, rental_price, image_url, retailer_name, retailer_url, colors, sizes, description')
           .eq('in_stock', true)
           .lte('price', maxPrice);
 
-        if (category) query = query.ilike('category', `%${category}%`);
-        if (keywordFilters) query = query.or(keywordFilters);
+        if (category) dbQuery = dbQuery.ilike('category', `%${category}%`);
+        if (keywordFilters) dbQuery = dbQuery.or(keywordFilters);
 
-        const { data: matches } = await query.order('price', { ascending: true }).limit(3);
+        const { data: matches } = await dbQuery.order('price', { ascending: true }).limit(3);
 
-        // Layer 1: ShopStyle
-        const shopStyleResults = await searchShopStyle(searchQuery, maxPrice);
+        // ── RETAILER RESULTS: ShopStyle → SerpAPI → Search URLs ──
+        // Step 1: Try ShopStyle (primary)
+        let retailer_results = await searchShopStyle(searchQuery, maxPrice);
 
-        // Layer 2: Firecrawl retailer search
-        const retailers = retailersByTier[tier] || retailersByTier.mid_range;
-        const firecrawlRetailerResults = await searchFirecrawl(searchQuery, retailers);
-
-        // Merge retailer results: ShopStyle first, then Firecrawl, then fallback URLs
-        let retailer_results = [...shopStyleResults, ...firecrawlRetailerResults];
-        if (retailer_results.length === 0) {
-          // Layer 3: Guaranteed fallback search URLs
-          retailer_results = buildSearchUrls(searchQuery, tier);
-          console.log(`Using fallback search URLs for "${searchQuery}"`);
+        // Step 2: If ShopStyle returned <2 results, fill gaps with SerpAPI
+        if (retailer_results.length < 2) {
+          const serpResults = await searchGoogleShopping(searchQuery, maxPrice);
+          retailer_results = [...retailer_results, ...serpResults];
+          if (serpResults.length > 0) {
+            console.log(`[SerpAPI] Filled ${serpResults.length} gaps for "${searchQuery}"`);
+          }
         }
+
+        // Step 3: If still no results, use guaranteed search URLs
+        if (retailer_results.length === 0) {
+          retailer_results = buildSearchUrls(searchQuery, tier);
+          console.log(`[Fallback] Using search URLs for "${searchQuery}"`);
+        }
+
         retailer_results = retailer_results.slice(0, 6);
 
-        // Rental searches: Firecrawl then fallback
+        // ── RENTAL RESULTS: Firecrawl (rental platforms aren't on ShopStyle/Google) → fallback URLs ──
         const rentalPlatforms = [
           { name: 'HURR', domain: 'hurr.co.uk' },
           { name: 'By Rotation', domain: 'byrotation.com' },
@@ -1322,10 +1308,10 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           rentalPlatforms.map(p => searchFirecrawlPlatform(searchQuery, p, 'rental'))
         )).filter(Boolean);
         let rental_results = rentalFirecrawlResults.length > 0
-          ? rentalFirecrawlResults.slice(0, 2)
+          ? rentalFirecrawlResults.slice(0, 3)
           : buildRentalSearchUrls(searchQuery);
 
-        // Secondhand searches: Firecrawl then fallback
+        // ── SECONDHAND RESULTS: Firecrawl → fallback URLs ──
         const secondhandPlatforms = [
           { name: 'Vestiaire Collective', domain: 'vestiairecollective.com' },
           { name: 'Depop', domain: 'depop.com' },
@@ -1336,10 +1322,10 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
           secondhandPlatforms.map(p => searchFirecrawlPlatform(searchQuery, p, 'secondhand'))
         )).filter(Boolean);
         let secondhand_results = secondhandFirecrawlResults.length > 0
-          ? secondhandFirecrawlResults.slice(0, 2)
+          ? secondhandFirecrawlResults.slice(0, 3)
           : buildSecondhandSearchUrls(searchQuery);
 
-        console.log(`Item "${searchQuery}": ${shopStyleResults.length} ShopStyle, ${firecrawlRetailerResults.length} Firecrawl, ${retailer_results.length} total retailer, ${rental_results.length} rental, ${secondhand_results.length} secondhand`);
+        console.log(`[Result] "${searchQuery}": ${retailer_results.length} retailer (sources: ${[...new Set(retailer_results.map((r: any) => r.source))].join(',')}), ${rental_results.length} rental, ${secondhand_results.length} secondhand`);
 
         return {
           item_type: item.item_type,
@@ -1355,7 +1341,7 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
       });
 
       shoppingMatches = await Promise.all(searchPromises);
-      console.log('Shopping matches found:', shoppingMatches.map(m => `${m.item_type}: ${m.retailer_results?.length || 0} retailer`));
+      console.log('[Search Complete]', shoppingMatches.map(m => `${m.item_type}: ${m.retailer_results?.length || 0} retailer`).join(', '));
     }
 
     // Save recommendation to database only if user is authenticated
