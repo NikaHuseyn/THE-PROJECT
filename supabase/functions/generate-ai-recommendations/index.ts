@@ -357,6 +357,22 @@ CRITICAL: This venue information was scraped from the actual venue's website. Yo
 We could not scrape the venue's website for dress code details. Use your own knowledge of this venue (or similar venues with this name) to infer the likely dress code, formality level, and atmosphere. Factor this into the outfit recommendation. If you don't recognise the venue, make reasonable assumptions based on the venue type and location context from the user's message.
 ` : ''}
 
+${inferred_venue_formality ? `
+🏠 INFERRED VENUE CONTEXT (no specific venue named):
+- Inferred Formality: ${inferred_venue_formality}
+- Meal Type: ${inferred_meal_type || 'not specified'}
+- Social Context: ${inferred_occasion_type || 'not specified'}
+
+The user described a vague venue (e.g. "nice restaurant", "fancy place"). There is NO specific venue to look up. Use the inferred formality level and context to guide your recommendation. Do NOT ask for more details — provide a confident recommendation based on these cues.
+` : ''}
+
+${emotional_tone ? `
+🎭 EMOTIONAL TONE (${is_multi_tone ? 'generating one of multiple options' : 'user-specified'}):
+Target emotional feeling: "${emotional_tone_label || emotional_tone}"
+
+${is_multi_tone ? `You are generating ONE specific outfit for the "${emotional_tone_label}" emotional direction. Make this outfit DISTINCT from other emotional tones — not just a colour swap. The silhouette, key pieces, and overall styling approach should genuinely reflect this specific mood.` : `The user wants to feel "${emotional_tone_label || emotional_tone}". Every item should serve this emotional goal. Lead with the feeling, not the dress code.`}
+` : ''}
+
 ${eventContext?.source === 'scraped' ? `
 🎫 EVENT INTELLIGENCE (scraped from event website - USE THIS):
 - Event: ${eventContext.event_name || 'Unknown'}
