@@ -20,6 +20,12 @@ export interface ChatMessage {
   cityClarificationChips?: string[];
   /** One-line weather context shown above recommendation */
   weatherNote?: string;
+  /** Wardrobe status from the backend */
+  wardrobeStatus?: {
+    is_authenticated: boolean;
+    wardrobe_count: number;
+    has_wardrobe: boolean;
+  };
   timestamp: Date;
 }
 
