@@ -20,6 +20,12 @@ export interface ChatMessage {
   cityClarificationChips?: string[];
   /** One-line weather context shown above recommendation */
   weatherNote?: string;
+  /** Wardrobe status from the backend */
+  wardrobeStatus?: {
+    is_authenticated: boolean;
+    wardrobe_count: number;
+    has_wardrobe: boolean;
+  };
   timestamp: Date;
 }
 
@@ -264,6 +270,7 @@ export const useStylingChat = () => {
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,
         culturalContext: data?.cultural_context || undefined,
+        wardrobeStatus: data?.wardrobe_status || undefined,
         weatherNote,
         timestamp: new Date(),
       };

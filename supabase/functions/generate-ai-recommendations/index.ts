@@ -289,17 +289,19 @@ ${recentFeedback?.length > 0 ? recentFeedback.map(fb => {
 }).join('\n') : '- No previous feedback available'}
 
 USER'S WARDROBE ITEMS (PRIORITIZE USING THESE):
-${wardrobeItems?.length > 0 ? wardrobeItems.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'}, ${item.brand || 'brand not specified'}${item.notes ? ', notes: ' + item.notes : ''})`).join('\n') : 'No wardrobe items uploaded yet - recommend shopping items'}
-
-AVAILABLE SHOPPING ITEMS FOR INSPIRATION:
-${shoppingItems?.map(item => `- ${item.name} by ${item.brand || 'Unknown'} (${item.category}, $${item.price}, Available in: ${item.colors?.join(', ') || 'Various colors'})`).join('\n') || 'No shopping items available'}
+${wardrobeItems?.length > 0 ? wardrobeItems.map(item => `- ${item.name} (${item.category}, ${item.color || 'color not specified'}, ${item.brand || 'brand not specified'}${item.notes ? ', notes: ' + item.notes : ''})`).join('\n') : `The user has not uploaded their wardrobe yet.
+Do not reference any existing clothing items.
+Instead, recommend a complete outfit for the occasion from scratch — describe each item specifically (type, color, style, material where relevant) and explain why it works for this specific occasion, venue, weather, and emotional goal. Be specific enough that the user could search for and buy each item.
+Set the "source" for EVERY item to "needs_purchase" and include a corresponding entry in "missing_items_search" for each one.`}
 
 CRITICAL WARDROBE INTEGRATION INSTRUCTIONS:
-1. ALWAYS analyze the user's wardrobe items FIRST
+${wardrobeItems?.length > 0 ? `1. ALWAYS analyze the user's wardrobe items FIRST
 2. If the user has suitable wardrobe items for any part of the outfit (top, bottom, shoes, outerwear, accessories), PRIORITIZE using those items
 3. Only suggest purchasing/renting items that the user doesn't already own or when their wardrobe lacks suitable options
 4. For each outfit piece, explicitly state whether it's "from_wardrobe" or "needs_purchase_or_rental"
-5. Create a balanced mix: use existing wardrobe items where appropriate, and suggest strategic purchases/rentals to complete the look
+5. Create a balanced mix: use existing wardrobe items where appropriate, and suggest strategic purchases/rentals to complete the look` : `1. The user has NO wardrobe items — every item you recommend must have source "needs_purchase"
+2. Include ALL recommended items in "missing_items_search" so real products can be found
+3. Be extra specific in item descriptions so product searches return accurate results`}
 
 ${originalRequest ? `
 🔄 THIS IS A FOLLOW-UP REQUEST - PRESERVE ORIGINAL CONTEXT 🔄
@@ -1304,6 +1306,11 @@ CRITICAL INSTRUCTION: The user is refining their original request. You MUST:
         wardrobe_analysis: recommendationData.wardrobe_analysis
       },
       missing_items: shoppingMatches,
+      wardrobe_status: {
+        is_authenticated: !!user,
+        wardrobe_count: wardrobeItems?.length || 0,
+        has_wardrobe: (wardrobeItems?.length || 0) > 0,
+      },
       cultural_context: culturalNorms.length > 0 ? {
         country: detectedCountry,
         norms: culturalNorms.map(n => ({

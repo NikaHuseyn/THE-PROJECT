@@ -97,6 +97,7 @@ const Index = () => {
                   cityClarificationChips={message.cityClarificationChips}
                   onCitySelect={sendMessage}
                   weatherNote={message.weatherNote}
+                  wardrobeStatus={message.wardrobeStatus}
                 />
               ))}
               {isLoading && <ChatMessage role="assistant" content="" isLoading />}
