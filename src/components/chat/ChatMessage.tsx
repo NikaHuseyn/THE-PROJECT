@@ -29,7 +29,7 @@ interface ChatMessageProps {
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, weatherNote, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
 
   const renderOutfitItem = (item: OutfitItem, index: number) => {
