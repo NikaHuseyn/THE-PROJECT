@@ -1,12 +1,15 @@
-import React from 'react';
-import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket, Globe } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Sparkles, ExternalLink, ShoppingBag, Tag, MapPin, Ticket, Globe, X, Shirt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import CompleteYourLook from './CompleteYourLook';
 
 interface OutfitItem {
   name: string;
   reasoning?: string;
   source?: string;
+  wardrobe_item_id?: string | null;
   purchase_options?: {
     uk_retailers?: Array<{ store: string; url: string; price_range: string }>;
     rental_platforms?: Array<{ platform: string; url: string; price_range: string }>;
@@ -26,16 +29,38 @@ interface ChatMessageProps {
   cityClarificationChips?: string[];
   onCitySelect?: (city: string) => void;
   weatherNote?: string;
+  wardrobeStatus?: {
+    is_authenticated: boolean;
+    wardrobe_count: number;
+    has_wardrobe: boolean;
+  };
   isLoading?: boolean;
 }
 
-const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, weatherNote, isLoading }: ChatMessageProps) => {
+const ChatMessage = ({ role, content, recommendation, venueContext, eventContext, culturalContext, cityClarificationChips, onCitySelect, weatherNote, wardrobeStatus, isLoading }: ChatMessageProps) => {
   const isUser = role === 'user';
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const renderOutfitItem = (item: OutfitItem, index: number) => {
+    const isFromWardrobe = item.source === 'from_wardrobe';
+
     return (
       <div key={index} className="mb-3 pl-4 border-l-2 border-border">
-        <p className="text-foreground font-medium">{item.name}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-foreground font-medium">{item.name}</p>
+          {isFromWardrobe && (
+            <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+              <Shirt className="h-3 w-3" />
+              Already in your wardrobe ✓
+            </Badge>
+          )}
+          {!isFromWardrobe && item.source === 'needs_purchase' && (
+            <Badge variant="outline" className="text-[10px] h-5 gap-1 text-muted-foreground">
+              <ShoppingBag className="h-3 w-3" />
+              Complete your look
+            </Badge>
+          )}
+        </div>
         {item.reasoning && (
           <p className="text-sm text-muted-foreground mt-1">{item.reasoning}</p>
         )}
@@ -84,6 +109,28 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
             </a>
           </Button>
         ))}
+      </div>
+    );
+  };
+
+  const renderWardrobeBanner = () => {
+    // Only show for logged-in users with empty wardrobe, not guests
+    if (!wardrobeStatus?.is_authenticated || wardrobeStatus.has_wardrobe || bannerDismissed) return null;
+
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-lg bg-primary/5 border border-primary/20 px-4 py-2.5 mb-3">
+        <p className="text-sm text-foreground">
+          ✨ Add your wardrobe to get outfit suggestions from clothes you already own →{' '}
+          <Link to="/wardrobe" className="font-medium text-primary hover:underline">
+            Add items
+          </Link>
+        </p>
+        <button
+          onClick={() => setBannerDismissed(true)}
+          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
     );
   };
@@ -205,7 +252,6 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
                       const avoid = culturalContext.norms.find(n => n.context_type === 'items_to_avoid');
                       const note = modesty || religious || avoid;
                       if (!note) return 'Cultural dress guidance applied';
-                      // Extract first meaningful sentence
                       const text = note.guidance.replace(/[#*_\[\]]/g, '').trim();
                       const firstSentence = text.split(/[.!?\n]/).find(s => s.trim().length > 15);
                       return firstSentence ? firstSentence.trim().slice(0, 120) : 'Cultural dress guidance applied';
@@ -219,6 +265,7 @@ const ChatMessage = ({ role, content, recommendation, venueContext, eventContext
         {!isUser && weatherNote && (
           <p className="text-sm text-muted-foreground mb-2">{weatherNote}</p>
         )}
+        {!isUser && recommendation && renderWardrobeBanner()}
         <p className="text-foreground whitespace-pre-wrap">{content}</p>
         {cityClarificationChips && cityClarificationChips.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
