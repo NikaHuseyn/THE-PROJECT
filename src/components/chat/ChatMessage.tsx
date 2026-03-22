@@ -23,6 +23,8 @@ interface ChatMessageProps {
     country: string;
     norms: Array<{ context_type: string; guidance: string }>;
   } | null;
+  cityClarificationChips?: string[];
+  onCitySelect?: (city: string) => void;
   isLoading?: boolean;
 }
 
