@@ -270,6 +270,7 @@ export const useStylingChat = () => {
         venueContext: venueContext || undefined,
         eventContext: eventContext || undefined,
         culturalContext: data?.cultural_context || undefined,
+        wardrobeStatus: data?.wardrobe_status || undefined,
         weatherNote,
         timestamp: new Date(),
       };
